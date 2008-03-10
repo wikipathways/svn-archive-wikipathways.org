@@ -13,7 +13,7 @@ require("wpi.php");
 //Definition of functions
 $updatePathway_sig=array(
 	array(
-		$xmlrpcInt, 
+		$xmlrpcBoolean, 
 		$xmlrpcString, $xmlrpcString, $xmlrpcString, $xmlrpcBase64,
 		$xmlrpcInt
 	),
@@ -28,7 +28,7 @@ $updatePathway_doc= "Update a pathway on wikipathways.";
 
 $updatePathway_docsig = array(
 	array(
-		"The newest revision number when the update was successful, 0 otherwise",
+		"True when the update was successful, false when not",
 		"The pathway name (e.g. Apoptosis)",
 		"The pathway species (e.g. Human)",
 		"Description of the modifications",
@@ -36,7 +36,7 @@ $updatePathway_docsig = array(
 		"The revision id on which the updated GPML is based"
 	),
 	array(
-		"The newest revision number when the update was successful, 0 otherwise",
+		"True when the update was successful, false when not",
 		"The pathway name (e.g. Apoptosis)",
 		"The pathway species (e.g. Human)",
 		"Description of the modifications",
@@ -113,20 +113,6 @@ $login_docsig = array(
 	)
 );
 
-$getPathwayList_sig = array(
-	array(
-			$xmlrpcArray
-	)
-);
-
-$getPathwayList_doc = "Get a list of all pathway titles (in the form of Species:PathwayName)";
-
-$getPathwayList_docsig = array(
-	array(
-		"An array containing all pathway titles"
-	)
-);
-
 //Definition of dispatch map
 $disp_map=array(
 		"WikiPathways.updatePathway" => 
@@ -149,11 +135,6 @@ $disp_map=array(
 			"signature" => $login_sig,
 			"docstring" => $login_doc,
 			"signature_docs" => $login_docsig),
-		"WikiPathways.getPathwayList" =>
-			array("function" => "getPathwayList",
-			"signature" => $getPathwayList_sig,
-			"docstring" => $getPathwayList_doc,
-			"signature_docs" => $getPathwayList_docsig),
 );
 
 //Setup the XML-RPC server
@@ -163,15 +144,6 @@ $s->functions_parameters_type = 'phpvals';
 $s->service();
 
 //Function implementations
-function getPathwayList() {
-	$pathways = Pathway::getAllPathways();
-	$titles = array();
-	foreach($pathways as $p) {
-		$titles[] = $p->getTitleObject()->getDbKey();
-	}
-	return $titles;
-}
-
 function updatePathway($pwName, $pwSpecies, $description, $gpmlData, $revision, $auth = NULL) {
 	global $xmlrpcerruser, $wgUser;
 	
@@ -184,14 +156,13 @@ function updatePathway($pwName, $pwSpecies, $description, $gpmlData, $revision, 
 		}
 	}
 		
-	$resp = 0;
+	$resp = TRUE;
 	try {
 		$pathway = new Pathway($pwName, $pwSpecies);
 		//Only update if the given revision is the newest
 		//Or if this is a new pathway
 		if(!$pathway->exists() || $revision == $pathway->getLatestRevision()) {
 			$pathway->updatePathway($gpmlData, $description);
-			$resp = $pathway->getLatestRevision();
 		} else {
 			$resp = new xmlrpcresp(0, $xmlrpcerruser,
 				"Revision out of date: your GPML code originates from " .
