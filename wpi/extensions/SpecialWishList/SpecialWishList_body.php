@@ -96,7 +96,7 @@ class SpecialWishList extends SpecialPage
 	}
 	
 	function markResolved($id, $pathwayTitle = '') {
-		global $wgOut, $wgUser;
+		global $wgOut;
 		if($pathwayTitle) {
 			$this->doMarkResolved($id, $pathwayTitle);
 			$this->reload();
@@ -112,37 +112,18 @@ class SpecialWishList extends SpecialPage
 			$select .= "<option value='$title'>$name ($species)</option>";
 		}
 		$select .= '</select>';
-		//resolved wish info
-		$wish = new Wish($id);
-		$title = $wish->getTitle()->getText();
-                $user = $wish->getRequestUser();
-		$user = $wgUser->getSkin()->userLink( $user, $user->getName());
-                $date = self::getSortTimeDate($wish->getRequestDate());    
-                $fullComment = str_replace('"', "'", $wish->getComments());
-                $comment = $this->truncateComment($wish, 75); //Cutoff comment at 20 chars
-		//displayed html	
-		$this->addJavaScript();	
 		$html = <<<HTML
-<H2>Resolve wishlist item</H2>
-<table class="prettytable"><tbody>
-<tr class='table-blue-tableheadings'>
-<td class='table-blue-headercell'>Suggested pathway name</td><td class='table-blue-headercell'>Suggested by user</td><td class='table-blue-headercell'>Suggested on date</td><td class='table-blue-headercell'>Comments</td>
-<tr class=''><td class='table-blue-contentcell'>{$title}</td><td class='table-blue-contentcell'>{$user}</td><td class='table-blue-contentcell'>{$date}</td><td class='table-blue-contentcell'>
-HTML;
-		$wgOut->addHTML($html);
-		$wgOut->addWikiText($comment);
-		$href = SITE_URL . "/index.php?title=Special:SpecialWishList";
-		$html2 = <<<HTML
-</td></tbody></table>
-<BR>Please specify the pathway that resolves this wishlist item:
+<H2>Resolve wishlist items</H2>
+<P>Please specify for each item the pathway that resolves it:
 <P>
 <FORM acion="{$this->this_url}" method="post">
 $select
 <INPUT type="hidden" name="wishaction" value="resolved">
-<INPUT type="submit" value="Resolve item"> <a href="{$href}">Cancel</a>
+<INPUT type="submit" value="Resolve item">
 </FORM>
+
 HTML;
-		$wgOut->addHTML($html2);
+		$wgOut->addHTML($html);
 		return true;
 	}
 	
@@ -175,7 +156,7 @@ HTML;
 <form action='{$this->this_url}' method='post'>
 <table class="prettytable sortable"><tbody>
 <tr class='table-blue-tableheadings'>
-<td class='table-blue-headercell'>Suggested pathway name</td><td class='table-blue-headercell'>Suggested by user</td><td class='table-blue-headercell'>Suggested on date</td><td class='table-blue-headercell'>Comments</td><td class='table-blue-headercell'>Votes
+<td class='table-blue-headercell'>Pathway name</td><td class='table-blue-headercell'>Requested by</td><td class='table-blue-headercell'>Date</td><td class='table-blue-headercell'>Comments</td><td class='table-blue-headercell'>Votes
 HTML;
 		if($wgUser->isLoggedIn()) {
 			$html .= "<td class='table-blue-headercell' class='unsortable'>Watch</td><td class='table-blue-headercell' class='unsortable'>Resolve";
@@ -206,7 +187,7 @@ HTML;
 		$wgOut->addWikiText("== Resolved items ==");
 		$wgOut->addHTML("<table class='prettytable sortable'><tbody>
 				<tr class='table-green-tableheadings'>
-				<td class='table-green-headercell'>Suggested pathway name<td class='table-green-headercell'>Resolved on date<td class='table-green-headercell'>Resolved by pathway name<td class='table-green-headercell'>Suggested on date<td class='table-green-headercell'>Suggested by user");
+				<td class='table-green-headercell'>Item name<td class='table-green-headercell'>Date resolved<td class='table-green-headercell'>Pathway<td class='table-green-headercell'>Created on<td class='table-green-headercell'>Created by");
 		$altrow2 = '';
 		foreach($wishes as $wish) {
 			if($wish->isResolved()) {
@@ -222,7 +203,7 @@ HTML;
 	}
 	
 	function addJavaScript() {
-		global $wgOut, $wgScriptPath;;
+		global $wgOut;
 		$js = <<<JS
 <script type="text/javascript">
 	function showhide(id, toggle, hidelabel, showlabel) {

@@ -56,17 +56,17 @@ function createDiffApplet($pathway, $revOld, $revNew) {
 
 	$base = EditApplet::getAppletBase();
 	$applet = <<<APPLET
-	<applet 
+	<object 
 		width="100%" 
 		height="500" 
 		standby="Loading DiffView applet ..." 
 		codebase="{$base}" 
 		archive="{$base}/diffview.jar" 
 		type="application/x-java-applet" 
-		code="org.pathvisio.gpmldiff.AppletMain.class">
+		classid="java:org.pathvisio.gpmldiff.AppletMain.class">
 		<param name="old" value="$file1"/>
 		<param name="new" value="$file2"/>
-	</applet>
+	</object>
 APPLET;
 	return $applet;
 }
