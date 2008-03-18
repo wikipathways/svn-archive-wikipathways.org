@@ -233,9 +233,15 @@ require_once('wpi/extensions/DiffAppletPage/DiffAppletPage.php');
 require_once('wpi/extensions/RecentPathwayChanges/RecentPathwayChanges.php');
 
 require_once('wpi/extensions/recaptcha/ReCaptcha.php'); 
+
+/* This shouldn't be in LocalSettings.php, since that's checked
+in to the svn repository. Put it in pass.php instead!
 // Sign up for keys at http://recaptcha.net/api/getKey
-$recaptcha_public_key = '6LeiPAEAAAAAAGLl8epcouGivbh5bQcmAwFuCgKO';
-$recaptcha_private_key = '6LeiPAEAAAAAABWdtfRXHzrtUn6Xigv7DIAtQCJ0';
+$recaptcha_public_key = '***********';
+$recaptcha_private_key = '**********';
+*/
+//Recaptcha keys need to be defined again after loading the recaptcha extension
+require("pass.php");
 
 require_once( "wpi/extensions/ContributionScores/ContributionScores.php" );
 $contribScoreIgnoreBots = true;  //Set to true if you want to exclude Bots from the reporting - Can be omitted.
