@@ -53,7 +53,7 @@ switch($action) {
 function delete($title) {
 	global $wgUser, $wgOut;
 	$pathway = Pathway::newFromTitle($_GET['pwTitle']);
-	if($wgUser->isAllowed('delete') || isPathwayCreator($wgUser, $_GET['pwTitle'])) {
+	if($wgUser->isAllowed('delete')) {
 		$pathway = Pathway::newFromTitle($_GET['pwTitle']);
 		$pathway->delete();
 		echo "<h1>Deleted</h1>";
