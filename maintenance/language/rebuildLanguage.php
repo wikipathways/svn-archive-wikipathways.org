@@ -2,7 +2,8 @@
 /**
  * Rewrite the messages array in the files languages/messages/MessagesXX.php.
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 require_once( dirname(__FILE__).'/../commandLine.inc' );
@@ -14,13 +15,32 @@ require_once( 'writeMessagesArray.inc' );
  *
  * @param $code The language code.
  * @param $write Write to the messages file?
- * @param $listUnknown List the unknown messages?
  */
-function rebuildLanguage( $code, $write, $listUnknown ) {
-	global $wgLanguages;
+function rebuildLanguage( $code, $write ) {
+	global $wgLanguages, $wg;
+
+	# Get messages
 	$messages = $wgLanguages->getMessages( $code );
 	$messages = $messages['all'];
-	writeMessagesToFile( $messages, $code, $write, $listUnknown );
+
+	# Rewrite messages array
+	$messagesText = writeMessagesArray( $messages, $code == 'en' );
+
+	# Write to the file
+	if ( $write ) {
+		$filename = Language::getMessagesFileName( $code );
+		$contents = file_get_contents( $filename );
+		if ( strpos( $contents, '$messages' ) !== false ) {
+			$new = explode( '$messages', $contents );
+			$new = $new[0];
+			$new .= $messagesText;
+			$new .= "\n?>\n";
+			file_put_contents( $filename, $new );
+			echo "Generated and wrote messages in language $code.\n";
+		}
+	} else {
+		echo "Generated messages in language $code.\n";
+	}
 }
 
 # Show help
@@ -32,7 +52,6 @@ Parameters:
 	* help: Show this help.
 Options:
 	* dry-run: Don't write the array to the file.
-	* no-unknown: Don't list the unknown messages.
 
 END;
 	exit();
@@ -45,9 +64,8 @@ if ( isset( $options['lang'] ) ) {
 	$wgCode = $wgContLang->getCode();
 }
 
-# Get the options
+# Get the write options
 $wgWriteToFile = !isset( $options['dry-run'] );
-$wgListUnknownMessages = !isset( $options['no-unknown'] );
 
 # Get language objects
 $wgLanguages = new languages();
@@ -55,10 +73,10 @@ $wgLanguages = new languages();
 # Write all the language
 if ( $wgCode == 'all' ) {
 	foreach ( $wgLanguages->getLanguages() as $language ) {
-		rebuildLanguage( $language, $wgWriteToFile, $wgListUnknownMessages );
+		rebuildLanguage( $language, $wgWriteToFile );
 	}
 } else {
-	rebuildLanguage( $wgCode, $wgWriteToFile, $wgListUnknownMessages );
+	rebuildLanguage( $wgCode, $wgWriteToFile );
 }
 
-
+?>

@@ -2,53 +2,12 @@
 /**
  * Write a messages array as a PHP text.
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 require_once( 'messages.inc' );
 require_once( 'messageTypes.inc' );
-
-/**
- * Write a messages array as a PHP text and write it to the messages file.
- *
- * @param $messages The messages array.
- * @param $code The language code.
- * @param $write Write to the messages file?
- * @param $listUnknown List the unknown messages?
- */
-function writeMessagesToFile( $messages, $code, $write, $listUnknown ) {
-	# Rewrite the messages array
-	$messages = writeMessagesArray( $messages, $code == 'en' );
-	$messagesText = $messages[0];
-	$sortedMessages = $messages[1];
-
-	# Write to the file
-	$filename = Language::getMessagesFileName( $code );
-	$contents = file_get_contents( $filename );
-	if ( strpos( $contents, '$messages' ) !== false ) {
-		$contents = explode( '$messages', $contents );
-		if ( $messagesText == '$messages' . $contents[1] ) {
-			echo "Generated messages for language $code. Same as the current file.\n";
-		} else {
-			if ( $write ) {
-				$new = $contents[0];
-				$new .= $messagesText;
-				file_put_contents( $filename, $new );
-				echo "Generated and wrote messages for language $code.\n";
-			} else {
-				echo "Generated messages for language $code. Please run the script again (without the parameter \"dry-run\") to write the array to the file.\n";
-			}
-		}
-		if ( $listUnknown && isset( $sortedMessages['unknown'] ) && !empty( $sortedMessages['unknown'] ) ) {
-			echo "\nThere are " . count( $sortedMessages['unknown'] ) . " unknown messages, please check them:\n";
-			foreach ( $sortedMessages['unknown'] as $key => $value ) {
-				echo "* " . $key . "\n";
-			}
-		}
-	} else {
-		echo "Generated messages for language $code. There seems to be no messages array in the file.\n";
-	}
-}
 
 /**
  * Write a messages array as a PHP text.
@@ -56,14 +15,14 @@ function writeMessagesToFile( $messages, $code, $write, $listUnknown ) {
  * @param $messages The messages array.
  * @param $ignoredComments Show comments about ignored and optional messages? (For English.)
  *
- * @return Array of the PHP text and the sorted messages array.
+ * @return The PHP text.
  */
 function writeMessagesArray( $messages, $ignoredComments = false ) {
-	global $wgMessageStructure, $wgBlockComments;
+	global $wgMessageStrucutre, $wgBlockComments, $wgMessageComments;
 
 	# Sort messages to blocks
 	$sortedMessages['unknown'] = $messages;
-	foreach ( $wgMessageStructure as $blockName => $block ) {
+	foreach ( $wgMessageStrucutre as $blockName => $block ) {
 		foreach ( $block as $key ) {
 			if ( array_key_exists( $key, $sortedMessages['unknown'] ) ) {
 				$sortedMessages[$blockName][$key] = $sortedMessages['unknown'][$key];
@@ -73,8 +32,7 @@ function writeMessagesArray( $messages, $ignoredComments = false ) {
 	}
 
 	# Write all the messages
-	$messagesText = "\$messages = array(
-";
+	$messagesText = "\$messages = array(\n";
 	foreach( $sortedMessages as $block => $messages ) {
 		# Skip if it's the block of unknown messages - handle that in the end of file
 		if ( $block == 'unknown' ) {
@@ -86,10 +44,9 @@ function writeMessagesArray( $messages, $ignoredComments = false ) {
 	}
 	ksort( $sortedMessages['unknown'] );
 	$messagesText .= writeMessagesBlock( 'unknown', 'Unknown messages', $sortedMessages['unknown'], $ignoredComments ); # Write the unknown messages, alphabetically sorted
-	$messagesText .= ");
-";
+	$messagesText .= ");\n";
 
-	return array( $messagesText, $sortedMessages );
+	return $messagesText;
 }
 
 /**
@@ -115,18 +72,19 @@ function writeMessagesBlock( $name, $comment, $messages, $ignoredComments ) {
 	# Format the block comment (if exists); check for multiple lines comments
 	if ( !empty( $comment ) ) {
 		if ( strpos( $comment, "\n" ) === false ) {
-			$blockText .= "# $comment
-";
+			$blockText .= "# $comment\n";
 		} else {
-			$blockText .= "/*
-$comment
-*/
-";
+			$blockText .= "/*\n$comment\n*/\n";
 		}
 	}
 
 	# Get max key length
-	$maxKeyLength = max( array_map( 'strlen', array_keys( $messages ) ) );
+	$maxKeyLength = 0;
+	foreach( array_keys( $messages ) as $key ) {
+		if ( strlen( $key ) > $maxKeyLength ) {
+			$maxKeyLength = strlen( $key );
+		}
+	}
 
 	# Format the messages
 	foreach( $messages as $key => $value ) {
@@ -134,7 +92,9 @@ $comment
 		$blockText .= "'$key'";
 
 		# Add the appropriate block whitespace
-		$blockText .= str_repeat( ' ', $maxKeyLength - strlen( $key ) );
+		for ( $i = 1; $i <= ( $maxKeyLength - strlen( $key ) ); $i++ ) {
+			$blockText .= ' ';
+		}
 
 		# Refer to the value
 		$blockText .= ' => ';
@@ -145,11 +105,7 @@ $comment
 		} elseif ( strpos( $value, '"' ) === false && !in_array( $key, $wgMessagseWithDollarSigns ) ) {
 			$blockText .= "\"$value\"";
 		} else {
-			# Pick the less numerous one to escape
-			$quote = substr_count( $value, '"' ) + substr_count( $value, '$' ) >= substr_count( $value, "'" ) ? "'" : '"';
-			if ('"' == $quote) { $extra = '$'; }
-			else { $extra = ''; }
-			$blockText .= $quote . addcslashes( $value, $quote.'\\'.$extra ) . $quote;
+			$blockText .= "'" . str_replace( "'", "\'", $value ) . "'";
 		}
 
 		# Comma
@@ -177,13 +133,11 @@ $comment
 		}
 
 		# Newline
-		$blockText .= "
-";
+		$blockText .= "\n";
 	}
 
 	# Newline to end the block
-	$blockText .= "
-";
+	$blockText .= "\n";
 
 	return $blockText;
 }

@@ -1,7 +1,8 @@
 <?php
 /** Latvian (Latviešu)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  * @author Niklas Laxström
  *
@@ -53,4 +54,4 @@ class LanguageLv extends Language {
 
 }
 
-
+?>

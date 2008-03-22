@@ -1,8 +1,9 @@
 <?php
 /** Quechua (Runa Simi)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $fallback = 'es';
-
+?>

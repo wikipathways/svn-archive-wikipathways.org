@@ -1,7 +1,8 @@
 <?php
 /**
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 $wgRequestTime = microtime(true);
@@ -34,7 +35,6 @@ if ( !isset( $optionsWithArgs ) ) {
 	$optionsWithArgs = array();
 }
 $optionsWithArgs[] = 'conf'; # For specifying the location of LocalSettings.php
-$optionsWithArgs[] = 'aconf'; # As above for AdminSettings.php
 
 $self = array_shift( $argv );
 $IP = realpath( dirname( __FILE__ ) . '/..' );
@@ -172,7 +172,7 @@ if ( file_exists( '/home/wikipedia/common/langlist' ) ) {
 
 	if ( ! is_readable( $settingsFile ) ) {
 		print "A copy of your installation's LocalSettings.php\n" .
-		  "must exist and be readable in the source directory.\n";
+		  "must exist in the source directory.\n";
 		exit( 1 );
 	}
 	$wgCommandLineMode = true;
@@ -180,14 +180,11 @@ if ( file_exists( '/home/wikipedia/common/langlist' ) ) {
 	#require_once( $IP.'/includes/ProfilerStub.php' );
 	require_once( $IP.'/includes/Defines.php' );
 	require_once( $settingsFile );
-	/* ini_set( 'include_path', ".$sep$IP$sep$IP/includes$sep$IP/languages$sep$IP/maintenance" ); */
+	ini_set( 'include_path', ".$sep$IP$sep$IP/includes$sep$IP/languages$sep$IP/maintenance" );
 
-	$adminSettings = isset( $options['aconf'] )
-		? $options['aconf']
-		: "{$IP}/AdminSettings.php";
-	if( is_readable( $adminSettings ) )
-		require_once( $adminSettings );
-
+	if ( is_readable( $IP.'/AdminSettings.php' ) ) {
+		require_once( $IP.'/AdminSettings.php' );
+	}
 }
 
 # Turn off output buffering again, it might have been turned on in the settings files
@@ -218,8 +215,8 @@ ini_set( 'memory_limit', -1 );
 
 $wgShowSQLErrors = true;
 
-require_once( "$IP/includes/Setup.php" );
-require_once( "$IP/install-utils.inc" );
+require_once( 'Setup.php' );
+require_once( 'install-utils.inc' );
 $wgTitle = null; # Much much faster startup than creating a title object
 set_time_limit(0);
 

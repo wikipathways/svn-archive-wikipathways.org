@@ -25,7 +25,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  *
  * @author Brion Vibber <brion at pobox.com>
- * @addtogroup maintenance
+ * @package MediaWiki
+ * @subpackage maintenance
  */
 
 require_once( 'commandLine.inc' );
@@ -37,6 +38,8 @@ class TitleCleanup extends TableCleanup {
 	}
 
 	function processPage( $row ) {
+		global $wgContLang;
+
 		$current = Title::makeTitle( $row->page_namespace, $row->page_title );
 		$display = $current->getPrefixedText();
 
@@ -84,7 +87,7 @@ class TitleCleanup extends TableCleanup {
 			$this->log( "DRY RUN: would rename $row->page_id ($row->page_namespace,'$row->page_title') to ($row->page_namespace,'$dest')" );
 		} else {
 			$this->log( "renaming $row->page_id ($row->page_namespace,'$row->page_title') to ($row->page_namespace,'$dest')" );
-			$dbw = wfGetDB( DB_MASTER );
+			$dbw =& wfGetDB( DB_MASTER );
 			$dbw->update( 'page',
 				array( 'page_title' => $dest ),
 				array( 'page_id' => $row->page_id ),
@@ -117,7 +120,7 @@ class TitleCleanup extends TableCleanup {
 			$this->log( "DRY RUN: would rename $row->page_id ($row->page_namespace,'$row->page_title') to ($row->page_namespace,'$dest')" );
 		} else {
 			$this->log( "renaming $row->page_id ($row->page_namespace,'$row->page_title') to ($ns,'$dest')" );
-			$dbw = wfGetDB( DB_MASTER );
+			$dbw =& wfGetDB( DB_MASTER );
 			$dbw->update( 'page',
 				array(
 					'page_namespace' => $ns,
@@ -135,4 +138,4 @@ $wgUser->setName( 'Conversion script' );
 $caps = new TitleCleanup( !isset( $options['fix'] ) );
 $caps->cleanup();
 
-
+?>

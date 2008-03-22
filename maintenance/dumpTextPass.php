@@ -18,13 +18,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 $originalDir = getcwd();
 
 require_once( 'commandLine.inc' );
-require_once( 'backup.inc' );
+require_once( 'SpecialExport.php' );
+require_once( 'maintenance/backup.inc' );
 
 /**
  * Stream wrapper around 7za filter program.
@@ -115,7 +117,7 @@ class TextPassDumper extends BackupDumper {
 
 		$this->initProgress( $this->history );
 
-		$this->db = $this->backupDb();
+		$this->db =& $this->backupDb();
 
 		$this->egress = new ExportProgressFilter( $this->sink, $this );
 
@@ -239,23 +241,17 @@ class TextPassDumper extends BackupDumper {
 		}
 		while( true ) {
 			try {
-				$text = $this->doGetText( $id );
-				$ex = new MWException("Graceful storage failure");
+				return $this->doGetText( $id );
 			} catch (DBQueryError $ex) {
-				$text = false;
-			}
-			if( $text === false ) {
 				$this->failures++;
 				if( $this->failures > $this->maxFailures ) {
 					throw $ex;
 				} else {
 					$this->progress( "Database failure $this->failures " .
-						"of allowed $this->maxFailures for revision $id! " .
+						"of allowed $this->maxFailures! " .
 						"Pausing $this->failureTimeout seconds..." );
 					sleep( $this->failureTimeout );
 				}
-			} else {
-				return $text;
 			}
 		}
 	}
@@ -270,9 +266,6 @@ class TextPassDumper extends BackupDumper {
 			array( 'old_id' => $id ),
 			'TextPassDumper::getText' );
 		$text = Revision::getRevisionText( $row );
-		if( $text === false ) {
-			return false;
-		}
 		$stripped = str_replace( "\r", "", $text );
 		$normalized = UtfNormal::cleanUp( $stripped );
 		return $normalized;
@@ -375,4 +368,4 @@ END
 );
 }
 
-
+?>

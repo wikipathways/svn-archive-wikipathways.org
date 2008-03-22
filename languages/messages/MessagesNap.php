@@ -1,9 +1,10 @@
 <?php
 /** Neapolitan (Nnapulitano)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $fallback = 'it';
 
-
+?>

@@ -7,7 +7,8 @@
  * - hooks names in hooks.txt are at the beginning of a line and single quoted.
  * - hooks names in code are the first parameter of wfRunHooks.
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  *
  * @author Ashar Voultoiz <hashar@altern.org>
  * @copyright Copyright © Ashar voultoiz
@@ -32,7 +33,6 @@ $pathinc = $IP . '/includes/';
 function getHooksFromDoc() {
 	global $doc;
 	$content = file_get_contents( $doc );
-	$m = array();
 	preg_match_all( "/\n'(.*?)'/", $content, $m);
 	return $m[1];
 }
@@ -44,7 +44,6 @@ function getHooksFromDoc() {
  */
 function getHooksFromFile( $file ) {
 	$content = file_get_contents( $file );
-	$m = array();
 	preg_match_all( "/wfRunHooks\(\s*\'(.*?)\'/", $content, $m);
 	return $m[1];
 }
@@ -91,4 +90,4 @@ $deprecated = array_diff($documented, $potential);
 printArray('undocumented', $todo );
 printArray('not found', $deprecated );
 
-
+?>

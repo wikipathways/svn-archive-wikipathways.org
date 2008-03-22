@@ -1,7 +1,8 @@
 <?php
 /** Czech (česky)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 #--------------------------------------------------------------------------
@@ -83,4 +84,4 @@ class LanguageCs extends Language {
   }
 }
 
-
+?>

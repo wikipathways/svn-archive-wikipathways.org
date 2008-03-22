@@ -1,7 +1,8 @@
 <?php
 /** Brazilian Portugese (Portuguêsi do Brasil)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  */
 
@@ -13,4 +14,4 @@ class LanguagePt_br extends Language {
 		return $count <= '1' ? $w1 : $w2;
         }
 }
-
+?>

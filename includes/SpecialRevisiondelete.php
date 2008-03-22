@@ -35,10 +35,6 @@ function wfSpecialRevisiondelete( $par = null ) {
 	}
 }
 
-/**
- * Implements the GUI for Revision Deletion.
- * @addtogroup SpecialPage
- */
 class RevisionDeleteForm {
 	/**
 	 * @param Title $page
@@ -174,10 +170,7 @@ class RevisionDeleteForm {
 	}
 }
 
-/**
- * Implements the actions for Revision Deletion.
- * @addtogroup SpecialPage
- */
+
 class RevisionDeleter {
 	function __construct( $db ) {
 		$this->db = $db;
@@ -272,4 +265,4 @@ class RevisionDeleter {
 	}
 }
 
-
+?>

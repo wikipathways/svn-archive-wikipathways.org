@@ -1,8 +1,9 @@
 <?php
 /** Samogitian (Žemaitėška)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $fallback = 'lt';
-
+?>

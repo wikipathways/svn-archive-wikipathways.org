@@ -1,6 +1,7 @@
 <?php
 /**
  *
+ * @package MediaWiki
  *
  * Example class for HTTP accessable external objects
  *
@@ -19,4 +20,4 @@ class ExternalStoreHttp {
 	 * whatever, for initial ext storage
 	 */
 }
-
+?>

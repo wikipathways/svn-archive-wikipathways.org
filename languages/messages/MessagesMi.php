@@ -1,7 +1,8 @@
 <?php
 /** Maori (Māori)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 $messages = array(
@@ -92,7 +93,6 @@ $messages = array(
 
 # Watchlist
 'watchlist' => 'Rārangi mātaki',
-'mywatchlist' => 'Rārangi mātaki',
 'watch'     => 'Mātaki',
 'unwatch'   => 'kāti te mātaki',
 
@@ -108,4 +108,4 @@ $messages = array(
 
 );
 
-
+?>

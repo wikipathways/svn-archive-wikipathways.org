@@ -2,7 +2,6 @@
 
 /**
  * Basic pager interface.
- * @addtogroup Pager
  */
 interface Pager {
 	function getNavigationBar();
@@ -12,44 +11,41 @@ interface Pager {
 /**
  * IndexPager is an efficient pager which uses a (roughly unique) index in the 
  * data set to implement paging, rather than a "LIMIT offset,limit" clause. 
- * In MySQL, such a limit/offset clause requires counting through the
- * specified number of offset rows to find the desired data, which can be
- * expensive for large offsets.
+ * In MySQL, such a limit/offset clause requires counting through the specified number
+ * of offset rows to find the desired data, which can be expensive for large offsets.
  * 
- * ReverseChronologicalPager is a child class of the abstract IndexPager, and
- * contains  some formatting and display code which is specific to the use of
- * timestamps as  indexes. Here is a synopsis of its operation:
+ * ReverseChronologicalPager is a child class of the abstract IndexPager, and contains 
+ * some formatting and display code which is specific to the use of timestamps as 
+ * indexes. Here is a synopsis of its operation:
  * 
- *    * The query is specified by the offset, limit and direction (dir)
- *      parameters, in addition to any subclass-specific parameters. 
- *    * The offset is the non-inclusive start of the DB query. A row with an
- *      index value equal to the offset will never be shown.
- *    * The query may either be done backwards, where the rows are returned by
- *      the database in the opposite order to which they are displayed to the
- *      user, or forwards. This is specified by the "dir" parameter, dir=prev
- *      means backwards, anything else means forwards. The offset value
- *      specifies the start of the database result set, which may be either
- *      the start or end of the displayed data set. This allows "previous" 
- *      links to be implemented without knowledge of the index value at the
- *      start of the previous page. 
- *    * An additional row beyond the user-specified limit is always requested.
- *      This allows us to tell whether we should display a "next" link in the
- *      case of forwards mode, or a "previous" link in the case of backwards
- *      mode. Determining whether to display the other link (the one for the
- *      page before the start of the database result set) can be done
- *      heuristically by examining the offset. 
+ *    * The query is specified by the offset, limit and direction (dir) parameters, in 
+ *      addition to any subclass-specific parameters. 
  *
- *    * An empty offset indicates that the offset condition should be omitted
- *      from the query. This naturally produces either the first page or the
- *      last page depending on the dir parameter. 
+ *    * The offset is the non-inclusive start of the DB query. A row with an index value 
+ *      equal to the offset will never be shown.
  *
- *  Subclassing the pager to implement concrete functionality should be fairly
- *  simple, please see the examples in PageHistory.php and 
- *  SpecialIpblocklist.php. You just need to override formatRow(),
- *  getQueryInfo() and getIndexField(). Don't forget to call the parent
- *  constructor if you override it.
+ *    * The query may either be done backwards, where the rows are returned by the database
+ *      in the opposite order to which they are displayed to the user, or forwards. This is
+ *      specified by the "dir" parameter, dir=prev means backwards, anything else means 
+ *      forwards. The offset value specifies the start of the database result set, which 
+ *      may be either the start or end of the displayed data set. This allows "previous" 
+ *      links to be implemented without knowledge of the index value at the start of the 
+ *      previous page. 
  *
- * @addtogroup Pager
+ *    * An additional row beyond the user-specified limit is always requested. This allows
+ *      us to tell whether we should display a "next" link in the case of forwards mode,
+ *      or a "previous" link in the case of backwards mode. Determining whether to 
+ *      display the other link (the one for the page before the start of the database
+ *      result set) can be done heuristically by examining the offset. 
+ *
+ *    * An empty offset indicates that the offset condition should be omitted from the query.
+ *      This naturally produces either the first page or the last page depending on the 
+ *      dir parameter. 
+ *
+ *  Subclassing the pager to implement concrete functionality should be fairly simple, 
+ *  please see the examples in PageHistory.php and SpecialIpblocklist.php. You just need 
+ *  to override formatRow(), getQueryInfo() and getIndexField(). Don't forget to call the 
+ *  parent constructor if you override it.
  */
 abstract class IndexPager implements Pager {
 	public $mRequest;
@@ -73,18 +69,17 @@ abstract class IndexPager implements Pager {
 	public $mResult;
 
 	function __construct() {
-		global $wgRequest, $wgUser;
+		global $wgRequest;
 		$this->mRequest = $wgRequest;
-		
-		# NB: the offset is quoted, not validated. It is treated as an
-		# arbitrary string to support the widest variety of index types. Be
-		# careful outputting it into HTML!
+
+		# NB: the offset is quoted, not validated. It is treated as an arbitrary string
+		# to support the widest variety of index types. Be careful outputting it into 
+		# HTML!
 		$this->mOffset = $this->mRequest->getText( 'offset' );
-		
-		# Use consistent behavior for the limit options
-		$this->mDefaultLimit = intval( $wgUser->getOption( 'rclimit' ) );
-		list( $this->mLimit, /* $offset */ ) = $this->mRequest->getLimitOffset();
-		
+		$this->mLimit = $this->mRequest->getInt( 'limit', $this->mDefaultLimit );
+		if ( $this->mLimit <= 0 || $this->mLimit > 50000 ) {
+			$this->mLimit = $this->mDefaultLimit;
+		}
 		$this->mIsBackwards = ( $this->mRequest->getVal( 'dir' ) == 'prev' );
 		$this->mIndexField = $this->getIndexField();
 		$this->mDb = wfGetDB( DB_SLAVE );
@@ -107,9 +102,6 @@ abstract class IndexPager implements Pager {
 		$this->mResult = $this->reallyDoQuery( $this->mOffset, $queryLimit, $descending );
 		$this->extractResultInfo( $this->mOffset, $queryLimit, $this->mResult );
 		$this->mQueryDone = true;
-		
-		$this->preprocessResults( $this->mResult );
-		$this->mResult->rewind(); // Paranoia
 
 		wfProfileOut( $fname );
 	}
@@ -135,10 +127,9 @@ abstract class IndexPager implements Pager {
 				$lastIndex = $row[$this->mIndexField];
 			} else {
 				$this->mPastTheEndRow = null;
-				# Setting indexes to an empty string means that they will be
-				# omitted if they would otherwise appear in URLs. It just so
-				# happens that this  is the right thing to do in the standard
-				# UI, in all the relevant cases.
+				# Setting indexes to an empty string means that they will be omitted
+				# if they would otherwise appear in URLs. It just so happens that this 
+				# is the right thing to do in the standard UI, in all the relevant cases.
 				$this->mPastTheEndIndex = '';
 				$res->seek( $numRows - 1 );
 				$row = $res->fetchRow();
@@ -165,22 +156,21 @@ abstract class IndexPager implements Pager {
 	}
 
 	/**
-	 * Do a query with specified parameters, rather than using the object
-	 * context
+	 * Do a query with specified parameters, rather than using the object context
 	 *
 	 * @param string $offset Index offset, inclusive
 	 * @param integer $limit Exact query limit
 	 * @param boolean $descending Query direction, false for ascending, true for descending
 	 * @return ResultWrapper
 	 */
-	function reallyDoQuery( $offset, $limit, $descending ) {
+	function reallyDoQuery( $offset, $limit, $ascending ) {
 		$fname = __METHOD__ . ' (' . get_class( $this ) . ')';
 		$info = $this->getQueryInfo();
 		$tables = $info['tables'];
 		$fields = $info['fields'];
 		$conds = isset( $info['conds'] ) ? $info['conds'] : array();
 		$options = isset( $info['options'] ) ? $info['options'] : array();
-		if ( $descending ) {
+		if ( $ascending ) {
 			$options['ORDER BY'] = $this->mIndexField;
 			$operator = '>';
 		} else {
@@ -194,13 +184,6 @@ abstract class IndexPager implements Pager {
 		$res = $this->mDb->select( $tables, $fields, $conds, $fname, $options );
 		return new ResultWrapper( $this->mDb, $res );
 	}
-
-	/**
-	 * Pre-process results; useful for performing batch existence checks, etc.
-	 *
-	 * @param ResultWrapper $result Result wrapper
-	 */
-	protected function preprocessResults( $result ) {}
 
 	/**
 	 * Get the formatted result list. Calls getStartBody(), formatRow() and 
@@ -344,10 +327,9 @@ abstract class IndexPager implements Pager {
 	}
 
 	/**
-	 * Get paging links. If a link is disabled, the item from $disabledTexts
-	 * will be used. If there is no such item, the unlinked text from
-	 * $linkTexts will be used. Both $linkTexts and $disabledTexts are arrays
-	 * of HTML.
+	 * Get paging links. If a link is disabled, the item from $disabledTexts will 
+	 * be used. If there is no such item, the unlinked text from $linkTexts will 
+	 * be used. Both $linkTexts and $disabledTexts are arrays of HTML.
 	 */
 	function getPagingLinks( $linkTexts, $disabledTexts = array() ) {
 		$queries = $this->getPagingQueries();
@@ -404,45 +386,8 @@ abstract class IndexPager implements Pager {
 	abstract function getIndexField();
 }
 
-
-/**
- * IndexPager with an alphabetic list and a formatted navigation bar
- * @addtogroup Pager
- */
-abstract class AlphabeticPager extends IndexPager {
-	public $mDefaultDirection = false;
-	
-	function __construct() {
-		parent::__construct();
-	}
-	
-	/** 
-	 * Shamelessly stolen bits from ReverseChronologicalPager, d
-	 * didn't want to do class magic as may be still revamped 
-	 */
-	function getNavigationBar() {
-		global $wgLang;
-		
-		$linkTexts = array(
-			'prev' => wfMsgHtml( "prevn", $this->mLimit ),
-			'next' => wfMsgHtml( 'nextn', $this->mLimit ),
-			'first' => wfMsgHtml('page_first'), /* Introduced the message */
-			'last' => wfMsgHtml( 'page_last' )  /* Introduced the message */
-		);
-		
-		$pagingLinks = $this->getPagingLinks( $linkTexts );
-		$limitLinks = $this->getLimitLinks();
-		$limits = implode( ' | ', $limitLinks );
-		
-		$this->mNavigationBar = "({$pagingLinks['first']} | {$pagingLinks['last']}) " . wfMsgHtml("viewprevnext", $pagingLinks['prev'], $pagingLinks['next'], $limits);
-		return $this->mNavigationBar;
-		
-	}
-}
-
 /**
  * IndexPager with a formatted navigation bar
- * @addtogroup Pager
  */
 abstract class ReverseChronologicalPager extends IndexPager {
 	public $mDefaultDirection = true;
@@ -468,15 +413,13 @@ abstract class ReverseChronologicalPager extends IndexPager {
 		$limitLinks = $this->getLimitLinks();
 		$limits = implode( ' | ', $limitLinks );
 		
-		$this->mNavigationBar = "({$pagingLinks['first']} | {$pagingLinks['last']}) " . 
-			wfMsgHtml("viewprevnext", $pagingLinks['prev'], $pagingLinks['next'], $limits);
+		$this->mNavigationBar = "({$pagingLinks['first']} | {$pagingLinks['last']}) " . wfMsgHtml("viewprevnext", $pagingLinks['prev'], $pagingLinks['next'], $limits);
 		return $this->mNavigationBar;
 	}
 }
 
 /**
  * Table-based display with a user-selectable sort order
- * @addtogroup Pager
  */
 abstract class TablePager extends IndexPager {
 	var $mSort;
@@ -681,22 +624,20 @@ abstract class TablePager extends IndexPager {
 	}
 
 	/**
-	 * Return true if the named field should be sortable by the UI, false
-	 * otherwise
-	 *
+	 * Return true if the named field should be sortable by the UI, false otherwise
 	 * @param string $field
 	 */
 	abstract function isFieldSortable( $field );
 
 	/**
-	 * Format a table cell. The return value should be HTML, but use an empty
-	 * string not &nbsp; for empty cells. Do not include the <td> and </td>. 
-	 *
-	 * The current result row is available as $this->mCurrentRow, in case you
-	 * need more context.
+	 * Format a table cell. The return value should be HTML, but use an empty string
+	 * not &nbsp; for empty cells. Do not include the <td> and </td>. 
 	 *
 	 * @param string $name The database field name
 	 * @param string $value The value retrieved from the database
+	 *
+	 * The current result row is available as $this->mCurrentRow, in case you need 
+	 * more context.
 	 */
 	abstract function formatValue( $name, $value );
 
@@ -706,10 +647,10 @@ abstract class TablePager extends IndexPager {
 	abstract function getDefaultSort();
 
 	/**
-	 * An array mapping database field names to a textual description of the
-	 * field name, for use in the table header. The description should be plain
-	 * text, it will be HTML-escaped later.
+	 * An array mapping database field names to a textual description of the field 
+	 * name, for use in the table header. The description should be plain text, it 
+	 * will be HTML-escaped later.
 	 */
 	abstract function getFieldNames();
 }
-
+?>

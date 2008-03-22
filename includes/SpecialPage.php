@@ -17,7 +17,8 @@
  * SpecialPage::$mList. To remove a core static special page at runtime, use
  * a SpecialPage_initList hook.
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -26,8 +27,8 @@
 
 /**
  * Parent special page class, also static functions for handling the special
- * page list.
- * @addtogroup SpecialPage
+ * page list
+ * @package MediaWiki
  */
 class SpecialPage
 {
@@ -73,75 +74,74 @@ class SpecialPage
 	 */
 	var $mAllowedRedirectParams = array();
 
-        //AP20070718
-        //Add ", 'block'" to arrays for pages to restrict from general users (users w/o block permissions)
+	
+	//AP20070718
+	//Add ", 'block'" to arrays for pages to restrict from general users (users w/o block permissions)
 
 	static public $mList = array(
-                'DoubleRedirects'           => array( 'SpecialPage', 'DoubleRedirects', 'block' ),
-                'BrokenRedirects'           => array( 'SpecialPage', 'BrokenRedirects', 'block' ),
-                'Disambiguations'           => array( 'SpecialPage', 'Disambiguations', 'block' ),
+		'DoubleRedirects'           => array( 'SpecialPage', 'DoubleRedirects', 'block' ),
+		'BrokenRedirects'           => array( 'SpecialPage', 'BrokenRedirects', 'block' ),
+		'Disambiguations'           => array( 'SpecialPage', 'Disambiguations', 'block' ),
 
-                'Userlogin'                 => array( 'SpecialPage', 'Userlogin' ),
-                'Userlogout'                => array( 'UnlistedSpecialPage', 'Userlogout' ),
-                'Preferences'               => array( 'SpecialPage', 'Preferences' ),
-                'Watchlist'                 => array( 'SpecialPage', 'Watchlist' ),
+		'Userlogin'                 => array( 'SpecialPage', 'Userlogin' ),
+		'Userlogout'                => array( 'UnlistedSpecialPage', 'Userlogout' ),
+		'Preferences'               => array( 'SpecialPage', 'Preferences' ),
+		'Watchlist'                 => array( 'SpecialPage', 'Watchlist' ),
 
-                'Recentchanges'             => array( 'IncludableSpecialPage', 'Recentchanges', 'block' ),
-                'Upload'                    => array( 'SpecialPage', 'Upload', 'block' ),
-                'Imagelist'                 => array( 'SpecialPage', 'Imagelist', 'block' ),
-                'Newimages'                 => array( 'IncludableSpecialPage', 'Newimages' ),
-                'Listusers'                 => array( 'SpecialPage', 'Listusers', 'block' ),
-                'Statistics'                => array( 'SpecialPage', 'Statistics', 'block' ),
-                'Randompage'                => array( 'SpecialPage', 'Randompage', 'block' ),
-                'Lonelypages'               => array( 'SpecialPage', 'Lonelypages', 'block' ),
-                'Uncategorizedpages'        => array( 'SpecialPage', 'Uncategorizedpages', 'block' ),
-                'Uncategorizedcategories'   => array( 'SpecialPage', 'Uncategorizedcategories', 'block' ),
-                'Uncategorizedimages'       => array( 'SpecialPage', 'Uncategorizedimages', 'block' ),
-                'Unusedcategories'          => array( 'SpecialPage', 'Unusedcategories', 'block' ),
-                'Unusedimages'              => array( 'SpecialPage', 'Unusedimages', 'block' ),
-                'Wantedpages'               => array( 'IncludableSpecialPage', 'Wantedpages', 'block' ),
-                'Wantedcategories'          => array( 'SpecialPage', 'Wantedcategories', 'block' ),
-                'Mostlinked'                => array( 'SpecialPage', 'Mostlinked', 'block' ),
-                'Mostlinkedcategories'      => array( 'SpecialPage', 'Mostlinkedcategories', 'block' ),
-                'Mostcategories'            => array( 'SpecialPage', 'Mostcategories', 'block' ),
-                'Mostimages'                => array( 'SpecialPage', 'Mostimages', 'block' ),
-                'Mostrevisions'             => array( 'SpecialPage', 'Mostrevisions', 'block' ),
-                'Shortpages'                => array( 'SpecialPage', 'Shortpages', 'block' ),
-                'Longpages'                 => array( 'SpecialPage', 'Longpages', 'block' ),
-                'Newpages'                  => array( 'IncludableSpecialPage', 'Newpages', 'block' ),
-                'Ancientpages'              => array( 'SpecialPage', 'Ancientpages', 'block' ),
-                'Deadendpages'              => array( 'SpecialPage', 'Deadendpages', 'block' ),
-		'Protectedpages'            => array( 'SpecialPage', 'Protectedpages', 'block' ),
-                'Allpages'                  => array( 'IncludableSpecialPage', 'Allpages', 'block' ),
-                'Prefixindex'               => array( 'IncludableSpecialPage', 'Prefixindex', 'block' ) ,
-                'Ipblocklist'               => array( 'SpecialPage', 'Ipblocklist', 'block' ),
-                'Specialpages'              => array( 'UnlistedSpecialPage', 'Specialpages' ),
-                'Contributions'             => array( 'UnlistedSpecialPage', 'Contributions' ),
-                'Emailuser'                 => array( 'UnlistedSpecialPage', 'Emailuser' ),
-                'Whatlinkshere'             => array( 'UnlistedSpecialPage', 'Whatlinkshere' ),
-                'Recentchangeslinked'       => array( 'UnlistedSpecialPage', 'Recentchangeslinked' ),
-                'Movepage'                  => array( 'UnlistedSpecialPage', 'Movepage' ),
-                'Blockme'                   => array( 'UnlistedSpecialPage', 'Blockme' ),
-                'Resetpass'                 => array( 'UnlistedSpecialPage', 'Resetpass' ),
-                'Booksources'               => array( 'SpecialPage', 'Booksources', 'block'),
-                'Categories'                => array( 'SpecialPage', 'Categories', 'block' ),
-                'Export'                    => array( 'SpecialPage', 'Export', 'block' ),
-                'Version'                   => array( 'SpecialPage', 'Version', 'block' ),
-                'Allmessages'               => array( 'SpecialPage', 'Allmessages', 'block' ),
-                'Log'                       => array( 'SpecialPage', 'Log', 'block' ),
+		'Recentchanges'             => array( 'IncludableSpecialPage', 'Recentchanges', 'block' ),
+		'Upload'                    => array( 'SpecialPage', 'Upload', 'block' ),
+		'Imagelist'                 => array( 'SpecialPage', 'Imagelist', 'block' ),
+		'Newimages'                 => array( 'IncludableSpecialPage', 'Newimages' ),
+		'Listusers'                 => array( 'SpecialPage', 'Listusers', 'block' ),
+		'Statistics'                => array( 'SpecialPage', 'Statistics', 'block' ),
+		'Randompage'                => array( 'SpecialPage', 'Randompage', 'block' ),
+		'Lonelypages'               => array( 'SpecialPage', 'Lonelypages', 'block' ),
+		'Uncategorizedpages'        => array( 'SpecialPage', 'Uncategorizedpages', 'block' ),
+		'Uncategorizedcategories'   => array( 'SpecialPage', 'Uncategorizedcategories', 'block' ),
+		'Uncategorizedimages'       => array( 'SpecialPage', 'Uncategorizedimages', 'block' ),
+		'Unusedcategories'          => array( 'SpecialPage', 'Unusedcategories', 'block' ),
+		'Unusedimages'              => array( 'SpecialPage', 'Unusedimages', 'block' ),
+		'Wantedpages'               => array( 'IncludableSpecialPage', 'Wantedpages', 'block' ),
+		'Wantedcategories'          => array( 'SpecialPage', 'Wantedcategories', 'block' ),
+		'Mostlinked'                => array( 'SpecialPage', 'Mostlinked', 'block' ),
+		'Mostlinkedcategories'      => array( 'SpecialPage', 'Mostlinkedcategories', 'block' ),
+		'Mostcategories'            => array( 'SpecialPage', 'Mostcategories', 'block' ),
+		'Mostimages'                => array( 'SpecialPage', 'Mostimages', 'block' ),
+		'Mostrevisions'             => array( 'SpecialPage', 'Mostrevisions', 'block' ),
+		'Shortpages'                => array( 'SpecialPage', 'Shortpages', 'block' ),
+		'Longpages'                 => array( 'SpecialPage', 'Longpages', 'block' ),
+		'Newpages'                  => array( 'IncludableSpecialPage', 'Newpages', 'block' ),
+		'Ancientpages'              => array( 'SpecialPage', 'Ancientpages', 'block' ),
+		'Deadendpages'              => array( 'SpecialPage', 'Deadendpages', 'block' ),
+		'Allpages'                  => array( 'IncludableSpecialPage', 'Allpages', 'block' ),
+		'Prefixindex'               => array( 'IncludableSpecialPage', 'Prefixindex', 'block' ) ,
+		'Ipblocklist'               => array( 'SpecialPage', 'Ipblocklist', 'block' ),
+		'Specialpages'              => array( 'UnlistedSpecialPage', 'Specialpages' ),
+		'Contributions'             => array( 'UnlistedSpecialPage', 'Contributions' ),
+		'Emailuser'                 => array( 'UnlistedSpecialPage', 'Emailuser' ),
+		'Whatlinkshere'             => array( 'UnlistedSpecialPage', 'Whatlinkshere' ),
+		'Recentchangeslinked'       => array( 'UnlistedSpecialPage', 'Recentchangeslinked' ),
+		'Movepage'                  => array( 'UnlistedSpecialPage', 'Movepage' ),
+		'Blockme'                   => array( 'UnlistedSpecialPage', 'Blockme' ),
+		'Resetpass'                 => array( 'UnlistedSpecialPage', 'Resetpass' ),
+		'Booksources'               => array( 'SpecialPage', 'Booksources', 'block'),
+		'Categories'                => array( 'SpecialPage', 'Categories', 'block' ),
+		'Export'                    => array( 'SpecialPage', 'Export', 'block' ),
+		'Version'                   => array( 'SpecialPage', 'Version', 'block' ),
+		'Allmessages'               => array( 'SpecialPage', 'Allmessages', 'block' ),
+		'Log'                       => array( 'SpecialPage', 'Log', 'block' ),
 		'Blockip'                   => array( 'SpecialPage', 'Blockip', 'block' ),
-                'Undelete'                  => array( 'SpecialPage', 'Undelete', 'deletedhistory' ),
-                'Import'                    => array( 'SpecialPage', "Import", 'import' ),
-                'Lockdb'                    => array( 'SpecialPage', 'Lockdb', 'siteadmin' ),
-                'Unlockdb'                  => array( 'SpecialPage', 'Unlockdb', 'siteadmin' ),
-                'Userrights'                => array( 'SpecialPage', 'Userrights', 'userrights' ),
-                'MIMEsearch'                => array( 'SpecialPage', 'MIMEsearch', 'block' ),
-                'Unwatchedpages'            => array( 'SpecialPage', 'Unwatchedpages', 'unwatchedpages' ),
-                'Listredirects'             => array( 'SpecialPage', 'Listredirects', 'block' ),
-                'Revisiondelete'            => array( 'SpecialPage', 'Revisiondelete', 'deleterevision' ),
-                'Unusedtemplates'           => array( 'SpecialPage', 'Unusedtemplates', 'block' ),
-                'Randomredirect'            => array( 'SpecialPage', 'Randomredirect', 'block' ),
-		'Withoutinterwiki'	    => array( 'SpecialPage', 'Withoutinterwiki', 'block' ),
+		'Undelete'                  => array( 'SpecialPage', 'Undelete', 'deletedhistory' ),
+		'Import'                    => array( 'SpecialPage', "Import", 'import' ),
+		'Lockdb'                    => array( 'SpecialPage', 'Lockdb', 'siteadmin' ),
+		'Unlockdb'                  => array( 'SpecialPage', 'Unlockdb', 'siteadmin' ),
+		'Userrights'                => array( 'SpecialPage', 'Userrights', 'userrights' ),
+		'MIMEsearch'                => array( 'SpecialPage', 'MIMEsearch', 'block' ),
+		'Unwatchedpages'            => array( 'SpecialPage', 'Unwatchedpages', 'unwatchedpages' ),
+		'Listredirects'             => array( 'SpecialPage', 'Listredirects', 'block' ),
+		'Revisiondelete'            => array( 'SpecialPage', 'Revisiondelete', 'deleterevision' ),
+		'Unusedtemplates'           => array( 'SpecialPage', 'Unusedtemplates', 'block' ),
+		'Randomredirect'            => array( 'SpecialPage', 'Randomredirect', 'block' ),
 
 		'Mypage'                    => array( 'SpecialMypage' ),
 		'Mytalk'                    => array( 'SpecialMytalk' ),
@@ -171,7 +171,7 @@ class SpecialPage
 		self::$mListInitialised = true;
 
 		if( !$wgDisableCounters ) {
-			self::$mList['Popularpages'] = array( 'SpecialPage', 'Popularpages' );
+			self::$mList['Popularpages'] = array( 'SpecialPage', 'Popularpages', 'block' );
 		}
 
 		if( !$wgDisableInternalSearch ) {
@@ -179,7 +179,7 @@ class SpecialPage
 		}
 
 		if( $wgEmailAuthentication ) {
-			self::$mList['Confirmemail'] = 'EmailConfirmation';
+			self::$mList['Confirmemail'] = array( 'UnlistedSpecialPage', 'Confirmemail' );
 		}
 
 		# Add extension special pages
@@ -274,30 +274,6 @@ class SpecialPage
 			self::initList();
 		}
 		unset( self::$mList[$name] );
-	}
-
-	/**
-	 * Check if a given name exist as a special page or as a special page alias
-	 * @param $name string: name of a special page
-	 * @return boolean: true if a special page exists with this name
-	 */
-	static function exists( $name ) {
-		global $wgContLang;
-		if ( !self::$mListInitialised ) {
-			self::initList();
-		}
-		if( !self::$mAliases ) {
-			self::initAliasList();
-		}
-
-		# Remove special pages inline parameters:
-		$bits = explode( '/', $name );
-		$name = $wgContLang->caseFold($bits[0]);
-
-		return
-			array_key_exists( $name, self::$mList )
-			or array_key_exists( $name, self::$mAliases )
-		;
 	}
 
 	/**
@@ -563,7 +539,7 @@ class SpecialPage
 			$this->mFunction = $function;
 		}
 		if ( $file === 'default' ) {
-			$this->mFile = dirname(__FILE__) . "/Special{$name}.php";
+			$this->mFile = "Special{$name}.php";
 		} else {
 			$this->mFile = $file;
 		}
@@ -719,7 +695,7 @@ class SpecialPage
 
 /**
  * Shortcut to construct a special page which is unlisted by default
- * @addtogroup SpecialPage
+ * @package MediaWiki
  */
 class UnlistedSpecialPage extends SpecialPage
 {
@@ -730,7 +706,7 @@ class UnlistedSpecialPage extends SpecialPage
 
 /**
  * Shortcut to construct an includable special  page
- * @addtogroup SpecialPage
+ * @package MediaWiki
  */
 class IncludableSpecialPage extends SpecialPage
 {
@@ -739,10 +715,6 @@ class IncludableSpecialPage extends SpecialPage
 	}
 }
 
-/**
- * Shortcut to construct a special page alias.
- * @addtogroup SpecialPage
- */
 class SpecialRedirectToSpecial extends UnlistedSpecialPage {
 	var $redirName, $redirSubpage;
 
@@ -762,17 +734,6 @@ class SpecialRedirectToSpecial extends UnlistedSpecialPage {
 	}
 }
 
-/** SpecialMypage, SpecialMytalk and SpecialMycontributions special pages
- * are used to get user independant links pointing to the user page, talk
- * page and list of contributions.
- * This can let us cache a single copy of any generated content for all
- * users.
- */
-
-/**
- * Shortcut to construct a special page pointing to current user user's page.
- * @addtogroup SpecialPage
- */
 class SpecialMypage extends UnlistedSpecialPage {
 	function __construct() {
 		parent::__construct( 'Mypage' );
@@ -789,10 +750,6 @@ class SpecialMypage extends UnlistedSpecialPage {
 	}
 }
 
-/**
- * Shortcut to construct a special page pointing to current user talk page.
- * @addtogroup SpecialPage
- */
 class SpecialMytalk extends UnlistedSpecialPage {
 	function __construct() {
 		parent::__construct( 'Mytalk' );
@@ -809,10 +766,6 @@ class SpecialMytalk extends UnlistedSpecialPage {
 	}
 }
 
-/**
- * Shortcut to construct a special page pointing to current user contributions.
- * @addtogroup SpecialPage
- */
 class SpecialMycontributions extends UnlistedSpecialPage {
 	function __construct() {
 		parent::__construct(  'Mycontributions' );
@@ -824,4 +777,4 @@ class SpecialMycontributions extends UnlistedSpecialPage {
 	}
 }
 
-
+?>

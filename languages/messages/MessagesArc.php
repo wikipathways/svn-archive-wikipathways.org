@@ -2,7 +2,8 @@
 
 /** Aramaic ( ܕܥܒܪܸܝܛ )
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $rtl = true;
@@ -11,4 +12,4 @@ $defaultUserOptionOverrides = array(
 	'quickbar' => 2,
 );
 
-
+?>

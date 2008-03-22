@@ -1,6 +1,7 @@
 <?php
 /**
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 class LanguageZh_cn extends Language {
 	function stripForSearch( $string ) {
@@ -23,4 +24,4 @@ class LanguageZh_cn extends Language {
 }
 
 
-
+?>

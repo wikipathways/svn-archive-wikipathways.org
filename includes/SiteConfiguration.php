@@ -1,4 +1,9 @@
 <?php
+/**
+ * This is a class used to hold configuration settings, particularly for multi-wiki sites.
+ *
+ * @package MediaWiki
+ */
 
 /**
  * The include paths change after this file is included from commandLine.inc,
@@ -8,10 +13,7 @@
 if (!defined('SITE_CONFIGURATION')) {
 define('SITE_CONFIGURATION', 1);
 
-/**
- * This is a class used to hold configuration settings, particularly for multi-wiki sites.
- *
- */
+/** @package MediaWiki */
 class SiteConfiguration {
 	var $suffixes = array();
 	var $wikis = array();
@@ -116,4 +118,4 @@ class SiteConfiguration {
 }
 }
 
-
+?>

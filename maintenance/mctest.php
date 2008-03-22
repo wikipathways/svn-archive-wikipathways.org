@@ -1,5 +1,5 @@
 <?php
-/* $Id: mctest.php 23531 2007-06-29 01:19:14Z simetrical $ */
+/* $Id: mctest.php 16738 2006-10-02 17:04:13Z brion $ */
 
 $optionsWithArgs = array( 'i' );
 
@@ -16,6 +16,8 @@ function microtime_float()
 
 if ( isset( $args[0] ) ) {
 	$wgMemCachedServers = array( $args[0] );
+} else {
+	$wgMemCachedServers[] = 'localhost';
 }
 if ( isset( $options['i'] ) ) {
 	$iterations = $options['i'];
@@ -55,4 +57,4 @@ foreach ( $wgMemCachedServers as $server ) {
 }
 
 
-
+?>

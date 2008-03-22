@@ -7,12 +7,14 @@ class MediaWiki {
 
 	var $GET; /* Stores the $_GET variables at time of creation, can be changed */
 	var $params = array();
-
-	/** Constructor. It just save the $_GET variable */
-	function __construct() {
+	
+	/**
+	 * Constructor
+	 */
+	function MediaWiki () {
 		$this->GET = $_GET;
 	}
-
+	
 	/**
 	 * Stores key/value pairs to circumvent global variables
 	 * Note that keys are case-insensitive!
@@ -21,7 +23,7 @@ class MediaWiki {
 		$key = strtolower( $key );
 		$this->params[$key] =& $value;
 	}
-
+	
 	/**
 	 * Retrieves key/value pairs to circumvent global variables
 	 * Note that keys are case-insensitive!
@@ -33,7 +35,7 @@ class MediaWiki {
 		}
 		return $default;
 	}
-
+	
 	/**
 	 * Initialization of ... everything
 	 @return Article either the object to become $wgArticle, or NULL
@@ -55,27 +57,7 @@ class MediaWiki {
 		wfProfileOut( 'MediaWiki::initialize' );
 		return $article;
 	}
-
-	function checkMaxLag( $maxLag ) {
-		global $wgLoadBalancer, $wgShowHostnames;
-		list( $host, $lag ) = $wgLoadBalancer->getMaxLag();
-		if ( $lag > $maxLag ) {
-			header( 'HTTP/1.1 503 Service Unavailable' );
-			header( 'Retry-After: ' . max( intval( $maxLag ), 5 ) );
-			header( 'X-Database-Lag: ' . intval( $lag ) );
-			header( 'Content-Type: text/plain' );
-			if( $wgShowHostnames ) {
-				echo "Waiting for $host: $lag seconds lagged\n";
-			} else {
-				echo "Waiting for a database server: $lag seconds lagged\n";
-			}
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-
+	
 	/**
 	 * Checks some initial queries
 	 * Note that $title here is *not* a Title object, but a string!
@@ -84,10 +66,10 @@ class MediaWiki {
 		if ($request->getVal( 'printable' ) == 'yes') {
 			$output->setPrintable();
 		}
-
+		
 		$ret = NULL ;
-
-
+		
+		
 		if ( '' == $title && 'delete' != $action ) {
 			$ret = Title::newMainPage();
 		} elseif ( $curid = $request->getInt( 'curid' ) ) {
@@ -100,32 +82,26 @@ class MediaWiki {
 			*/
 			if( count($lang->getVariants()) > 1 && !is_null($ret) && $ret->getArticleID() == 0 )
 				$lang->findVariantLink( $title, $ret );
-
-		}
-		if ( ( $oldid = $request->getInt( 'oldid' ) )
-			&& ( is_null( $ret ) || $ret->getNamespace() != NS_SPECIAL ) ) {
-			// Allow oldid to override a changed or missing title.
-			$rev = Revision::newFromId( $oldid );
-			if( $rev ) {
-				$ret = $rev->getTitle();
-			}
+		
 		}
 		return $ret ;
 	}
-
+	
 	/**
 	 * Checks for search query and anon-cannot-read case
 	 */
 	function preliminaryChecks ( &$title, &$output, $request ) {
-
-		if( $request->getCheck( 'search' ) ) {
+	
+		# Debug statement for user levels
+		// print_r($wgUser);
+		
+		$search = $request->getText( 'search' );
+		if( !is_null( $search ) && $search !== '' ) {
 			// Compatibility with old search URLs which didn't use Special:Search
-			// Just check for presence here, so blank requests still
-			// show the search page when using ugly URLs (bug 8054).
-			
 			// Do this above the read whitelist check for security...
 			$title = SpecialPage::getTitleFor( 'Search' );
 		}
+		$this->setVal( 'Search', $search );
 
 		# If the user is not logged in, the Namespace:title of the article must be in
 		# the Read array in order for the user to see it. (We have to check here to
@@ -135,18 +111,23 @@ class MediaWiki {
 			$output->output();
 			exit;
 		}
-
+		
 	}
-
+	
 	/**
 	 * Initialize the object to be known as $wgArticle for special cases
 	 */
 	function initializeSpecialCases ( &$title, &$output, $request ) {
 		global $wgRequest;
 		wfProfileIn( 'MediaWiki::initializeSpecialCases' );
-
+		
+		$search = $this->getVal('Search');
 		$action = $this->getVal('Action');
-		if( !$title or $title->getDBkey() == '' ) {
+		if( !$this->getVal('DisableInternalSearch') && !is_null( $search ) && $search !== '' ) {
+			require_once( 'includes/SpecialSearch.php' );
+			$title = SpecialPage::getTitleFor( 'Search' );
+			wfSpecialSearch();
+		} else if( !$title or $title->getDBkey() == '' ) {
 			$title = SpecialPage::getTitleFor( 'Badtitle' );
 			# Die now before we mess up $wgArticle and the skin stops working
 			throw new ErrorPageError( 'badtitle', 'badtitletext' );
@@ -163,19 +144,19 @@ class MediaWiki {
 				$title = SpecialPage::getTitleFor( 'Badtitle' );
 				throw new ErrorPageError( 'badtitle', 'badtitletext' );
 			}
-		} else if ( ( $action == 'view' ) && !$wgRequest->wasPosted() && 
+		} else if ( ( $action == 'view' ) &&
 			(!isset( $this->GET['title'] ) || $title->getPrefixedDBKey() != $this->GET['title'] ) &&
 			!count( array_diff( array_keys( $this->GET ), array( 'action', 'title' ) ) ) )
 		{
 			$targetUrl = $title->getFullURL();
 			// Redirect to canonical url, make it a 301 to allow caching
-			global $wgUsePathInfo;
+			global $wgServer, $wgUsePathInfo;
 			if( $targetUrl == $wgRequest->getFullRequestURL() ) {
 				$message = "Redirect loop detected!\n\n" .
 					"This means the wiki got confused about what page was " .
 					"requested; this sometimes happens when moving a wiki " .
 					"to a new server or changing the server configuration.\n\n";
-
+				
 				if( $wgUsePathInfo ) {
 					$message .= "The wiki is trying to interpret the page " .
 						"title from the URL path portion (PATH_INFO), which " .
@@ -214,7 +195,7 @@ class MediaWiki {
 	 * @param Title $title
 	 * @return Article
 	 */
-	static function articleFromTitle( $title ) {
+	function articleFromTitle( $title ) {
 		$article = null;
 		wfRunHooks('ArticleFromTitle', array( &$title, &$article ) );
 		if ( $article ) {
@@ -225,7 +206,7 @@ class MediaWiki {
 			// FIXME: where should this go?
 			$title = Title::makeTitle( NS_IMAGE, $title->getDBkey() );
 		}
-
+	
 		switch( $title->getNamespace() ) {
 		case NS_IMAGE:
 			return new ImagePage( $title );
@@ -235,7 +216,7 @@ class MediaWiki {
 			return new Article( $title );
 		}
 	}
-
+	
 	/**
 	 * Initialize the object to be known as $wgArticle for "standard" actions
 	 * Create an Article object for the page, following redirects if needed.
@@ -247,17 +228,17 @@ class MediaWiki {
 	function initializeArticle( $title, $request ) {
 		global $wgTitle;
 		wfProfileIn( 'MediaWiki::initializeArticle' );
-
+		
 		$action = $this->getVal('Action');
 		$article = $this->articleFromTitle( $title );
-
+		
 		// Namespace might change when using redirects
 		if( $action == 'view' && !$request->getVal( 'oldid' ) &&
 						$request->getVal( 'redirect' ) != 'no' ) {
-
-			$dbr = wfGetDB(DB_SLAVE);
+							
+			$dbr =& wfGetDB(DB_SLAVE);
 			$article->loadPageData($article->pageDataFromTitle($dbr, $title));
-
+		
 			/* Follow redirects only for... redirects */
 			if ($article->mIsRedirect) {
 				$target = $article->followRedirect();
@@ -309,7 +290,7 @@ class MediaWiki {
 	 */
 	function doUpdates ( &$updates ) {
 		wfProfileIn( 'MediaWiki::doUpdates' );
-		$dbw = wfGetDB( DB_MASTER );
+		$dbw =& wfGetDB( DB_MASTER );
 		foreach( $updates as $up ) {
 			$up->doUpdate();
 
@@ -326,7 +307,7 @@ class MediaWiki {
 	 */
 	function doJobs() {
 		global $wgJobRunRate;
-
+		
 		if ( $wgJobRunRate <= 0 || wfReadOnly() ) {
 			return;
 		}
@@ -354,7 +335,7 @@ class MediaWiki {
 			wfDebugLog( 'jobqueue', $output );
 		}
 	}
-
+	
 	/**
 	 * Ends this task peacefully
 	 */
@@ -420,26 +401,24 @@ class MediaWiki {
 				showCreditsPage( $article );
 				break;
 			case 'submit':
-				if( session_id() == '' ) {
+				if( !$this->getVal( 'CommandLineMode' ) && !$request->checkSessionCookie() ) {
 					/* Send a cookie so anons get talk message notifications */
-					wfSetupSession();
+					User::SetupSession();
 				}
 				/* Continue... */
 			case 'edit':
-				if( wfRunHooks( 'CustomEditor', array( $article, $user ) ) ) {
-					$internal = $request->getVal( 'internaledit' );
-					$external = $request->getVal( 'externaledit' );
-					$section = $request->getVal( 'section' );
-					$oldid = $request->getVal( 'oldid' );
-					if( !$this->getVal( 'UseExternalEditor' ) || $action=='submit' || $internal ||
-					   $section || $oldid || ( !$user->getOption( 'externaleditor' ) && !$external ) ) {
-						$editor = new EditPage( $article );
-						$editor->submit();
-					} elseif( $this->getVal( 'UseExternalEditor' ) && ( $external || $user->getOption( 'externaleditor' ) ) ) {
-						$mode = $request->getVal( 'mode' );
-						$extedit = new ExternalEdit( $article, $mode );
-						$extedit->edit();
-					}
+				$internal = $request->getVal( 'internaledit' );
+				$external = $request->getVal( 'externaledit' );
+				$section = $request->getVal( 'section' );
+				$oldid = $request->getVal( 'oldid' );
+				if( !$this->getVal( 'UseExternalEditor' ) || $action=='submit' || $internal ||
+				   $section || $oldid || ( !$user->getOption( 'externaleditor' ) && !$external ) ) {
+					$editor = new EditPage( $article );
+					$editor->submit();
+				} elseif( $this->getVal( 'UseExternalEditor' ) && ( $external || $user->getOption( 'externaleditor' ) ) ) {
+					$mode = $request->getVal( 'mode' );
+					$extedit = new ExternalEdit( $article, $mode );
+					$extedit->edit();
 				}
 				break;
 			case 'history':
@@ -461,8 +440,9 @@ class MediaWiki {
 		}
 		wfProfileOut( 'MediaWiki::performAction' );
 
+	
 	}
 
 }; /* End of class MediaWiki */
 
-
+?>

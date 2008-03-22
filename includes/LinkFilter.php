@@ -14,7 +14,7 @@ class LinkFilter {
 	/**
 	 * @static
 	 */
-	static function matchEntry( $text, $filterEntry ) {
+	function matchEntry( $text, $filterEntry ) {
 		$regex = LinkFilter::makeRegex( $filterEntry );
 		return preg_match( $regex, $text );
 	}
@@ -22,10 +22,10 @@ class LinkFilter {
 	/**
 	 * @static
 	 */
-	private static function makeRegex( $filterEntry ) {
+	function makeRegex( $filterEntry ) {
 		$regex = '!http://';
 		if ( substr( $filterEntry, 0, 2 ) == '*.' ) {
-			$regex .= '(?:[A-Za-z0-9.-]+\.|)';
+			$regex .= '([A-Za-z0-9.-]+\.|)';
 			$filterEntry = substr( $filterEntry, 2 );
 		}
 		$regex .= preg_quote( $filterEntry, '!' ) . '!Si';
@@ -47,10 +47,8 @@ class LinkFilter {
 	 * Asterisks in any other location are considered invalid.
 	 * 
 	 * @static
-	 * @param $filterEntry String: domainparts
-	 * @param $prot        String: protocol
 	 */
-	 public static function makeLike( $filterEntry , $prot = 'http://' ) {
+	function makeLike( $filterEntry ) {
 		if ( substr( $filterEntry, 0, 2 ) == '*.' ) {
 			$subdomains = true;
 			$filterEntry = substr( $filterEntry, 2 );
@@ -76,33 +74,19 @@ class LinkFilter {
 			$path = '/';
 			$host = $filterEntry;
 		}
-		// Reverse the labels in the hostname, convert to lower case
-		// For emails reverse domainpart only
-		if ( $prot == 'mailto:' && strpos($host, '@') ) {
-			// complete email adress 
-			$mailparts = explode( '@', $host );
-			$domainpart = strtolower( implode( '.', array_reverse( explode( '.', $mailparts[1] ) ) ) );
-			$host = $domainpart . '@' . $mailparts[0];
-			$like = "$prot$host%";
-		} elseif ( $prot == 'mailto:' ) {
-			// domainpart of email adress only. do not add '.'
-			$host = strtolower( implode( '.', array_reverse( explode( '.', $host ) ) ) );	
-			$like = "$prot$host%";			
-		} else {
-			$host = strtolower( implode( '.', array_reverse( explode( '.', $host ) ) ) );	
-			if ( substr( $host, -1, 1 ) !== '.' ) {
-				$host .= '.';
-			}
-			$like = "$prot$host";
-
-			if ( $subdomains ) {
-				$like .= '%';
-			}
-			if ( !$subdomains || $path !== '/' ) {
-				$like .= $path . '%';
-			}
+		$host = strtolower( implode( '.', array_reverse( explode( '.', $host ) ) ) );
+		if ( substr( $host, -1, 1 ) !== '.' ) {
+			$host .= '.';
+		}
+		$like = "http://$host";
+		
+		if ( $subdomains ) {
+			$like .= '%';
+		}
+		if ( !$subdomains || $path !== '/' ) {
+			$like .= $path . '%';
 		}
 		return $like;
 	}
 }
-
+?>

@@ -1,7 +1,8 @@
 <?php
 /** Dutch Lower Saxon (Nedersaksisch)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   *
   * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>, Jens Frank
   * @copyright Copyright © 2005, Ævar Arnfjörð Bjarmason, Jens Frank
@@ -14,6 +15,7 @@ $skinNames = array(
 	'standard'      => 'Klassiek',
 	'nostalgia'     => 'Nostalgie',
 	'cologneblue'   => 'Keuls blauw',
+	'smarty'        => 'Paddington',
 	'chick'         => 'Sjiek'
 );
 
@@ -32,8 +34,8 @@ $namespaceNames = array(
 	NS_MEDIAWIKI_TALK   => 'Overleg_MediaWiki',
 	NS_TEMPLATE         => 'Sjabloon',
 	NS_TEMPLATE_TALK    => 'Overleg_sjabloon',
-	NS_HELP             => 'Hulpe',
-	NS_HELP_TALK        => 'Overleg_hulpe',
+	NS_HELP             => 'Help',
+	NS_HELP_TALK        => 'Overleg_help',
 	NS_CATEGORY         => 'Kattegerie',
 	NS_CATEGORY_TALK    => 'Overleg_kattegerie'
 );
@@ -42,7 +44,6 @@ $namespaceAliases = array(
 	'Speciaol'          => NS_SPECIAL,
 	'Categorie'         => NS_CATEGORY,
 	'Overleg_categorie' => NS_CATEGORY_TALK,
-	'Overleg_help'      => NS_HELP_TALK,
 );
 
 $dateFormats = array(
@@ -59,4 +60,4 @@ $dateFormats = array(
 	'ymd both' => 'H:i, Y M j',
 );
 
-
+?>

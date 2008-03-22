@@ -3,10 +3,12 @@
  * License: Public domain
  *
  * @author Erik Moeller <moeller@scireview.de>
+ * @package MediaWiki
  */
 
 /**
  *
+ * @package MediaWiki
  *
  * Support for external editors to modify both text and files
  * in external applications. It works as follows: MediaWiki
@@ -20,7 +22,7 @@
 
 class ExternalEdit {
 
-	function __construct( $article, $mode ) {
+	function ExternalEdit ( $article, $mode ) {
 		global $wgInputEncoding;
 		$this->mArticle =& $article;
 		$this->mTitle =& $article->mTitle;
@@ -46,7 +48,7 @@ class ExternalEdit {
 			$extension="wiki";
 		} elseif($this->mMode=="file") {
 			$type="Edit file";
-			$image = wfLocalFile( $this->mTitle );
+			$image = new Image( $this->mTitle );
 			$img_url = $image->getURL();
 			if(strpos($img_url,"://")) {
 				$url = $img_url;
@@ -72,4 +74,4 @@ CONTROL;
 		echo $control;
 	}
 }
-
+?>

@@ -2,9 +2,10 @@
 /**
  * Karakalpak (Qaraqalpaqsha)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 $linkTrail = '/^([a-zʻ`]+)(.*)$/sDu';
 
-
+?>

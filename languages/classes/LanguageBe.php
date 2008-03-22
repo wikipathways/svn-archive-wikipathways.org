@@ -1,10 +1,8 @@
 <?php
-/** Belarusian normative (Беларуская мова)
+/** Belarusian (Беларуская мова)
   *
-  * This is still the version from Be-x-old, only duplicated for consistency of
-  * plural and grammar functions. If there are errors please send a patch.
-  *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   *
   * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>
   * @bug 1638, 2135
@@ -88,4 +86,4 @@ class LanguageBe extends Language {
 
 }
 
-
+?>

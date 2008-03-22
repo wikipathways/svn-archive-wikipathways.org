@@ -1,13 +1,7 @@
 <?php
 
-/** 
- * @package MediaWiki
- * @addtogroup Ajax
- */
-
-if( !defined( 'MEDIAWIKI' ) ) {
-	die( 1 );
-}
+if( !defined( 'MEDIAWIKI' ) )
+        die( 1 );
 
 /**
  * Function converts an Javascript escaped string back into a string with
@@ -19,39 +13,40 @@ if( !defined( 'MEDIAWIKI' ) ) {
  * @return string
  */
 function js_unescape($source, $iconv_to = 'UTF-8') {
-	$decodedStr = '';
-	$pos = 0;
-	$len = strlen ($source);
+   $decodedStr = '';
+   $pos = 0;
+   $len = strlen ($source);
+   while ($pos < $len) {
+       $charAt = substr ($source, $pos, 1);
+       if ($charAt == '%') {
+           $pos++;
+           $charAt = substr ($source, $pos, 1);
+           if ($charAt == 'u') {
+               // we got a unicode character
+               $pos++;
+               $unicodeHexVal = substr ($source, $pos, 4);
+               $unicode = hexdec ($unicodeHexVal);
+               $decodedStr .= code2utf($unicode);
+               $pos += 4;
+           }
+           else {
+               // we have an escaped ascii character
+               $hexVal = substr ($source, $pos, 2);
+               $decodedStr .= chr (hexdec ($hexVal));
+               $pos += 2;
+           }
+       }
+       else {
+           $decodedStr .= $charAt;
+           $pos++;
+       }
+   }
 
-	while ($pos < $len) {
-		$charAt = substr ($source, $pos, 1);
-		if ($charAt == '%') {
-			$pos++;
-			$charAt = substr ($source, $pos, 1);
-			if ($charAt == 'u') {
-				// we got a unicode character
-				$pos++;
-				$unicodeHexVal = substr ($source, $pos, 4);
-				$unicode = hexdec ($unicodeHexVal);
-				$decodedStr .= code2utf($unicode);
-				$pos += 4;
-			} else {
-				// we have an escaped ascii character
-				$hexVal = substr ($source, $pos, 2);
-				$decodedStr .= chr (hexdec ($hexVal));
-				$pos += 2;
-			}
-		} else {
-			$decodedStr .= $charAt;
-			$pos++;
-		}
-	}
-
-	if ($iconv_to != "UTF-8") {
-		$decodedStr = iconv("UTF-8", $iconv_to, $decodedStr);
-	}
-
-	return $decodedStr;
+   if ($iconv_to != "UTF-8") {
+       $decodedStr = iconv("UTF-8", $iconv_to, $decodedStr);
+   }
+  
+   return $decodedStr;
 }
 
 /**
@@ -76,7 +71,7 @@ function code2utf($num){
 function wfSajaxSearch( $term ) {
 	global $wgContLang, $wgOut;
 	$limit = 16;
-
+	
 	$l = new Linker;
 
 	$term = str_replace( ' ', '_', $wgContLang->ucfirst( 
@@ -86,7 +81,7 @@ function wfSajaxSearch( $term ) {
 	if ( strlen( str_replace( '_', '', $term ) )<3 )
 		return;
 
-	$db = wfGetDB( DB_SLAVE );
+	$db =& wfGetDB( DB_SLAVE );
 	$res = $db->select( 'page', 'page_title',
 			array(  'page_namespace' => 0,
 				"page_title LIKE '". $db->strencode( $term) ."%'" ),
@@ -113,8 +108,8 @@ function wfSajaxSearch( $term ) {
 	$subtitlemsg = ( Title::newFromText($term) ? 'searchsubtitle' : 'searchsubtitleinvalid' );
 	$subtitle = $wgOut->parse( wfMsg( $subtitlemsg, wfEscapeWikiText($term) ) ); #FIXME: parser is missing mTitle !
 
-	$term = urlencode( $term );
-	$html = '<div style="float:right; border:solid 1px black;background:gainsboro;padding:2px;"><a onclick="Searching_Hide_Results();">'
+	$term = htmlspecialchars( $term );
+	$html = '<div style="float:right; border:solid 1px black;background:gainsboro;padding:2px;"><a onclick="Searching_Hide_Results();">' 
 		. wfMsg( 'hideresults' ) . '</a></div>'
 		. '<h1 class="firstHeading">'.wfMsg('search')
 		. '</h1><div id="contentSub">'. $subtitle . '</div><ul><li>'
@@ -126,61 +121,51 @@ function wfSajaxSearch( $term ) {
 					"search=$term&go=Go" )
 		. "</li></ul><h2>" . wfMsg( 'articletitles', $term ) . "</h2>"
 		. '<ul>' .$r .'</ul>'.$more;
-
+		
 	$response = new AjaxResponse( $html );
-
+	
 	$response->setCacheDuration( 30*60 );
-
+		
 	return $response;
 }
 
 /**
  * Called for AJAX watch/unwatch requests.
- * @param $pagename Prefixed title string for page to watch/unwatch
+ * @param $pageID Integer ID of the page to be watched/unwatched
  * @param $watch String 'w' to watch, 'u' to unwatch
- * @return String '<w#>' or '<u#>' on successful watch or unwatch, 
- *   respectively, followed by an HTML message to display in the alert box; or
- *   '<err#>' on error
+ * @return String '<w#>' or '<u#>' on successful watch or unwatch, respectively, or '<err#>' on error (invalid XML in case we want to add HTML sometime)
  */
-function wfAjaxWatch($pagename = "", $watch = "") {
-	if(wfReadOnly()) {
-		// redirect to action=(un)watch, which will display the database lock
-		// message
-		return '<err#>'; 
-	}
+function wfAjaxWatch($pageID = "", $watch = "") {
+	if(wfReadOnly())
+		return '<err#>'; // redirect to action=(un)watch, which will display the database lock message
 
-	if('w' !== $watch && 'u' !== $watch) {
+	if(('w' !== $watch && 'u' !== $watch) || !is_numeric($pageID))
 		return '<err#>';
-	}
 	$watch = 'w' === $watch;
+	$pageID = intval($pageID);
 
-	$title = Title::newFromText($pagename);
-	if(!$title) {
-		// Invalid title
+	$title = Title::newFromID($pageID);
+	if(!$title)
 		return '<err#>';
-	}
 	$article = new Article($title);
 	$watching = $title->userIsWatching();
 
 	if($watch) {
 		if(!$watching) {
-			$dbw = wfGetDB(DB_MASTER);
+			$dbw =& wfGetDB(DB_MASTER);
 			$dbw->begin();
 			$article->doWatch();
 			$dbw->commit();
 		}
 	} else {
 		if($watching) {
-			$dbw = wfGetDB(DB_MASTER);
+			$dbw =& wfGetDB(DB_MASTER);
 			$dbw->begin();
 			$article->doUnwatch();
 			$dbw->commit();
 		}
 	}
-	if( $watch ) {
-		return '<w#>'.wfMsgExt( 'addedwatchtext', array( 'parse' ), $title->getPrefixedText() );
-	} else {
-		return '<u#>'.wfMsgExt( 'removedwatchtext', array( 'parse' ), $title->getPrefixedText() );
-	}
-}
 
+	return $watch ? '<w#>' : '<u#>';
+}
+?>

@@ -30,21 +30,6 @@ of the group node (see below).]  In terms of the representation in Cytoscape, he
 	whatever we end up developing in PathVisio and thus even be stored in the GPML and explicitly set in 
 	Cytoscape. This is very flexible and I think more accurate in terms of network representations. Scooter Morris 
 	is the primary developer of groups in Cytoscape, so we have a close relationship with group dev plan as well.
-	
-	Comment Thomas: I tried to implement the use of CyGroups in the plugin, however, I couldn't get it to behave as metanodes.
-	The internal representation of a CyGroup is just a Cytoscape node. What happens when I create a group is that 
-	a new CyNode is inserted representing the group. When I create a link between a group and another node, Cytoscape 
-	creates a link to the CyNode that represents the group. So far, so good. However, the group nodes are totally 
-	on their own, there is no link to the nodes that belong to the group (probably there is a link stored in the 
-	GroupManager class, but this is not represented in the network). Maybe I'm totally misusing Cytoscape groups 
-	here? Is there a way that works like you described above?
-	Comment Alex:  Current CyGroups support a large number of use cases, but they do not support the view in your
-	gpml-groups.png example, where the group node AND the children are viewed as part of the same graph with edges.
-	Rather, CyGroups are meant to act as metanodes, where you EITHER view the group node OR the children via 
-	collapse and expand functions.  I think this will work for our groups.  In the case above, we want an expanded,
-	i.e., stacked, view of the CyGroup and we want the edge to go the stack.  We can get this effect by implementing
-	a new CyGroup view (see GSoC idea #17). It's just a matter of view.  The CyGroup will accurately represent the
-	relationship between the member nodes and the group node (better than an egde). 
 
 === Edges to aliases of groups ===
 Aliases are labels used in place of a group of datanodes for the purpose of simplifying the visual representation 
@@ -57,25 +42,6 @@ metanode in Cytoscape, where the metanode contained all the members of the group
 proposal (2) above, the only difference being that the default metanode state for aliased groups would be 
 collapsed, viewed as a single node which could then be expanded to view all the members.
 
-Comment Thomas: This is really something that is necessary for better pathways. I'm not sure I understand how you'd like to store
-it as a property of a group. Just an example of how I would store it:
-
-<Group>
-	<Alias id="abc"/>
-	<Alias id="def"/>
-</Group>
-
-<Label graphId="abc"/>
-<Shape graphId="def"/>
-
-Here, the label and the shape are both aliases of the group. This is very flexible and allows any GPML shape to
-be an alias for a group. This is sometimes needed, in some cases you want the alias to be a label, in other cases you
-want it to be a rectangle or even group (e.g. when you want to illustrate a mechanism, see mRNA_processing_Reactome).
-
-Comment Alex:  This looks great.  By "property" I simply meant the relationship of the Alias element to the Group
-element, which you have in your example above.  I like the idea of using ids to allow flexibility in the nature
-of the alias.
-
 === Representation of Groups ===
 In addition to the handling of edges linking to groups, we should also address the basic visualization of groups.  
 We would like to see the following:
@@ -84,9 +50,6 @@ We would like to see the following:
  bottom, left, right) and perhaps rotatable, in a way that does not clobber the braces
  * Groups should have aliases that can be labels or labels in boxes (like datanodes). These should probably have 
  a fixed color (e.g, red) to distinguish them.
- 
-Comment Thomas: Just an idea: groups could have mouse over events, so that aliases are higlhighted when you go over a group with
-your mouse cursor.
 
 == Multi-stage Plan ==
  1. We can go through the archive today and identify which pathways can be made at least 80% "sticky" immediately.
@@ -97,22 +60,7 @@ your mouse cursor.
      group.
    * Associate edges connecting single nodes and/or groups, as formed above.
    * Aliases are to be ignored at this stage.
-
-Comment Thomas: Sjoerd, Chris's son already did some work on sticky edges (offline). During this step, we can manually merge his work 
-for the list of sticky-able pathways.
-Comment Alex:  Too bad he did it offline :)  Is there a ways to integrate his changes, perhaps by copy/paste replace of the contents of
-pathways?  Or do you think we will just have them as reference as we manually make edges?
-
-Comment Martijn: There is a plan for this: we want to use the gpmldiff / gpmlpatch programs in combination with the webservice to add
-Sjoerd's changes to wikipathways. Step by step it would work like this:
- step 1. For each pathway that Sjoerd modified, create a "patch" using the gpmldiff program
- step 2. (optionally) filter the patch to remove changes not related to graphId's / groupId's 
-    (such as slight movements of objects, we don't want those)
- step 3. Download the current state of this pathway from wikipathways using the webservice
- step 4. apply the patch using the gpmlpatch program
- step 5. upload the new start of the pathway
- This would also be a good proof-of-concept for the gpmlpatch program.
-
+   
  2. Modify GPMLReader to translate our groups to Cytoscape metanodes so that associated edges become legitimate
  cytoscape graph egdes, connecting to a group node in expanded mode. We can define a visual style for the expanded
  mode so that it maintains the coords and layout provided by the GPML.
@@ -123,21 +71,17 @@ Sjoerd's changes to wikipathways. Step by step it would work like this:
    * Replace free text aliases with group aliases.
    * Restore edge associations to group aliases.
 
-Comment Thomas: We should first fix the group bugs before starting on this.
-
  4. Modify GPMLReader to translate our aliases to collapsed metanodes. The metanode can take the coords from the
  alias label in the GPML. The children nodes would be visible upon expansion of the metanode. We could define
  various expanded visual styles.
  
- 5. Make GUI for annotating edgges with BioPAX definitions in PathVisio which can be robustly stored in the GPML. 
- Go through archive again with new edge annotation tool:
+ 5. Implement BioPAX definitions so that all edges in PathVisio can be directly defined by a BioPAX term which is
+ robustly stored in the GPML. Go through archive again with new edge annotation tool:
  	* Annotate edges with literature references and BioPAX terms.
-
+ 	
 Comment Alex: In terms of the manual work of going through the pathways and making changes, I think we can 
 handle 1-4 ourselves, given a few dedicated weekends. For #5 we can enlist the community by declaring a
 special initiative to annotate edges. This is where curation dashboards and other community mechanisms
 will come into play.  If we could get a handful of people annotating, it would establish a great precident
 for community-based curation.
-Comment Thomas: Step 5 is already possible (you can connect any Biopax element to the edge), but there is no user interface
-for it yet. I agree this should be done by the community, we just have to make sure that it's easy.
-Comment Alex: changed step 5 to reflect that all we need is the interface to make this possible.
+

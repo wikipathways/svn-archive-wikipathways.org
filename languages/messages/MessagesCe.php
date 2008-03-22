@@ -1,8 +1,9 @@
 <?php
 /** Chechen (Нохчийн)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $fallback = 'ru';
-
+?>

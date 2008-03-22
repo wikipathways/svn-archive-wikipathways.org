@@ -1,7 +1,8 @@
 <?php
 /** Klingon (tlhIngan-Hol)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $namespaceNames = array(
@@ -26,4 +27,4 @@ $namespaceNames = array(
 );
 
 
-
+?>

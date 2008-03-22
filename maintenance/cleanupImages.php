@@ -25,7 +25,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  *
  * @author Brion Vibber <brion at pobox.com>
- * @addtogroup maintenance
+ * @package MediaWiki
+ * @subpackage maintenance
  */
 
 require_once( 'commandLine.inc' );
@@ -89,10 +90,7 @@ class ImageCleanup extends TableCleanup {
 	}
 	
 	function filePath( $name ) {
-		if ( !isset( $this->repo ) ) {
-			$this->repo = RepoGroup::singleton()->getLocalRepo();
-		}
-		return $this->repo->getRootDirectory() . '/' . $this->repo->getHashPath( $name ) . $name;
+		return wfImageDir( $name ) . "/$name";
 	}
 	
 	function pokeFile( $orig, $new ) {
@@ -167,4 +165,4 @@ $wgUser->setName( 'Conversion script' );
 $caps = new ImageCleanup( !isset( $options['fix'] ) );
 $caps->cleanup();
 
-
+?>

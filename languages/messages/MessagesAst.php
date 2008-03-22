@@ -1,7 +1,8 @@
 <?php
 /** Asturian (Asturianu)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $namespaceNames = array(
@@ -25,4 +26,4 @@ $namespaceNames = array(
 	NS_CATEGORY_TALK    => 'Categoría_discusión',
 );
 
-
+?>

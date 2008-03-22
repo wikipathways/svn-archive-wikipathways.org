@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  *
  * @author Rob Church <robchur@gmail.com>
  * @copyright © 2006 Rob Church
@@ -8,9 +9,10 @@
  */
 
 /**
- * Special:Listredirects - Lists all the redirects on the wiki.
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
+
 class ListredirectsPage extends QueryPage {
 
 	function getName() { return( 'Listredirects' ); }
@@ -19,7 +21,7 @@ class ListredirectsPage extends QueryPage {
 	function sortDescending() { return( false ); }
 
 	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$page = $dbr->tableName( 'page' );
 		$sql = "SELECT 'Listredirects' AS type, page_title AS title, page_namespace AS namespace, 0 AS value FROM $page WHERE page_is_redirect = 1";
 		return( $sql );
@@ -62,4 +64,4 @@ function wfSpecialListredirects() {
 	$lrp->doQuery( $offset, $limit );
 }
 
-
+?>

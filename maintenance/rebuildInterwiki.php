@@ -3,7 +3,8 @@
  * Rebuild interwiki table using the file on meta and the language list
  * Wikimedia specific!
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
@@ -27,4 +28,4 @@ if ( isset( $options['o'] ) ) {
 	print $sql;
 }
 
-
+?>

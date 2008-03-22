@@ -1,7 +1,8 @@
 <?php
 /**
  * Use this special page to get a list of the MediaWiki system messages.
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -25,8 +26,7 @@ function wfSpecialAllmessages() {
 	$navText = wfMsg( 'allmessagestext' );
 
 	# Make sure all extension messages are available
-	
-	$wgMessageCache->loadAllMessages();
+	MessageCache::loadAllMessages();
 
 	$sortedArray = array_merge( Language::getMessagesFor( 'en' ), $wgMessageCache->getExtensionMessagesFor( 'en' ) );
 	ksort( $sortedArray );
@@ -89,8 +89,8 @@ function makeHTMLText( $messages ) {
 	global $wgLang, $wgContLang, $wgUser;
 	wfProfileIn( __METHOD__ );
 
-	$sk = $wgUser->getSkin();
-	$talk = wfMsg( 'talkpagelinktext' );
+	$sk =& $wgUser->getSkin();
+	$talk = $wgLang->getNsText( NS_TALK );
 
 	$input = wfElement( 'input', array(
 		'type'    => 'text',
@@ -124,7 +124,7 @@ function makeHTMLText( $messages ) {
 		NS_MEDIAWIKI => array(),
 		NS_MEDIAWIKI_TALK => array()
 	);
-	$dbr = wfGetDB( DB_SLAVE );
+	$dbr =& wfGetDB( DB_SLAVE );
 	$page = $dbr->tableName( 'page' );
 	$sql = "SELECT page_namespace,page_title FROM $page WHERE page_namespace IN (" . NS_MEDIAWIKI . ", " . NS_MEDIAWIKI_TALK . ")";
 	$res = $dbr->query( $sql );
@@ -197,4 +197,4 @@ $mw
 	return $txt;
 }
 
-
+?>

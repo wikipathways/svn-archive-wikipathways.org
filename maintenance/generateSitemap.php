@@ -4,14 +4,15 @@ define( 'GS_TALK', -1 );
 /**
  * Creates a Google sitemap for the site
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  *
  * @copyright Copyright © 2005, Ævar Arnfjörð Bjarmason
  * @copyright Copyright © 2005, Jens Frank <jeluf@gmx.de>
  * @copyright Copyright © 2005, Brion Vibber <brion@pobox.com>
  *
- * @see http://www.google.com/webmasters/sitemaps/docs/en/about.html
- * @see http://www.google.com/schemas/sitemap/0.84/sitemap.xsd
+ * @link http://www.google.com/webmasters/sitemaps/docs/en/about.html
+ * @link http://www.google.com/schemas/sitemap/0.84/sitemap.xsd
  *
  * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
  */
@@ -143,16 +144,17 @@ class GenerateSitemap {
 	 * @param string $path The path to append to the domain name
 	 * @param bool $compress Whether to compress the sitemap files
 	 */
-	function GenerateSitemap( $fspath, $compress ) {
+	function GenerateSitemap( $fspath, $path, $compress ) {
 		global $wgScriptPath;
 
 		$this->url_limit = 50000;
 		$this->size_limit = pow( 2, 20 ) * 10;
 		$this->fspath = isset( $fspath ) ? $fspath : '';
+		$this->path = isset( $path ) ? $path : $wgScriptPath;
 		$this->compress = $compress;
 
 		$this->stderr = fopen( 'php://stderr', 'wt' );
-		$this->dbr = wfGetDB( DB_SLAVE );
+		$this->dbr =& wfGetDB( DB_SLAVE );
 		$this->generateNamespaces();
 		$this->timestamp = wfTimestamp( TS_ISO_8601, wfTimestampNow() );
 		$this->findex = fopen( "{$this->fspath}sitemap-index-" . wfWikiID() . ".xml", 'wb' );
@@ -446,29 +448,23 @@ class GenerateSitemap {
 }
 
 if ( in_array( '--help', $argv ) ) {
-	echo <<<EOT
-Usage: php generateSitemap.php [options]
-	--help			show this message
-
-	--fspath=<path>		The file system path to save to, e.g /tmp/sitemap/
-
-	--server=<server>	The protocol and server name to use in URLs, e.g.
-		http://en.wikipedia.org. This is sometimes necessary because
-		server name detection may fail in command line scripts.
-
-	--compress=[yes|no]	compress the sitemap files, default yes
-
-EOT;
+	echo
+		"Usage: php generateSitemap.php [host] [options]\n" .
+		"\thost = hostname\n" .
+		"\toptions:\n" .
+		"\t\t--help\tshow this message\n" .
+		"\t\t--fspath\tThe file system path to save to, e.g /tmp/sitemap/\n" .
+		"\t\t--path\tThe http path to use, e.g. /wiki\n" .
+		"\t\t--compress=[yes|no]\tcompress the sitemap files, default yes\n";
 	die( -1 );
 }
 
-$optionsWithArgs = array( 'fspath', 'server', 'compress' );
-require_once( dirname( __FILE__ ) . '/commandLine.inc' );
+if ( isset( $argv[1] ) && strpos( $argv[1], '--' ) !== 0 )
+	$_SERVER['SERVER_NAME'] = $argv[1];
 
-if ( isset( $options['server'] ) ) {
-	$wgServer = $options['server'];
-}
+$optionsWithArgs = array( 'fspath', 'path', 'compress' );
+require_once 'commandLine.inc';
 
-$gs = new GenerateSitemap( @$options['fspath'], @$options['compress'] !== 'no' );
+$gs = new GenerateSitemap( @$options['fspath'], @$options['path'], @$options['compress'] !== 'no' );
 $gs->main();
-
+?>

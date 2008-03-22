@@ -1,13 +1,14 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
- * A special page looking for articles with no article linking to them,
- * thus being lonely.
- * @addtogroup SpecialPage
+ *
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class LonelyPagesPage extends PageQueryPage {
 
@@ -15,7 +16,7 @@ class LonelyPagesPage extends PageQueryPage {
 		return "Lonelypages";
 	}
 	function getPageHeader() {
-		return wfMsgExt( 'lonelypagestext', array( 'parse' ) );
+		return '<p>' . wfMsg('lonelypagestext') . '</p>';
 	}
 
 	function sortDescending() {
@@ -28,7 +29,7 @@ class LonelyPagesPage extends PageQueryPage {
 	function isSyndicated() { return false; }
 
 	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		list( $page, $pagelinks ) = $dbr->tableNamesN( 'page', 'pagelinks' );
 
 		return
@@ -57,4 +58,4 @@ function wfSpecialLonelypages() {
 	return $lpp->doQuery( $offset, $limit );
 }
 
-
+?>

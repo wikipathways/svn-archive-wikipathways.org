@@ -1,7 +1,8 @@
 <?php
 /**
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
@@ -18,7 +19,7 @@ if ( !$options['dfn-only'] ) {
 		$start = 1;
 	}
 
-	refreshLinks( $start, $options['new-only'], $options['m'], $options['e'], $options['redirects-only'] );
+	refreshLinks( $start, $options['new-only'], $options['m'], $options['e'] );
 }
 // this bit's bad for replication: disabling temporarily
 // --brion 2005-07-16
@@ -28,4 +29,4 @@ if ( $options['globals'] ) {
 	print_r( $GLOBALS );
 }
 
-
+?>

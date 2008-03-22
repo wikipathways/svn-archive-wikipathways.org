@@ -19,7 +19,8 @@
 
 /**
  * Run text & title search and display the output
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -37,13 +38,18 @@ function wfSpecialSearch( $par = '' ) {
 		!is_null ($wgRequest->getVal( 'searchx' ) ) ) {
 		$searchPage->showResults( $search );
 	} else {
-		$searchPage->goResult( $search );
+		
+/** Don't call 'Go' results; only 'Search' results 
+		
+		$searchPage->goResult( $search );  */
+		$searchPage->showResults( $search);
 	}
 }
 
 /**
- * implements Special:Search - Run text & title search and display the output
- * @addtogroup SpecialPage
+ * @todo document
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class SpecialSearch {
 
@@ -78,11 +84,17 @@ class SpecialSearch {
 
 		$this->setupPage( $term );
 
+/** AP20070421
+ * Add 'Pathway:' to search terms to support exact matches in this namespace
+ */
 		# Try to go to page as entered.
+		$term = 'Pathway:' . $term;
 		$t = Title::newFromText( $term );
 
 		# If the string cannot be used to create a title
 		if( is_null( $t ) ){
+		    	$parts = explode(':', $term, 2);
+			$term = $parts[1];
 			return $this->showResults( $term );
 		}
 
@@ -159,22 +171,19 @@ class SpecialSearch {
 
 		$num = ( $titleMatches ? $titleMatches->numRows() : 0 )
 			+ ( $textMatches ? $textMatches->numRows() : 0);
-		if ( $num > 0 ) {
-			if ( $num >= $this->limit ) {
-				$top = wfShowingResults( $this->offset, $this->limit );
-			} else {
-				$top = wfShowingResultsNum( $this->offset, $this->limit, $num );
-			}
-			$wgOut->addHTML( "<p>{$top}</p>\n" );
+		if ( $num >= $this->limit ) {
+			$top = wfShowingResults( $this->offset, $this->limit );
+		} else {
+			$top = wfShowingResultsNum( $this->offset, $this->limit, $num );
 		}
+		$wgOut->addHTML( "<p>{$top}</p>\n" );
 
 		if( $num || $this->offset ) {
 			$prevnext = wfViewPrevNext( $this->offset, $this->limit,
 				SpecialPage::getTitleFor( 'Search' ),
 				wfArrayToCGI(
 					$this->powerSearchOptions(),
-					array( 'search' => $term ) ),
-					($num < $this->limit) );
+					array( 'search' => $term ) ) );
 			$wgOut->addHTML( "<br />{$prevnext}\n" );
 		}
 
@@ -185,7 +194,6 @@ class SpecialSearch {
 			} else {
 				$wgOut->addWikiText( '==' . wfMsg( 'notitlematches' ) . "==\n" );
 			}
-			$titleMatches->free();
 		}
 
 		if( $textMatches ) {
@@ -196,7 +204,6 @@ class SpecialSearch {
 				# Don't show the 'no text matches' if we received title matches
 				$wgOut->addWikiText( '==' . wfMsg( 'notextmatches' ) . "==\n" );
 			}
-			$textMatches->free();
 		}
 
 		if ( $num == 0 ) {
@@ -207,6 +214,37 @@ class SpecialSearch {
 		}
 		$wgOut->addHTML( $this->powerSearchBox( $term ) );
 		wfProfileOut( $fname );
+
+		$wgOut->addHTML('
+<!-- Google Search Result Snippet Begins -->
+  <div id="results_cref"></div>
+  <script type="text/javascript">
+    var googleSearchIframeName = "results_cref";
+    var googleSearchFormName = "searchbox_cref";
+    var googleSearchFrameWidth = 600;
+    var googleSearchFrameborder = 0;
+    var googleSearchDomain = "www.google.com";
+    var googleSearchPath = "/cse";
+    var googleSearchResizeIframe = false; //fixes back button issue in firefox
+  </script>
+  <script type="text/javascript" src="http://www.google.com/afsonline/show_afs_search.js"></script>
+
+<script type="text/javascript">
+  var googleSearchFrame = document.getElementsByName("googleSearchFrame");
+  if (googleSearchFrame[0]) {
+      // Firefox, Opera, ...
+      googleSearchFrame[0].style.height = "60em";
+  } else {
+      // IE - which has a misbehaving getElementsByName - assumin only one iframe
+      var googleSearchFrame = document.getElementsByTagName("iframe");
+      if (googleSearchFrame[0]) {
+          googleSearchFrame[0].style.height = "65em";
+      }
+  }
+</script>
+
+<!-- Google Search Result Snippet Ends -->
+		');
 	}
 
 	#------------------------------------------------------------------
@@ -317,20 +355,11 @@ class SpecialSearch {
 			wfProfileOut( $fname );
 			return "<!-- Broken link in search result -->\n";
 		}
-		$sk = $wgUser->getSkin();
-
+		$sk =& $wgUser->getSkin();
 		$contextlines = $wgUser->getOption( 'contextlines',  5 );
 		$contextchars = $wgUser->getOption( 'contextchars', 50 );
 
 		$link = $sk->makeKnownLinkObj( $t );
-
-		//If page content is not readable, just return the title.
-		//This is not quite safe, but better than showing excerpts from non-readable pages
-		//Note that hiding the entry entirely would screw up paging.
-		if (!$t->userCanRead()) {
-			return "<li>{$link}</li>\n";
-		}
-
 		$revision = Revision::newFromTitle( $t );
 		$text = $revision->getText();
 		$size = wfMsgExt( 'nbytes', array( 'parsemag', 'escape'),
@@ -414,4 +443,4 @@ class SpecialSearch {
 	}
 }
 
-
+?>

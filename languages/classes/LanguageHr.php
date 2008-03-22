@@ -1,7 +1,8 @@
 <?php
 /** Croatian (hrvatski)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 class LanguageHr extends Language {
@@ -22,4 +23,4 @@ class LanguageHr extends Language {
 
 }
 
-
+?>

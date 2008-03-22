@@ -1,7 +1,8 @@
 <?php
 /** Nahuatl
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   *
   * @author Rob Church <robchur@gmail.com>
   *
@@ -47,4 +48,4 @@ $messages = array(
 );
 
 
-
+?>

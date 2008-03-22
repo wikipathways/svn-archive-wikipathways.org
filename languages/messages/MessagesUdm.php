@@ -1,7 +1,8 @@
 <?php
 /** Udmurt (Удмурт)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  */
 
@@ -47,4 +48,4 @@ $messages = array(
 'preferences' => 'настройкаос',
 );
 
-
+?>

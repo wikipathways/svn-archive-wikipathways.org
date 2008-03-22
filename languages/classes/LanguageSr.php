@@ -1,6 +1,7 @@
 <?php
 /**
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 /*
@@ -81,7 +82,7 @@ class SrConverter extends LanguageConverter {
 
 	// Do not convert content on talk pages
 	function parserConvert( $text, &$parser ){
-		if(is_object($parser->getTitle() ) && $parser->getTitle()->isTalkPage())
+		if(is_object($parser->mTitle) && $parser->mTitle->isTalkPage())
 			$this->mDoContentConvert=false;
 		else 
 			$this->mDoContentConvert=true;
@@ -188,4 +189,4 @@ class LanguageSr extends LanguageSr_ec {
 		$wgHooks['ArticleSaveComplete'][] = $this->mConverter;
 	}
 }
-
+?>

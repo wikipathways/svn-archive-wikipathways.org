@@ -4,14 +4,16 @@
  * Wikimedia specific!
  *
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
 
 /**
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 class Site {
 	var $suffix, $lateral, $url;
@@ -57,7 +59,6 @@ function getRebuildInterwikiSQL() {
 		'sep11wiki' => 'sep11.wikipedia.org',
 		'metawiki' => 'meta.wikimedia.org',
 		'commonswiki' => 'commons.wikimedia.org',
-		'specieswiki' => 'species.wikimedia.org',
 	);
 
 	# Extra interwiki links that can't be in the intermap for some reason
@@ -107,7 +108,6 @@ function getRebuildInterwikiSQL() {
 	$iwArray = array();
 
 	foreach ( $lines as $line ) {
-		$matches = array();
 		if ( preg_match( '/^\|\s*(.*?)\s*\|\|\s*(https?:\/\/.*?)\s*$/', $line, $matches ) ) {
 			$prefix = strtolower( $matches[1] );
 			$url = $matches[2];
@@ -252,7 +252,7 @@ function makeLink( $entry, &$first, $source ) {
 	} else {
 		$sql .= ",\n";
 	}
-	$dbr = wfGetDB( DB_SLAVE );
+	$dbr =& wfGetDB( DB_SLAVE );
 	$sql .= "(" . $dbr->makeList( $entry ) . ")";
 	return $sql;
 }

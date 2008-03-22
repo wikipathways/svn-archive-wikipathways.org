@@ -8,7 +8,6 @@ require_once( "$IP/maintenance/commandLine.inc" );
 
 foreach ( glob( "$IP/languages/messages/Messages*.php" ) as $filename ) {
 	$base = basename( $filename );
-	$m = array();
 	if ( !preg_match( '/Messages(.*)\.php$/', $base, $m ) ) {
 		continue;
 	}
@@ -43,4 +42,4 @@ foreach ( glob( "$IP/languages/messages/Messages*.php" ) as $filename ) {
 	print "\n\n";
 }
 
-
+?>

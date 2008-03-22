@@ -1,6 +1,7 @@
 <?php
 /**
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 # Stub for Pashto
@@ -13,4 +14,4 @@ $defaultUserOptionOverrides = array(
 	'underline' => 0,
 );
 
-
+?>

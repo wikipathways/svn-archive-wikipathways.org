@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -36,8 +37,9 @@ function wfSpecialLockdb() {
 }
 
 /**
- * A form to make the database readonly (eg for maintenance purposes).
- * @addtogroup SpecialPage
+ *
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class DBLockForm {
 	var $reason = '';
@@ -124,11 +126,11 @@ END
 		$wgOut->addWikiText( wfMsg( 'lockdbsuccesstext' ) );
 	}
 	
-	public static function notWritable() {
+	function notWritable() {
 		global $wgOut;
 		$wgOut->errorPage( 'lockdb', 'lockfilenotwritable' );
 	}
 	
 }
 
-
+?>

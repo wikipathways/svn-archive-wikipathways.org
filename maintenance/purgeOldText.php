@@ -3,7 +3,8 @@
 /**
  * Purge old text records from the database
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  * @author Rob Church <robchur@gmail.com>
  */
 
@@ -26,3 +27,4 @@ function ShowUsage() {
 	echo( " help : Show this usage information\n" );
 }
 
+?>

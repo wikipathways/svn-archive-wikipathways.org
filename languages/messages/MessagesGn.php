@@ -1,8 +1,9 @@
 <?php
 /** Guaraní (avañe'ẽ)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $fallback = 'es';
-
+?>

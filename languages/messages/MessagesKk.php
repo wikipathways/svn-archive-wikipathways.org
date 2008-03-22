@@ -2,11 +2,12 @@
 /**
   * Kazakh (Қазақша)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $fallback = 'kk-kz';
 
 $linkTrail = '/^([a-zäçéğıïñöşüýа-яёәғіқңөұүһʺʹ“»]+)(.*)$/sDu';
 
-
+?>

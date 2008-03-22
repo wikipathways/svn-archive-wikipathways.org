@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup Cache
+ * @package MediaWiki
+ * @subpackage Cache
  */
 
 /**
@@ -16,6 +17,7 @@ define( 'MSG_CACHE_VERSION', 1 );
  * Message cache
  * Performs various MediaWiki namespace-related functions
  *
+ * @package MediaWiki
  */
 class MessageCache {
 	var $mCache, $mUseCache, $mDisable, $mExpiry;
@@ -23,7 +25,6 @@ class MessageCache {
 	var $mExtensionMessages = array();
 	var $mInitialised = false;
 	var $mDeferred = true;
-	var $mAllMessagesLoaded;
 
 	function __construct( &$memCached, $useDB, $expiry, $memcPrefix) {
 		wfProfileIn( __METHOD__ );
@@ -297,10 +298,10 @@ class MessageCache {
 	 * Loads all or main part of cacheable messages from the database
 	 */
 	function loadFromDB() {
-		global $wgMaxMsgCacheEntrySize;
+		global $wgLang, $wgMaxMsgCacheEntrySize;
 
 		wfProfileIn( __METHOD__ );
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$this->mCache = array();
 
 		# Load titles for all oversized pages in the MediaWiki namespace
@@ -546,7 +547,7 @@ class MessageCache {
 
 				if ( $type == ' ' ) {
 					$message = substr( $entry, 1 );
-					$this->mCache[$title] = $entry;
+					$this->mCache[$title] = $message;
 					return $message;
 				} elseif ( $entry == '!NONEXISTENT' ) {
 					return false;
@@ -628,6 +629,7 @@ class MessageCache {
 
 	/**
 	 * Add a 2-D array of messages by lang. Useful for extensions.
+	 * Introduced in 1.9. Please do not use it for now, for backwards compatibility.
 	 *
 	 * @param array $messages The array to be added
 	 */
@@ -670,39 +672,12 @@ class MessageCache {
 		}
 	}
 
-	function loadAllMessages() {
-		global $wgExtensionMessagesFiles;
-		if ( $this->mAllMessagesLoaded ) {
-			return;
-		}
-		$this->mAllMessagesLoaded = true;
-
+	static function loadAllMessages() {
 		# Some extensions will load their messages when you load their class file
 		wfLoadAllExtensions();
 		# Others will respond to this hook
 		wfRunHooks( 'LoadAllMessages' );
-		# Some register their messages in $wgExtensionMessagesFiles
-		foreach ( $wgExtensionMessagesFiles as $name => $file ) {
-			if ( $file ) {
-				$this->loadMessagesFile( $file );
-				$wgExtensionMessagesFiles[$name] = false;
-			}
-		}
 		# Still others will respond to neither, they are EVIL. We sometimes need to know!
 	}
-
-	/**
-	 * Load messages from a given file
-	 */
-	function loadMessagesFile( $filename ) {
-		$magicWords = false;
-		require( $filename );
-		$this->addMessagesByLang( $messages );
-
-		if ( $magicWords !== false ) {
-			global $wgContLang;
-			$wgContLang->addMagicWordsByLang( $magicWords );
-		}
-	}
 }
-
+?>

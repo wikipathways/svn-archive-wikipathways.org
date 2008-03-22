@@ -2,7 +2,8 @@
 /**
  * Bavarian (Boarisch)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 $fallback = 'de';
@@ -13,4 +14,4 @@ $messages = array(
 
 );
 
-
+?>

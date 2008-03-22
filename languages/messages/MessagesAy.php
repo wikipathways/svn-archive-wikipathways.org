@@ -1,8 +1,9 @@
 <?php
-/** Aymara
+/** Tahitian (Reo Mā`ohi)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
-$fallback = 'es';
-
+$fallback = 'fr';
+?>

@@ -1,8 +1,9 @@
 <?php
 /** Bambara (Bamanankan)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $fallback = 'fr';
-
+?>

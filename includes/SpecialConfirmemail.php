@@ -4,18 +4,22 @@
  * Special page allows users to request email confirmation message, and handles
  * processing of the confirmation code when the link in the email is followed
  *
- * @addtogroup SpecialPage
- * @author Brion Vibber
+ * @package MediaWiki
+ * @subpackage Special pages
  * @author Rob Church <robchur@gmail.com>
  */
-class EmailConfirmation extends UnlistedSpecialPage {
-	
-	/**
-	 * Constructor
-	 */
-	public function __construct() {
-		parent::__construct( 'Confirmemail' );
-	}
+ 
+/**
+ * Main execution point
+ *
+ * @param $par Parameters passed to the page
+ */
+function wfSpecialConfirmemail( $par ) {
+	$form = new EmailConfirmation();
+	$form->execute( $par );
+}
+
+class EmailConfirmation extends SpecialPage {
 	
 	/**
 	 * Main execution point
@@ -24,7 +28,6 @@ class EmailConfirmation extends UnlistedSpecialPage {
 	 */
 	function execute( $code ) {
 		global $wgUser, $wgOut;
-		$this->setHeaders();
 		if( empty( $code ) ) {
 			if( $wgUser->isLoggedIn() ) {
 				if( User::isValidEmailAddr( $wgUser->getEmail() ) ) {
@@ -101,4 +104,4 @@ class EmailConfirmation extends UnlistedSpecialPage {
 	
 }
 
-
+?>

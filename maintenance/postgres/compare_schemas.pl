@@ -7,8 +7,8 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-my @old = ('../tables.sql');
-my $new = 'tables.sql';
+my @old = ("../tables.sql", "../mysql5/tables.sql", "../mysql5/tables-binary.sql");
+my $new = "tables.sql";
 my @xfile;
 
 ## Read in exceptions and other metadata
@@ -27,7 +27,7 @@ while (<DATA>) {
 		push @xfile, $val;
 		next;
 	}
-	for (split /\s+/ => $val) {
+	for (split(/\s+/ => $val)) {
 		$ok{$name}{$_} = 0;
 	}
 }
@@ -35,7 +35,7 @@ while (<DATA>) {
 my $datatype = join '|' => qw(
 bool
 tinyint int bigint real float
-tinytext mediumtext text char varchar varbinary binary
+tinytext mediumtext text char varchar varbinary
 timestamp datetime
 tinyblob mediumblob blob
 );
@@ -46,16 +46,16 @@ my $typeval = qr{(\(\d+\))?};
 
 my $typeval2 = qr{ unsigned| binary| NOT NULL| NULL| auto_increment| default ['\-\d\w"]+| REFERENCES .+CASCADE};
 
-my $indextype = join '|' => qw(INDEX KEY FULLTEXT), 'PRIMARY KEY', 'UNIQUE INDEX', 'UNIQUE KEY';
+my $indextype = join '|' => qw(INDEX KEY FULLTEXT), "PRIMARY KEY", "UNIQUE INDEX", "UNIQUE KEY";
 $indextype = qr{$indextype};
 
 my $engine = qr{TYPE|ENGINE};
 
-my $tabletype = qr{InnoDB|MyISAM|HEAP|HEAP MAX_ROWS=\d+|InnoDB MAX_ROWS=\d+ AVG_ROW_LENGTH=\d+};
+my $tabletype = qr{InnoDB|MyISAM|HEAP|HEAP MAX_ROWS=\d+};
 
 my $charset = qr{utf8|binary};
 
-open my $newfh, '<', $new or die qq{Could not open $new: $!\n};
+open my $newfh, "<", $new or die qq{Could not open $new: $!\n};
 
 
 my ($table,%old);
@@ -83,7 +83,7 @@ sub parse_sql {
 
 	my $oldfile = shift;
 
-	open my $oldfh, '<', $oldfile or die qq{Could not open $oldfile: $!\n};
+	open my $oldfh, "<", $oldfile or die qq{Could not open $oldfile: $!\n};
 
 	my %info;
 	while (<$oldfh>) {
@@ -96,10 +96,6 @@ sub parse_sql {
 				or die qq{Invalid CREATE TABLE at line $. of $oldfile\n};
 			$table = $1;
 			$info{$table}{name}=$table;
-		}
-		elsif (m#^\) /\*\$wgDBTableOptions\*/#) {
-			$info{$table}{engine} = 'TYPE';
-			$info{$table}{type} = 'variable';
 		}
 		elsif (/^\) ($engine)=($tabletype);$/) {
 			$info{$table}{engine}=$1;
@@ -114,8 +110,8 @@ sub parse_sql {
 			$info{$table}{column}{$1} = $2;
 		}
 		elsif (/^  ($indextype)(?: (\w+))? \(([\w, \(\)]+)\),?$/) {
-			$info{$table}{lc $1.'_name'} = $2 ? $2 : '';
-			$info{$table}{lc $1.'pk_target'} = $3;
+			$info{$table}{lc $1."_name"} = $2 ? $2 : "";
+			$info{$table}{lc $1."pk_target"} = $3;
 		}
 		else {
 			die "Cannot parse line $. of $oldfile:\n$_\n";
@@ -155,7 +151,7 @@ CIDR
 );
 $dtype = qr{($dtype)};
 my %new;
-my ($infunction,$inview,$inrule,$lastcomma) = (0,0,0,0);
+my ($infunction,$inview,$inrule) = (0,0,0);
 seek $newfh, 0, 0;
 while (<$newfh>) {
 	next if /^\s*\-\-/ or /^\s*$/;
@@ -190,19 +186,11 @@ while (<$newfh>) {
 	if (/^CREATE TABLE "?(\w+)"? \($/) {
 		$table = $1;
 		$new{$table}{name}=$table;
-		$lastcomma = 1;
 	}
 	elsif (/^\);$/) {
-		if ($lastcomma) {
-			warn "Stray comma before line $.\n";
-		}
 	}
-	elsif (/^  (\w+) +$dtype.*?(,?)(?: --.*)?$/) {
+	elsif (/^  (\w+) +$dtype/) {
 		$new{$table}{column}{$1} = $2;
-		if (!$lastcomma) {
-			print "Missing comma before line $. of $new\n";
-		}
-		$lastcomma = $3 ? 1 : 0;
 	}
 	else {
 		die "Cannot parse line $. of $new:\n$_\n";
@@ -221,13 +209,13 @@ for my $t (sort keys %{$old{$oldfile}}) {
 	my $newcol = $new{$newt}{column};
 	for my $c (keys %$oldcol) {
 		if (!exists $newcol->{$c}) {
-			print "Column $t.$c not in $new\n";
+			print "Column $t.$c not in new\n";
 			next;
 		}
 	}
 	for my $c (keys %$newcol) {
 		if (!exists $oldcol->{$c}) {
-			print "Column $t.$c not in $oldfile\n";
+			print "Column $t.$c not in old\n";
 			next;
 		}
 	}
@@ -235,7 +223,7 @@ for my $t (sort keys %{$old{$oldfile}}) {
 ## New but not old:
 for (sort keys %new) {
 	if (!exists $old{$oldfile}{$_} and !exists $ok{NEW}{$_}) {
-		print "Not in $oldfile: $_\n";
+		print "Not in old: $_\n";
 		next;
 	}
 }
@@ -247,7 +235,9 @@ for (sort keys %new) {
 __DATA__
 ## Known exceptions
 OLD: searchindex          ## We use tsearch2 directly on the page table instead
+OLD: archive              ## This is a view due to the char(14) timestamp hack
 RENAME: user mwuser       ## Reserved word causing lots of problems
 RENAME: text pagecontent  ## Reserved word
+NEW: archive2             ## The real archive table
 NEW: mediawiki_version    ## Just us, for now
 XFILE: ../archives/patch-profiling.sql

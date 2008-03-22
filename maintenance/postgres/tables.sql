@@ -5,7 +5,7 @@
 -- For information about each table, please see the notes in maintenance/tables.sql
 -- Please make sure all dollar-quoting uses $mw$ at the start of the line
 -- We can't use SERIAL everywhere: the sequence names are hard-coded into the PHP
--- TODO: Change CHAR to BOOL (still needed as CHAR due to some PHP code)
+-- TODO: Change CHAR to BOOL
 
 BEGIN;
 SET client_min_messages = 'ERROR';
@@ -42,7 +42,7 @@ CREATE UNIQUE INDEX user_groups_unique ON user_groups (ug_user, ug_group);
 
 CREATE TABLE user_newtalk (
   user_id  INTEGER NOT NULL  REFERENCES mwuser(user_id) ON DELETE CASCADE,
-  user_ip  TEXT        NULL
+  user_ip  CIDR        NULL
 );
 CREATE INDEX user_newtalk_id_idx ON user_newtalk (user_id);
 CREATE INDEX user_newtalk_ip_idx ON user_newtalk (user_ip);
@@ -92,12 +92,9 @@ CREATE TABLE revision (
   rev_user_text   TEXT         NOT NULL,
   rev_timestamp   TIMESTAMPTZ  NOT NULL,
   rev_minor_edit  CHAR         NOT NULL  DEFAULT '0',
-  rev_deleted     CHAR         NOT NULL  DEFAULT '0',
-  rev_len         INTEGER          NULL,
-  rev_parent_id   INTEGER          NULL
+  rev_deleted     CHAR         NOT NULL  DEFAULT '0'
 );
 CREATE UNIQUE INDEX revision_unique ON revision (rev_page, rev_id);
-CREATE INDEX rev_text_id_idx        ON revision (rev_text_id);
 CREATE INDEX rev_timestamp_idx      ON revision (rev_timestamp);
 CREATE INDEX rev_user_idx           ON revision (rev_user);
 CREATE INDEX rev_user_text_idx      ON revision (rev_user_text);
@@ -111,24 +108,10 @@ CREATE TABLE pagecontent ( -- replaces reserved word 'text'
 );
 
 
-CREATE SEQUENCE pr_id_val;
-CREATE TABLE page_restrictions (
-  pr_id      INTEGER      NOT NULL  UNIQUE DEFAULT nextval('pr_id_val'),
-  pr_page    INTEGER          NULL  REFERENCES page (page_id) ON DELETE CASCADE,
-  pr_type    TEXT         NOT NULL,
-  pr_level   TEXT         NOT NULL,
-  pr_cascade SMALLINT     NOT NULL,
-  pr_user    INTEGER          NULL,
-  pr_expiry  TIMESTAMPTZ      NULL
-);
-ALTER TABLE page_restrictions ADD CONSTRAINT page_restrictions_pk PRIMARY KEY (pr_page,pr_type);
-
-
-CREATE TABLE archive (
+CREATE TABLE archive2 (
   ar_namespace   SMALLINT     NOT NULL,
   ar_title       TEXT         NOT NULL,
   ar_text        TEXT,
-  ar_page_id     INTEGER          NULL,
   ar_comment     TEXT,
   ar_user        INTEGER          NULL  REFERENCES mwuser(user_id) ON DELETE SET NULL,
   ar_user_text   TEXT         NOT NULL,
@@ -136,12 +119,24 @@ CREATE TABLE archive (
   ar_minor_edit  CHAR         NOT NULL  DEFAULT '0',
   ar_flags       TEXT,
   ar_rev_id      INTEGER,
-  ar_text_id     INTEGER,
-  ar_deleted     INTEGER      NOT NULL  DEFAULT 0,
-  ar_len         INTEGER          NULL
+  ar_text_id     INTEGER
 );
-CREATE INDEX archive_name_title_timestamp ON archive (ar_namespace,ar_title,ar_timestamp);
-CREATE INDEX archive_user_text            ON archive (ar_user_text);
+CREATE INDEX archive_name_title_timestamp ON archive2 (ar_namespace,ar_title,ar_timestamp);
+
+-- This is the easiest way to work around the char(15) timestamp hack without modifying PHP code
+CREATE VIEW archive AS 
+SELECT 
+  ar_namespace, ar_title, ar_text, ar_comment, ar_user, ar_user_text, 
+  ar_minor_edit, ar_flags, ar_rev_id, ar_text_id,
+       TO_CHAR(ar_timestamp, 'YYYYMMDDHH24MISS') AS ar_timestamp
+FROM archive2;
+
+CREATE RULE archive_insert AS ON INSERT TO archive
+DO INSTEAD INSERT INTO archive2 VALUES (
+  NEW.ar_namespace, NEW.ar_title, NEW.ar_text, NEW.ar_comment, NEW.ar_user, NEW.ar_user_text, 
+  TO_DATE(NEW.ar_timestamp, 'YYYYMMDDHH24MISS'),
+  NEW.ar_minor_edit, NEW.ar_flags, NEW.ar_rev_id, NEW.ar_text_id
+);
 
 
 CREATE TABLE redirect (
@@ -179,7 +174,7 @@ CREATE TABLE categorylinks (
   cl_timestamp  TIMESTAMPTZ  NOT NULL
 );
 CREATE UNIQUE INDEX cl_from ON categorylinks (cl_from, cl_to);
-CREATE INDEX cl_sortkey     ON categorylinks (cl_to, cl_sortkey, cl_from);
+CREATE INDEX cl_sortkey     ON categorylinks (cl_to, cl_sortkey);
 
 CREATE TABLE externallinks (
   el_from   INTEGER  NOT NULL  REFERENCES page(page_id) ON DELETE CASCADE,
@@ -228,10 +223,7 @@ CREATE TABLE ipblocks (
   ipb_enable_autoblock  CHAR         NOT NULL  DEFAULT '1',
   ipb_expiry            TIMESTAMPTZ  NOT NULL,
   ipb_range_start       TEXT,
-  ipb_range_end         TEXT,
-  ipb_deleted           INTEGER      NOT NULL  DEFAULT 0,
-  ipb_block_email       CHAR         NOT NULL  DEFAULT '0'
-
+  ipb_range_end         TEXT
 );
 CREATE INDEX ipb_address ON ipblocks (ipb_address);
 CREATE INDEX ipb_user    ON ipblocks (ipb_user);
@@ -251,12 +243,10 @@ CREATE TABLE image (
   img_description  TEXT      NOT NULL,
   img_user         INTEGER       NULL  REFERENCES mwuser(user_id) ON DELETE SET NULL,
   img_user_text    TEXT      NOT NULL,
-  img_timestamp    TIMESTAMPTZ,
-  img_sha1         TEXT      NOT NULL  DEFAULT ''
+  img_timestamp    TIMESTAMPTZ
 );
 CREATE INDEX img_size_idx      ON image (img_size);
 CREATE INDEX img_timestamp_idx ON image (img_timestamp);
-CREATE INDEX img_sha1          ON image (img_sha1);
 
 CREATE TABLE oldimage (
   oi_name          TEXT         NOT NULL  REFERENCES image(img_name),
@@ -268,17 +258,9 @@ CREATE TABLE oldimage (
   oi_description   TEXT,
   oi_user          INTEGER          NULL  REFERENCES mwuser(user_id) ON DELETE SET NULL,
   oi_user_text     TEXT         NOT NULL,
-  oi_timestamp     TIMESTAMPTZ  NOT NULL,
-  oi_metadata      BYTEA        NOT NULL DEFAULT '',
-  oi_media_type    TEXT             NULL,
-  oi_major_mime    TEXT         NOT NULL DEFAULT 'unknown',
-  oi_minor_mime    TEXT         NOT NULL DEFAULT 'unknown',
-  oi_deleted       CHAR         NOT NULL DEFAULT '0',
-  oi_sha1          TEXT         NOT NULL DEFAULT ''
+  oi_timestamp     TIMESTAMPTZ  NOT NULL
 );
-CREATE INDEX oi_name_timestamp    ON oldimage (oi_name,oi_timestamp);
-CREATE INDEX oi_name_archive_name ON oldimage (oi_name,oi_archive_name);
-CREATE INDEX oi_sha1              ON oldimage (oi_sha1);
+CREATE INDEX oi_name ON oldimage (oi_name);
 
 
 CREATE TABLE filearchive (
@@ -301,8 +283,7 @@ CREATE TABLE filearchive (
   fa_description        TEXT         NOT NULL,
   fa_user               INTEGER          NULL  REFERENCES mwuser(user_id) ON DELETE SET NULL,
   fa_user_text          TEXT         NOT NULL,
-  fa_timestamp          TIMESTAMPTZ,
-  fa_deleted            INTEGER      NOT NULL DEFAULT 0
+  fa_timestamp          TIMESTAMPTZ
 );
 CREATE INDEX fa_name_time ON filearchive (fa_name, fa_timestamp);
 CREATE INDEX fa_dupe      ON filearchive (fa_storage_group, fa_storage_key);
@@ -332,12 +313,7 @@ CREATE TABLE recentchanges (
   rc_patrolled       CHAR         NOT NULL  DEFAULT '0',
   rc_ip              CIDR,
   rc_old_len         INTEGER,
-  rc_new_len         INTEGER,
-  rc_deleted         INTEGER      NOT NULL  DEFAULT 0,
-  rc_logid           INTEGER      NOT NULL  DEFAULT 0,
-  rc_log_type        TEXT,
-  rc_log_action      TEXT,
-  rc_params          TEXT
+  rc_new_len         INTEGER
 );
 CREATE INDEX rc_timestamp       ON recentchanges (rc_timestamp);
 CREATE INDEX rc_namespace_title ON recentchanges (rc_namespace, rc_title);
@@ -356,8 +332,8 @@ CREATE UNIQUE INDEX wl_user_namespace_title ON watchlist (wl_namespace, wl_title
 
 
 CREATE TABLE math (
-  math_inputhash              BYTEA     NOT NULL  UNIQUE,
-  math_outputhash             BYTEA     NOT NULL,
+  math_inputhash              TEXT      NOT NULL  UNIQUE,
+  math_outputhash             TEXT      NOT NULL,
   math_html_conservativeness  SMALLINT  NOT NULL,
   math_html                   TEXT,
   math_mathml                 TEXT
@@ -397,6 +373,7 @@ CREATE INDEX querycachetwo_type_value ON querycachetwo (qcc_type, qcc_value);
 CREATE INDEX querycachetwo_title      ON querycachetwo (qcc_type,qcc_namespace,qcc_title);
 CREATE INDEX querycachetwo_titletwo   ON querycachetwo (qcc_type,qcc_namespacetwo,qcc_titletwo);
 
+
 CREATE TABLE objectcache (
   keyname  CHAR(255)              UNIQUE,
   value    BYTEA        NOT NULL  DEFAULT '',
@@ -411,9 +388,7 @@ CREATE TABLE transcache (
 );
 
 
-CREATE SEQUENCE log_log_id_seq;
 CREATE TABLE logging (
-  log_id          INTEGER      NOT NULL  PRIMARY KEY DEFAULT nextval('log_log_id_seq'),
   log_type        TEXT         NOT NULL,
   log_action      TEXT         NOT NULL,
   log_timestamp   TIMESTAMPTZ  NOT NULL,
@@ -421,8 +396,7 @@ CREATE TABLE logging (
   log_namespace   SMALLINT     NOT NULL,
   log_title       TEXT         NOT NULL,
   log_comment     TEXT,
-  log_params      TEXT,
-  log_deleted     INTEGER      NOT NULL DEFAULT 0
+  log_params      TEXT
 );
 CREATE INDEX logging_type_name ON logging (log_type, log_timestamp);
 CREATE INDEX logging_user_time ON logging (log_timestamp, log_user);
@@ -453,6 +427,7 @@ CREATE INDEX job_cmd_namespace_title ON job (job_cmd, job_namespace, job_title);
 -- Tsearch2 2 stuff. Will fail if we don't have proper access to the tsearch2 tables
 
 ALTER TABLE page ADD titlevector tsvector;
+CREATE INDEX ts2_page_title ON page USING gist(titlevector);
 CREATE FUNCTION ts2_page_title() RETURNS TRIGGER LANGUAGE plpgsql AS
 $mw$
 BEGIN
@@ -470,6 +445,7 @@ CREATE TRIGGER ts2_page_title BEFORE INSERT OR UPDATE ON page
 
 
 ALTER TABLE pagecontent ADD textvector tsvector;
+CREATE INDEX ts2_page_text ON pagecontent USING gist(textvector);
 CREATE FUNCTION ts2_page_text() RETURNS TRIGGER LANGUAGE plpgsql AS
 $mw$
 BEGIN
@@ -484,11 +460,6 @@ $mw$;
 
 CREATE TRIGGER ts2_page_text BEFORE INSERT OR UPDATE ON pagecontent
   FOR EACH ROW EXECUTE PROCEDURE ts2_page_text();
-
--- These are added by the setup script due to version compatibility issues
--- If using 8.1, switch from "gin" to "gist"
--- CREATE INDEX ts2_page_title ON page USING gin(titlevector);
--- CREATE INDEX ts2_page_text ON pagecontent USING gin(textvector);
 
 CREATE FUNCTION add_interwiki (TEXT,INT,CHAR) RETURNS INT LANGUAGE SQL AS
 $mw$
@@ -525,6 +496,7 @@ CREATE TABLE mediawiki_version (
 );
 
 INSERT INTO mediawiki_version (type,mw_version,sql_version,sql_date)
-  VALUES ('Creation','??','$LastChangedRevision: 25527 $','$LastChangedDate: 2007-09-05 01:14:18 -0700 (Wed, 05 Sep 2007) $');
+  VALUES ('Creation','??','$LastChangedRevision: 18326 $','$LastChangedDate: 2006-12-14 07:34:56 -0800 (Thu, 14 Dec 2006) $');
 
 
+COMMIT;

@@ -19,7 +19,7 @@ function addWiki( $lang, $site, $dbName )
 
 	$name = $wgLanguageNames[$lang];
 
-	$dbw = wfGetDB( DB_WRITE );
+	$dbw =& wfGetDB( DB_WRITE );
 	$common = "/home/wikipedia/common";
 	$maintenance = "$IP/maintenance";
 
@@ -34,7 +34,6 @@ function addWiki( $lang, $site, $dbName )
 	dbsource( "$maintenance/tables.sql", $dbw );
 	dbsource( "$IP/extensions/OAI/update_table.sql", $dbw );
 	dbsource( "$IP/extensions/AntiSpoof/mysql/patch-antispoof.sql", $dbw );
-	dbsource( "$IP/extensions/CheckUser/cu_changes.sql", $dbw );
 	$dbw->query( "INSERT INTO site_stats(ss_row_id) VALUES (1)" );
 
 	# Initialise external storage
@@ -50,7 +49,6 @@ function addWiki( $lang, $site, $dbName )
 		print "Initialising external storage $store...\n";
 		global $wgDBuser, $wgDBpassword, $wgExternalServers;
 		foreach ( $stores as $storeURL ) {
-			$m = array();
 			if ( !preg_match( '!^DB://(.*)$!', $storeURL, $m ) ) {
 				continue;
 			}
@@ -233,4 +231,4 @@ See the [http://www.wikipedia.org Wikipedia portal] for other language Wikipedia
 
 	print "Script ended. You now want to run sync-common-all to publish *dblist files (check them for duplicates first)\n";
 }
-
+?>

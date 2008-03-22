@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -36,4 +37,4 @@ function wfSpecialBlockme() {
 
 	$wgOut->addWikiText( $success );
 }
-
+?>

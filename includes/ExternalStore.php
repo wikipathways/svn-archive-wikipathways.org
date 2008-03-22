@@ -1,6 +1,7 @@
 <?php
 /**
  *
+ * @package MediaWiki
  *
  * Constructor class for data kept in external repositories
  *
@@ -41,9 +42,10 @@ class ExternalStore {
 			return false;
 
 		$class='ExternalStore'.ucfirst($proto);
-		/* Any custom modules should be added to $wgAutoLoadClasses for on-demand loading */
+		/* Preloaded modules might exist, especially ones serving multiple protocols */
 		if (!class_exists($class)) {
-			return false;
+			if (!include_once($class.'.php'))
+				return false;
 		}
 		$store=new $class();
 		return $store;
@@ -65,4 +67,4 @@ class ExternalStore {
 		}
 	}
 }
-
+?>

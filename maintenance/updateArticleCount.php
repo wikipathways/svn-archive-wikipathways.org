@@ -4,7 +4,8 @@
  * Maintenance script to provide a better count of the number of articles
  * and update the site statistics table, if desired
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  * @author Rob Church <robchur@gmail.com>
  */
 
@@ -27,7 +28,7 @@ if( $result !== false ) {
 	echo( "found {$result}.\n" );
 	if( isset( $options['update'] ) && $options['update'] ) {
 		echo( "Updating site statistics table... " );
-		$dbw = wfGetDB( DB_MASTER );
+		$dbw =& wfGetDB( DB_MASTER );
 		$dbw->update( 'site_stats', array( 'ss_good_articles' => $result ), array( 'ss_row_id' => 1 ), __METHOD__ );
 		echo( "done.\n" );
 	} else {
@@ -38,3 +39,4 @@ if( $result !== false ) {
 }
 echo( "\n" );
 
+?>

@@ -1,6 +1,7 @@
 <?php
 /**
  *
+ * @package MediaWiki
  */
 
 
@@ -8,6 +9,7 @@
  * Database load balancing object
  *
  * @todo document
+ * @package MediaWiki
  */
 class LoadBalancer {
 	/* private */ var $mServers, $mConnections, $mLoads, $mGroupLoads;
@@ -22,7 +24,7 @@ class LoadBalancer {
 	 */
 	const AVG_STATUS_POLL = 2000;
 
-	function __construct( $servers, $failFunction = false, $waitTimeout = 10, $waitForMasterNow = false )
+	function LoadBalancer( $servers, $failFunction = false, $waitTimeout = 10, $waitForMasterNow = false )
 	{
 		$this->mServers = $servers;
 		$this->mFailFunction = $failFunction;
@@ -30,7 +32,7 @@ class LoadBalancer {
 		$this->mWriteIndex = -1;
 		$this->mForce = -1;
 		$this->mConnections = array();
-		$this->mLastIndex = -1;
+		$this->mLastIndex = 1;
 		$this->mLoads = array();
 		$this->mWaitForFile = false;
 		$this->mWaitForPos = false;
@@ -95,9 +97,7 @@ class LoadBalancer {
 		# Unset excessively lagged servers
 		$lags = $this->getLagTimes();
 		foreach ( $lags as $i => $lag ) {
-			if ( $i != 0 && isset( $this->mServers[$i]['max lag'] ) && 
-				( $lag === false || $lag > $this->mServers[$i]['max lag'] ) ) 
-			{
+			if ( isset( $this->mServers[$i]['max lag'] ) && $lag > $this->mServers[$i]['max lag'] ) {
 				unset( $loads[$i] );
 			}
 		}
@@ -504,7 +504,8 @@ class LoadBalancer {
 	 * Save master pos to the session and to memcached, if the session exists
 	 */
 	function saveMasterPos() {
-		if ( session_id() != '' && count( $this->mServers ) > 1 ) {
+		global $wgSessionStarted;
+		if ( $wgSessionStarted && count( $this->mServers ) > 1 ) {
 			# If this entire request was served from a slave without opening a connection to the
 			# master (however unlikely that may be), then we can fetch the position from the slave.
 			if ( empty( $this->mConnections[0] ) ) {
@@ -646,4 +647,4 @@ class LoadBalancer {
 	}
 }
 
-
+?>

@@ -1,7 +1,8 @@
 <?php
 /** Lithuanian (Lietuvių)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  */
 
@@ -18,4 +19,4 @@ class LanguageLt extends Language {
 		return empty($wordform3)?$wordform2:$wordform3;
 	}
 }
-
+?>

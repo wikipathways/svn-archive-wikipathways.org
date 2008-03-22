@@ -1,9 +1,15 @@
 <?php
-
 /**
  * Date formatter, recognises dates in plain text and formats them accoding to user preferences.
+ *
+ * @package MediaWiki
+ * @subpackage Parser
+ */
+
+/**
  * @todo preferences, OutputPage
- * @addtogroup Parser
+ * @package MediaWiki
+ * @subpackage Parser
  */
 class DateFormatter
 {
@@ -282,4 +288,4 @@ class DateFormatter
 	}
 }
 
-
+?>

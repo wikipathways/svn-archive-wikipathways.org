@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -30,7 +31,8 @@ function wfSpecialUnlockdb() {
 
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class DBUnlockForm {
 	function showForm( $err )
@@ -107,4 +109,4 @@ END
 	}
 }
 
-
+?>

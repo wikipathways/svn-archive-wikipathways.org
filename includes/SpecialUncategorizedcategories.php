@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -10,8 +11,9 @@
 require_once( "SpecialUncategorizedpages.php" );
 
 /**
- * implements Special:Uncategorizedcategories
- * @addtogroup SpecialPage
+ *
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class UncategorizedCategoriesPage extends UncategorizedPagesPage {
 	function UncategorizedCategoriesPage() {
@@ -34,4 +36,4 @@ function wfSpecialUncategorizedcategories() {
 	return $lpp->doQuery( $offset, $limit );
 }
 
-
+?>

@@ -1,15 +1,10 @@
 <?php
 
-/** Constructor */
 function wfSpecialResetpass( $par ) {
 	$form = new PasswordResetForm();
 	$form->execute( $par );
 }
 
-/**
- * Let users recover their password.
- * @addtogroup SpecialPage
- */
 class PasswordResetForm extends SpecialPage {
 	function __construct( $name=null, $reset=null ) {
 		if( $name !== null ) {
@@ -73,9 +68,7 @@ class PasswordResetForm extends SpecialPage {
 	}
 	
 	function showForm() {
-		global $wgOut, $wgUser, $wgRequest;
-
-		$wgOut->disallowUserJs();
+		global $wgOut, $wgUser, $wgLang, $wgRequest;
 		
 		$self = SpecialPage::getTitleFor( 'Resetpass' );		
 		$form  =
@@ -141,7 +134,7 @@ class PasswordResetForm extends SpecialPage {
 	}
 	
 	/**
-	 * @throws PasswordError when cannot set the new password because requirements not met.
+	 * @throws PasswordError
 	 */
 	function attemptReset( $newpass, $retype ) {
 		$user = User::newFromName( $this->mName );
@@ -162,4 +155,4 @@ class PasswordResetForm extends SpecialPage {
 	}
 }
 
-
+?>

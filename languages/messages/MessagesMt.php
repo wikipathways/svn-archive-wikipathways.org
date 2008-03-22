@@ -1,7 +1,8 @@
 <?php
 /** Maltese (Malti)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 $messages = array(
@@ -74,7 +75,6 @@ $messages = array(
 
 # Watchlist
 'watchlist' => "Lista t'osservazzjoni tiegħi",
-'mywatchlist' => "Lista t'osservazzjoni tiegħi",
 'watch'     => 'Segwi',
 'unwatch'   => 'Tibqax issegwi',
 
@@ -96,4 +96,4 @@ $messages = array(
 
 );
 
-
+?>

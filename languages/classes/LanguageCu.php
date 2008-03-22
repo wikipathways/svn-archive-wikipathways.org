@@ -1,7 +1,8 @@
 <?php
 /** Old Church Slavonic (Ѩзыкъ словѣньскъ)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 /* Please, see Language.php for general function comments */
@@ -46,4 +47,4 @@ class LanguageCu extends Language {
 	}
 
 }
-
+?>

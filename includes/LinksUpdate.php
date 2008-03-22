@@ -1,8 +1,12 @@
 <?php
 /**
- * See docs/deferred.txt
- * 
- * @todo document (e.g. one-sentence top-level class description).
+ * See deferred.txt
+ * @package MediaWiki
+ */
+
+/**
+ * @todo document
+ * @package MediaWiki
  */
 class LinksUpdate {
 
@@ -24,10 +28,10 @@ class LinksUpdate {
 
 	/**
 	 * Constructor
-	 *
-	 * @param Title $title Title of the page we're updating
-	 * @param ParserOutput $parserOutput Output from a full parse of this page
-	 * @param bool $recursive Queue jobs for recursive updates?
+	 * Initialize private variables
+	 * @param $title Integer: FIXME
+	 * @param $parserOutput FIXME
+	 * @param $recursive Boolean: FIXME, default 'true'.
 	 */
 	function LinksUpdate( $title, $parserOutput, $recursive = true ) {
 		global $wgAntiLockFlags;
@@ -37,7 +41,7 @@ class LinksUpdate {
 		} else {
 			$this->mOptions = array( 'FOR UPDATE' );
 		}
-		$this->mDb = wfGetDB( DB_MASTER );
+		$this->mDb =& wfGetDB( DB_MASTER );
 
 		if ( !is_object( $title ) ) {
 			throw new MWException( "The calling convention to LinksUpdate::LinksUpdate() has changed. " .
@@ -64,8 +68,6 @@ class LinksUpdate {
 		}
 
 		$this->mRecursive = $recursive;
-		
-		wfRunHooks( 'LinksUpdateConstructed', array( &$this ) );
 	}
 
 	/**
@@ -170,7 +172,7 @@ class LinksUpdate {
 		wfProfileIn( __METHOD__ );
 		
 		$batchSize = 100;
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$res = $dbr->select( array( 'templatelinks', 'page' ), 
 			array( 'page_namespace', 'page_title' ),
 			array( 
@@ -190,7 +192,7 @@ class LinksUpdate {
 					break;
 				}
 				$title = Title::makeTitle( $row->page_namespace, $row->page_title );
-				$jobs[] = new RefreshLinksJob( $title, '' );
+				$jobs[] = Job::factory( 'refreshLinks', $title );
 			}
 			Job::batchInsert( $jobs );
 		}
@@ -596,4 +598,4 @@ class LinksUpdate {
 		return $arr;
 	}
 }
-
+?>

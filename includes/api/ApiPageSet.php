@@ -1,11 +1,12 @@
 <?php
 
+
 /*
  * Created on Sep 24, 2006
  *
  * API for MediaWiki 1.8+
  *
- * Copyright (C) 2006 Yuri Astrakhan <Firstname><Lastname>@gmail.com
+ * Copyright (C) 2006 Yuri Astrakhan <FirstnameLastname@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,26 +29,12 @@ if (!defined('MEDIAWIKI')) {
 	require_once ('ApiQueryBase.php');
 }
 
-/**
- * This class contains a list of pages that the client has requested.
- * Initially, when the client passes in titles=, pageids=, or revisions= parameter,
- * an instance of the ApiPageSet class will normalize titles,
- * determine if the pages/revisions exist, and prefetch any additional data page data requested.
- * 
- * When generator is used, the result of the generator will become the input for the
- * second instance of this class, and all subsequent actions will go use the second instance
- * for all their work. 
- * 
- * @addtogroup API
- */
 class ApiPageSet extends ApiQueryBase {
 
 	private $mAllPages; // [ns][dbkey] => page_id or 0 when missing
-	private $mTitles, $mGoodTitles, $mMissingTitles, $mMissingPageIDs, $mRedirectTitles;
-	private $mNormalizedTitles, $mInterwikiTitles;
+	private $mTitles, $mGoodTitles, $mMissingTitles, $mMissingPageIDs, $mRedirectTitles, $mNormalizedTitles;
 	private $mResolveRedirects, $mPendingRedirectIDs;
 	private $mGoodRevIDs, $mMissingRevIDs;
-	private $mFakePageId;
 
 	private $mRequestedPageFields;
 
@@ -61,7 +48,6 @@ class ApiPageSet extends ApiQueryBase {
 		$this->mMissingPageIDs = array ();
 		$this->mRedirectTitles = array ();
 		$this->mNormalizedTitles = array ();
-		$this->mInterwikiTitles = array ();
 		$this->mGoodRevIDs = array();
 		$this->mMissingRevIDs = array();
 
@@ -69,8 +55,6 @@ class ApiPageSet extends ApiQueryBase {
 		$this->mResolveRedirects = $resolveRedirects;
 		if($resolveRedirects)
 			$this->mPendingRedirectIDs = array();
-			
-		$this->mFakePageId = -1;
 	}
 
 	public function isResolvingRedirects() {
@@ -102,16 +86,7 @@ class ApiPageSet extends ApiQueryBase {
 		if ($this->mResolveRedirects)
 			$pageFlds['page_is_redirect'] = null;
 
-		$pageFlds = array_merge($pageFlds, $this->mRequestedPageFields);
-		return array_keys($pageFlds);
-	}
-
-	/**
-	 * Returns an array [ns][dbkey] => page_id for all requested titles
-	 * page_id is a unique negative number in case title was not found
-	 */
-	public function getAllTitlesByNamespace() {
-		return $this->mAllPages;
+		return array_keys(array_merge($pageFlds, $this->mRequestedPageFields));
 	}
 
 	/**
@@ -146,7 +121,6 @@ class ApiPageSet extends ApiQueryBase {
 
 	/**
 	 * Title objects that were NOT found in the database.
-	 * The array's index will be negative for each item
 	 * @return array of Title objects
 	 */
 	public function getMissingTitles() {
@@ -176,15 +150,6 @@ class ApiPageSet extends ApiQueryBase {
 	 */
 	public function getNormalizedTitles() {
 		return $this->mNormalizedTitles;
-	}
-
-	/**
-	 * Get a list of interwiki titles - maps the title given 
-	 * with to the interwiki prefix.
-	 * @return array raw_prefixed_title (string) => interwiki_prefix (string) 
-	 */
-	public function getInterwikiTitles() {
-		return $this->mInterwikiTitles;
 	}
 
 	/**
@@ -266,6 +231,7 @@ class ApiPageSet extends ApiQueryBase {
 	 */
 	public function populateFromPageIDs($pageIDs) {
 		$this->profileIn();
+		$pageIDs = array_map('intval', $pageIDs); // paranoia
 		$this->initFromPageIds($pageIDs);
 		$this->profileOut();
 	}
@@ -297,18 +263,22 @@ class ApiPageSet extends ApiQueryBase {
 		// Store Title object in various data structures
 		$title = Title :: makeTitle($row->page_namespace, $row->page_title);
 	
-		$pageId = intval($row->page_id);	
-		$this->mAllPages[$row->page_namespace][$row->page_title] = $pageId;
-		$this->mTitles[] = $title;
+		// skip any pages that user has no rights to read
+		if ($title->userCanRead()) {
 
-		if ($this->mResolveRedirects && $row->page_is_redirect == '1') {
-			$this->mPendingRedirectIDs[$pageId] = $title;
-		} else {
-			$this->mGoodTitles[$pageId] = $title;
+			$pageId = intval($row->page_id);	
+			$this->mAllPages[$row->page_namespace][$row->page_title] = $pageId;
+			$this->mTitles[] = $title;
+	
+			if ($this->mResolveRedirects && $row->page_is_redirect == '1') {
+				$this->mPendingRedirectIDs[$pageId] = $title;
+			} else {
+				$this->mGoodTitles[$pageId] = $title;
+			}
+	
+			foreach ($this->mRequestedPageFields as $fieldName => & $fieldValues)
+				$fieldValues[$pageId] = $row-> $fieldName;
 		}
-
-		foreach ($this->mRequestedPageFields as $fieldName => & $fieldValues)
-			$fieldValues[$pageId] = $row-> $fieldName;
 	}
 	
 	public function finishPageSetGeneration() {
@@ -334,11 +304,11 @@ class ApiPageSet extends ApiQueryBase {
 	private function initFromTitles($titles) {
 
 		// Get validated and normalized title objects
-		$linkBatch = $this->processTitlesArray($titles);
+		$linkBatch = $this->processTitlesStrArray($titles);
 		if($linkBatch->isEmpty())
 			return;
 			
-		$db = $this->getDB();
+		$db = & $this->getDB();
 		$set = $linkBatch->constructSet('page', $db);
 
 		// Get pageIDs data from the `page` table
@@ -356,13 +326,12 @@ class ApiPageSet extends ApiQueryBase {
 	private function initFromPageIds($pageids) {
 		if(empty($pageids))
 			return;
-
-		$pageids = array_map('intval', $pageids); // paranoia
+			
 		$set = array (
 			'page_id' => $pageids
 		);
 
-		$db = $this->getDB();
+		$db = & $this->getDB();
 
 		// Get pageIDs data from the `page` table
 		$this->profileDBIn();
@@ -415,9 +384,8 @@ class ApiPageSet extends ApiQueryBase {
 				foreach ($remaining as $ns => $dbkeys) {
 					foreach ( $dbkeys as $dbkey => $unused ) {
 						$title = Title :: makeTitle($ns, $dbkey);
-						$this->mAllPages[$ns][$dbkey] = $this->mFakePageId;
-						$this->mMissingTitles[$this->mFakePageId] = $title;
-						$this->mFakePageId--;
+						$this->mMissingTitles[] = $title;
+						$this->mAllPages[$ns][$dbkey] = 0;
 						$this->mTitles[] = $title;
 					}
 				}
@@ -438,7 +406,7 @@ class ApiPageSet extends ApiQueryBase {
 		if(empty($revids))
 			return;
 			
-		$db = $this->getDB();
+		$db = & $this->getDB();
 		$pageids = array();
 		$remaining = array_flip($revids);
 		
@@ -470,7 +438,7 @@ class ApiPageSet extends ApiQueryBase {
 	private function resolvePendingRedirects() {
 
 		if($this->mResolveRedirects) {
-			$db = $this->getDB();
+			$db = & $this->getDB();
 			$pageFlds = $this->getPageTableFields();
 	
 			// Repeat until all redirects have been resolved
@@ -502,7 +470,7 @@ class ApiPageSet extends ApiQueryBase {
 	private function getRedirectTargets() {
 
 		$linkBatch = new LinkBatch();
-		$db = $this->getDB();
+		$db = & $this->getDB();
 
 		// find redirect targets for all redirect pages
 		$this->profileDBIn();
@@ -566,46 +534,39 @@ class ApiPageSet extends ApiQueryBase {
 
 	/**
 	 * Given an array of title strings, convert them into Title objects.
-	 * Alternativelly, an array of Title objects may be given.
 	 * This method validates access rights for the title, 
 	 * and appends normalization values to the output.
 	 * 
 	 * @return LinkBatch of title objects.
 	 */
-	private function processTitlesArray($titles) {
+	private function processTitlesStrArray($titles) {
 
 		$linkBatch = new LinkBatch();
 
-		foreach ($titles as $title) {
-			
-			$titleObj = is_string($title) ? Title :: newFromText($title) : $title;
+		foreach ($titles as $titleString) {
+			$titleObj = Title :: newFromText($titleString);
+
+			// Validation
 			if (!$titleObj)
-				$this->dieUsage("bad title", 'invalidtitle');
+				$this->dieUsage("bad title $titleString", 'invalidtitle');
+			if ($titleObj->getNamespace() < 0)
+				$this->dieUsage("No support for special page $titleString has been implemented", 'unsupportednamespace');
+			if (!$titleObj->userCanRead())
+				$this->dieUsage("No read permission for $titleString", 'titleaccessdenied');
 
-			$iw = $titleObj->getInterwiki();
-			if (!empty($iw)) {
-				// This title is an interwiki link.
-				$this->mInterwikiTitles[$titleObj->getPrefixedText()] = $iw;
-			} else { 
+			$linkBatch->addObj($titleObj);
 
-				// Validation
-				if ($titleObj->getNamespace() < 0)
-					$this->dieUsage("No support for special pages has been implemented", 'unsupportednamespace');
-
-				$linkBatch->addObj($titleObj);
-			}
-			
 			// Make sure we remember the original title that was given to us
 			// This way the caller can correlate new titles with the originally requested,
 			// i.e. namespace is localized or capitalization is different
-			if (is_string($title) && $title !== $titleObj->getPrefixedText()) {
-				$this->mNormalizedTitles[$title] = $titleObj->getPrefixedText();
+			if ($titleString !== $titleObj->getPrefixedText()) {
+				$this->mNormalizedTitles[$titleString] = $titleObj->getPrefixedText();
 			}
 		}
 
 		return $linkBatch;
 	}
-	
+
 	protected function getAllowedParams() {
 		return array (
 			'titles' => array (
@@ -631,7 +592,7 @@ class ApiPageSet extends ApiQueryBase {
 	}
 
 	public function getVersion() {
-		return __CLASS__ . ': $Id: ApiPageSet.php 24935 2007-08-20 08:13:16Z nickj $';
+		return __CLASS__ . ': $Id: ApiPageSet.php 17929 2006-11-25 17:11:58Z tstarling $';
 	}
 }
-
+?>

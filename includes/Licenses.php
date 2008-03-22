@@ -1,8 +1,9 @@
 <?php
 /**
  * A License class for use on Special:Upload
- * 
- * @addtogroup SpecialPage
+ *
+ * @package MediaWiki
+ * @subpackage SpecialPage
  *
  * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>
  * @copyright Copyright © 2005, Ævar Arnfjörð Bjarmason
@@ -30,12 +31,12 @@ class Licenses {
 	/**#@-*/
 
 	/**
-	 * Constructor
+	 * Constrictor
 	 *
 	 * @param $str String: the string to build the licenses member from, will use
 	 *                    wfMsgForContent( 'licenses' ) if null (default: null)
 	 */
-	function __construct( $str = null ) {
+	function Licenses( $str = null ) {
 		// PHP sucks, this should be possible in the constructor
 		$this->msg = is_null( $str ) ? wfMsgForContent( 'licenses' ) : $str;
 		$this->html = '';
@@ -146,9 +147,6 @@ class Licenses {
 	function getHtml() { return $this->html; }
 }
 
-/**
- * A License class for use on Special:Upload (represents a single type of license).
- */
 class License {
 	/**
 	 * @var string
@@ -172,4 +170,4 @@ class License {
 		$this->text = strrev( $text );
 	}
 }
-
+?>

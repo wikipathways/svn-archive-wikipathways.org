@@ -18,12 +18,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 $optionsWithArgs = array( 'report' );
 
 require_once( 'commandLine.inc' );
+require_once( 'SpecialImport.php' );
 
 class BackupReader {
 	var $reportingInterval = 100;
@@ -46,8 +48,8 @@ class BackupReader {
 			$this->progress( "Got bogus revision with null title!" );
 			return;
 		}
-		#$timestamp = $rev->getTimestamp();
-		#$display = $title->getPrefixedText();
+		$display = $title->getPrefixedText();
+		$timestamp = $rev->getTimestamp();
 		#echo "$display $timestamp\n";
 
 		$this->revCount++;
@@ -68,8 +70,8 @@ class BackupReader {
 		if( $this->reporting ) {
 			$delta = wfTime() - $this->startTime;
 			if( $delta ) {
-				$rate = sprintf("%.2f", $this->pageCount / $delta);
-				$revrate = sprintf("%.2f", $this->revCount / $delta);
+				$rate = $this->pageCount / $delta;
+				$revrate = $this->revCount / $delta;
 			} else {
 				$rate = '-';
 				$revrate = '-';
@@ -135,7 +137,7 @@ if( WikiError::isError( $result ) ) {
 } else {
 	echo "Done!\n";
 	echo "You might want to run rebuildrecentchanges.php to regenerate\n";
-	echo "the recentchanges page.\n";
+	echo "the recentchanges page.";
 }
 
-
+?>

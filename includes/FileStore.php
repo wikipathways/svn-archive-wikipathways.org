@@ -1,8 +1,5 @@
 <?php
 
-/**
- * @todo document (needs one-sentence top-level class description).
- */
 class FileStore {
 	const DELETE_ORIGINAL = 1;
 	
@@ -36,7 +33,7 @@ class FileStore {
 	 * suffer an uncaught error the lock will be released when the
 	 * connection is closed.
 	 *
-	 * @todo Probably only works on MySQL. Abstract to the Database class?
+	 * @fixme Probably only works on MySQL. Abstract to the Database class?
 	 */
 	static function lock() {
 		global $wgDBtype;
@@ -109,7 +106,7 @@ class FileStore {
 	private function copyFile( $sourcePath, $destPath, $flags=0 ) {
 		if( !file_exists( $sourcePath ) ) {
 			// Abort! Abort!
-			throw new FSException( "missing source file '$sourcePath'" );
+			throw new FSException( "missing source file '$sourcePath'\n" );
 		}
 		
 		$transaction = new FSTransaction();
@@ -128,7 +125,7 @@ class FileStore {
 				
 				if( !$ok ) {
 					throw new FSException(
-						"failed to create directory for '$destPath'" );
+						"failed to create directory for '$destPath'\n" );
 				}
 			}
 			
@@ -141,7 +138,7 @@ class FileStore {
 				$transaction->addRollback( FSTransaction::DELETE_FILE, $destPath );
 			} else {
 				throw new FSException(
-					__METHOD__." failed to copy '$sourcePath' to '$destPath'" );
+					__METHOD__." failed to copy '$sourcePath' to '$destPath'\n" );
 			}
 		}
 		
@@ -178,7 +175,7 @@ class FileStore {
 	 * @throws FSException if file can't be deleted
 	 * @return FSTransaction
 	 *
-	 * @todo Might be worth preliminary permissions check
+	 * @fixme Might be worth preliminary permissions check
 	 */
 	static function deleteFile( $path ) {
 		if( file_exists( $path ) ) {
@@ -219,7 +216,7 @@ class FileStore {
 	 * Confirm that the given file key is valid.
 	 * Note that a valid key may refer to a file that does not exist.
 	 *
-	 * Key should consist of a 31-digit base-36 SHA-1 hash and
+	 * Key should consist of a 32-digit base-36 SHA-1 hash and
 	 * an optional alphanumeric extension, all lowercase.
 	 * The whole must not exceed 64 characters.
 	 *
@@ -227,7 +224,7 @@ class FileStore {
 	 * @return boolean
 	 */
 	static function validKey( $key ) {
-		return preg_match( '/^[0-9a-z]{31,32}(\.[0-9a-z]{1,31})?$/', $key );
+		return preg_match( '/^[0-9a-z]{32}(\.[0-9a-z]{1,31})?$/', $key );
 	}
 	
 	
@@ -249,7 +246,7 @@ class FileStore {
 			return false;
 		}
 		
-		$base36 = wfBaseConvert( $hash, 16, 36, 31 );
+		$base36 = wfBaseConvert( $hash, 16, 36, 32 );
 		if( $extension == '' ) {
 			$key = $base36;
 		} else {
@@ -371,9 +368,6 @@ class FSTransaction {
 	}
 }
 
-/**
- * @addtogroup Exception
- */
 class FSException extends MWException { }
 
-
+?>

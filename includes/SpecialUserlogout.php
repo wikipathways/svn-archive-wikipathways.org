@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -23,4 +24,4 @@ function wfSpecialUserlogout() {
 	}
 }
 
-
+?>

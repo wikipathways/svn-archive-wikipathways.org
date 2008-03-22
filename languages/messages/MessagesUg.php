@@ -1,9 +1,10 @@
 <?php
 /** Uyghur (Oyghurque)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $rtl = true;
 
-
+?>

@@ -1,10 +1,12 @@
 <?php
 /** Navajo (Diné bizaad)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 $skinNames = array(
+	'mono' => 'Łáa\'ígíí',
 	'monobook' => 'NaaltsoosŁáa\'ígíí'
 );
 
@@ -67,4 +69,4 @@ $messages = array(
 'dec'                   => 'Ntsx',
 );
 
-
+?>

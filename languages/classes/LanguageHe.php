@@ -2,7 +2,8 @@
 /**
  * Hebrew (עברית)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  * @author Rotem Liss
  */
@@ -68,4 +69,4 @@ class LanguageHe extends Language {
 	}
 }
 
-
+?>

@@ -3,7 +3,8 @@
   *
   * Minimalistic setup, needed to switch to right-to-left writing.
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $linkPrefixExtension = true;
@@ -19,4 +20,4 @@ $defaultUserOptionOverrides = array(
 
 $fallback = 'fa';
 
-
+?>

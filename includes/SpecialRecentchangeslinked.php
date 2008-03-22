@@ -1,7 +1,8 @@
 <?php
 /**
  * This is to display changes made to all articles linked in an article.
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -24,18 +25,22 @@ function wfSpecialRecentchangeslinked( $par = NULL ) {
 	$wgOut->setPagetitle( wfMsg( 'recentchangeslinked' ) );
 	$sk = $wgUser->getSkin();
 
-	if (is_null($target)) {
-		$wgOut->errorpage( 'notargettitle', 'notargettext' );
-		return;
-	}
+	# Validate the title
 	$nt = Title::newFromURL( $target );
-	if( !$nt ) {
-		$wgOut->errorpage( 'notargettitle', 'notargettext' );
+	if( !is_object( $nt ) ) {
+		$wgOut->errorPage( 'notargettitle', 'notargettext' );
 		return;
 	}
+	
+	# Check for existence
+	# Do a quiet redirect back to the page itself if it doesn't
+	if( !$nt->exists() ) {
+		$wgOut->redirect( $nt->getLocalUrl() );
+		return;
+	}
+
 	$id = $nt->getArticleId();
 
-	$wgOut->setPageTitle( wfMsg( 'recentchangeslinked-title', $nt->getPrefixedText() ) );
 	$wgOut->setSubtitle( htmlspecialchars( wfMsg( 'rclsub', $nt->getPrefixedText() ) ) );
 
 	if ( ! $days ) {
@@ -43,7 +48,7 @@ function wfSpecialRecentchangeslinked( $par = NULL ) {
 	}
 	list( $limit, /* offset */ ) = wfCheckLimits( 100, 'rclimit' );
 
-	$dbr = wfGetDB( DB_SLAVE,'recentchangeslinked' );
+	$dbr =& wfGetDB( DB_SLAVE );
 	$cutoff = $dbr->timestamp( time() - ( $days * 86400 ) );
 
 	$hideminor = ($hideminor ? 1 : 0);
@@ -67,7 +72,7 @@ function wfSpecialRecentchangeslinked( $par = NULL ) {
 
 	$GROUPBY = "
 	GROUP BY rc_cur_id,rc_namespace,rc_title,
-		rc_user,rc_comment,rc_user_text,rc_timestamp,rc_minor,rc_deleted,
+		rc_user,rc_comment,rc_user_text,rc_timestamp,rc_minor,
 		rc_new, rc_id, rc_this_oldid, rc_last_oldid, rc_bot, rc_patrolled, rc_type, rc_old_len, rc_new_len
 " . ($uid ? ",wl_user" : "") . "
 		ORDER BY rc_timestamp DESC
@@ -93,8 +98,7 @@ function wfSpecialRecentchangeslinked( $par = NULL ) {
 				rc_patrolled,
 				rc_type,
 				rc_old_len,
-				rc_new_len,
-				rc_deleted
+				rc_new_len
 " . ($uid ? ",wl_user" : "") . "
 	    FROM $categorylinks, $recentchanges
 " . ($uid ? "LEFT OUTER JOIN $watchlist ON wl_user={$uid} AND wl_title=rc_title AND wl_namespace=rc_namespace " : "") . "
@@ -123,8 +127,7 @@ $GROUPBY
 			rc_patrolled,
 			rc_type,
 			rc_old_len,
-			rc_new_len,
-			rc_deleted
+			rc_new_len
 " . ($uid ? ",wl_user" : "") . "
    FROM $pagelinks, $recentchanges
 " . ($uid ? " LEFT OUTER JOIN $watchlist ON wl_user={$uid} AND wl_title=rc_title AND wl_namespace=rc_namespace " : "") . "
@@ -138,8 +141,8 @@ $GROUPBY
 	}
 	$res = $dbr->query( $sql, $fname );
 
-	$wgOut->addHTML("&lt; ".$sk->makeLinkObj($nt, "", "redirect=no" )."<br />\n");
-	$note = wfMsgExt( "rcnote", array ( 'parseinline' ), $limit, $days, $wgLang->timeAndDate( wfTimestampNow(), true ) );
+	$wgOut->addHTML("&lt; ".$sk->makeKnownLinkObj($nt, "", "redirect=no" )."<br />\n");
+	$note = wfMsg( "rcnote", $limit, $days, $wgLang->timeAndDate( wfTimestampNow(), true ) );
 	$wgOut->addHTML( "<hr />\n{$note}\n<br />" );
 
 	$note = rcDayLimitlinks( $days, $limit, "Recentchangeslinked",
@@ -152,19 +155,15 @@ $GROUPBY
 	$s = $list->beginRecentChangesList();
 	$count = $dbr->numRows( $res );
 
-	if ( $count ) {
-		$counter = 1;
-		while ( $limit ) {
-			if ( 0 == $count ) { break; }
-			$obj = $dbr->fetchObject( $res );
-			--$count;
-			$rc = RecentChange::newFromRow( $obj );
-			$rc->counter = $counter++;
-			$s .= $list->recentChangesLine( $rc , !empty( $obj->wl_user) );
-			--$limit;
-		}
-	} else {
-		$wgOut->addWikiText( wfMsg('recentchangeslinked-noresult') );
+	$counter = 1;
+	while ( $limit ) {
+		if ( 0 == $count ) { break; }
+		$obj = $dbr->fetchObject( $res );
+		--$count;
+		$rc = RecentChange::newFromRow( $obj );
+		$rc->counter = $counter++;
+		$s .= $list->recentChangesLine( $rc , !empty( $obj->wl_user) );
+		--$limit;
 	}
 	$s .= $list->endRecentChangesList();
 
@@ -172,4 +171,4 @@ $GROUPBY
 	$wgOut->addHTML( $s );
 }
 
-
+?>

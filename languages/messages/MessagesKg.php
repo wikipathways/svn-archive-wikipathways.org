@@ -1,7 +1,8 @@
 <?php
 /** Kongo (Kikongo)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 $messages = array(
@@ -95,4 +96,4 @@ $messages = array(
 
 );
 
-
+?>

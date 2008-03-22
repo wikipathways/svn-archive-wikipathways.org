@@ -22,7 +22,8 @@
  * 2005-03-14
  *
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 if( php_sapi_name() != 'cli' ) {
@@ -45,7 +46,7 @@ $wgFieldSeparator = "\xb3"; # Some wikis may use different char
 	$FS3 = $FS."3" ;
 
 # Unicode sanitization tools
-require_once( dirname( dirname( __FILE__ ) ) . '/includes/normal/UtfNormal.php' );
+require_once( '../includes/normal/UtfNormal.php' );
 
 $usercache = array();
 
@@ -89,7 +90,6 @@ function importPageDirectory( $dir, $prefix = "" )
 	echo "\n<!-- Checking page directory " . xmlCommentSafe( $dir ) . " -->\n";
 	$mydir = opendir( $dir );
 	while( $entry = readdir( $mydir ) ) {
-		$m = array();
 		if( preg_match( '/^(.+)\.db$/', $entry, $m ) ) {
 			echo importPage( $prefix . $m[1] );
 		} else {
@@ -121,7 +121,7 @@ function useModFilename( $title ) {
 
 function fetchPage( $title )
 {
-	global $FS1,$FS2,$FS3, $wgRootDirectory;
+	global $FS,$FS1,$FS2,$FS3, $wgRootDirectory;
 
 	$fname = $wgRootDirectory . "/page/" . useModFilename( $title ) . ".db";
 	if( !file_exists( $fname ) ) {
@@ -140,7 +140,7 @@ function fetchPage( $title )
 
 function fetchKeptPages( $title )
 {
-	global $FS1,$FS2,$FS3, $wgRootDirectory;
+	global $FS,$FS1,$FS2,$FS3, $wgRootDirectory, $wgTimezoneCorrection;
 
 	$fname = $wgRootDirectory . "/keep/" . useModFilename( $title ) . ".kp";
 	if( !file_exists( $fname ) ) return array();
@@ -235,13 +235,13 @@ END;
 	# History
 	$revisions = array_merge( $revisions, fetchKeptPages( $title ) );
 	if(count( $revisions ) == 0 ) {
-		return NULL; // Was "$sql", which does not appear to be defined.
+		return $sql;
 	}
 
 	foreach( $revisions as $rev ) {
 		$text      = xmlsafe( recodeText( $rev->text ) );
 		$minor     = ($rev->minor ? '<minor/>' : '');
-		list( /* $userid */ , $username ) = checkUserCache( $rev->username, $rev->host );
+		list( $userid, $username ) = checkUserCache( $rev->username, $rev->host );
 		$username  = xmlsafe( recodeText( $username ) );
 		$timestamp = xmlsafe( timestamp2ISO8601( $rev->ts ) );
 		$comment   = xmlsafe( recodeText( $rev->summary ) );
@@ -362,4 +362,4 @@ function nowikiPlaceholder( $matches ) {
 	return placeholder();
 }
 
-
+?>

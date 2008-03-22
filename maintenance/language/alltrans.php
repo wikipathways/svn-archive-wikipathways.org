@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  *
  * Get all the translations messages, as defined in the English language file.
  */
@@ -12,4 +13,4 @@ foreach( $wgEnglishMessages as $key ) {
 	echo "$key\n";
 }
 
-
+?>

@@ -1,6 +1,7 @@
 <?php
 /**
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 # Kalmyk stub localization;
 
@@ -51,4 +52,4 @@ $messages = array(
 );
 
 
-
+?>

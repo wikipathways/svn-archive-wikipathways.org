@@ -1,7 +1,8 @@
 <?php
 /** Lojban (Lojban)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 $messages = array(
@@ -14,9 +15,10 @@ $messages = array(
 'help'			=> 'sidju ckupau',
 'mainpage'		=> 'ralju ckupau',
 'movedto'		=> 'te muvdu',
+'pagemovedtext'		=> '[[$1]] te muvdu [[$2]] le vreji',
 'portal'		=> 'bende ckupau',
 'randompage'		=> 'cunso ckupau'
 
 );
 
-
+?>

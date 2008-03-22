@@ -1,14 +1,15 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
-
-require_once('UserMailer.php');
 
 /**
- * @todo document
+ *
  */
+require_once('UserMailer.php');
+
 function wfSpecialEmailuser( $par ) {
 	global $wgUser, $wgOut, $wgRequest, $wgEnableEmail, $wgEnableUserEmail;
 
@@ -45,26 +46,12 @@ function wfSpecialEmailuser( $par ) {
 		return;
 	}
 
-	if ( $wgUser->isBlockedFromEmailUser() ) {
-		// User has been blocked from sending e-mail. Show the std blocked form.
-		wfDebug( "User is blocked from sending e-mail.\n" );
-		$wgOut->blockedPage();
-		return;
-	}
-
 	$f = new EmailUserForm( $nu );
 
 	if ( "success" == $action ) {
 		$f->showSuccess( $nu );
 	} else if ( "submit" == $action && $wgRequest->wasPosted() &&
-				$wgUser->matchEditToken( $wgRequest->getVal( 'wpEditToken' ) ) ) 
-	{
-		# Check against the rate limiter
-		if( $wgUser->pingLimiter( 'emailuser' ) ) {
-			$wgOut->rateLimited();
-			return;
-		}
-
+		$wgUser->matchEditToken( $wgRequest->getVal( 'wpEditToken' ) ) ) {
 		$f->doSubmit();
 	} else {
 		$f->showForm();
@@ -72,8 +59,9 @@ function wfSpecialEmailuser( $par ) {
 }
 
 /**
- * Implements the Special:Emailuser web interface, and invokes userMailer for sending the email message.
- * @addtogroup SpecialPage
+ * @todo document
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class EmailUserForm {
 
@@ -115,7 +103,7 @@ class EmailUserForm {
 		$titleObj = SpecialPage::getTitleFor( "Emailuser" );
 		$action = $titleObj->escapeLocalURL( "target=" .
 			urlencode( $this->target->getName() ) . "&action=submit" );
-		$token = htmlspecialchars( $wgUser->editToken() );
+		$token = $wgUser->editToken();
 
 		$wgOut->addHTML( "
 <form id=\"emailuser\" method=\"post\" action=\"{$action}\">
@@ -192,4 +180,4 @@ class EmailUserForm {
 		$wgOut->returnToMain( false, $user->getUserPage() );
 	}
 }
-
+?>

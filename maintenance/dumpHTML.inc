@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 define( 'REPORTING_INTERVAL', 10 );
@@ -8,10 +9,6 @@ define( 'REPORTING_INTERVAL', 10 );
 require_once( 'includes/ImagePage.php' );
 require_once( 'includes/CategoryPage.php' );
 require_once( 'includes/RawPage.php' );
-
-# Explicitly disable article view counter (bug 6823)
-global $wgDisableCounters;
-$wgDisableCounters = true;
 
 class DumpHTML {
 	# Destination directory
@@ -247,9 +244,10 @@ class DumpHTML {
 	 * have a local image
 	 */
 	function doLocalImageDescriptions() {
+		global $wgSharedUploadDirectory;
 		$chunkSize = 1000;
 
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		
 		$cp = $this->getCheckpoint( 'local image' );
 		if ( $cp == 'done' ) {
@@ -349,7 +347,7 @@ class DumpHTML {
 		$chunkSize = 1000;
 		
 		$this->setupGlobals();
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		
 		$cp = $this->getCheckpoint( 'category' );
 		if ( $cp == 'done' ) {
@@ -412,7 +410,7 @@ class DumpHTML {
 		}
 
 		$this->setupGlobals();
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$i = 0;
 
 		for ( $chunkStart = $start; $chunkStart <= $end; $chunkStart += $chunkSize ) {
@@ -445,6 +443,9 @@ class DumpHTML {
 
 	/** Write an article specified by title */
 	function doArticle( $title ) {
+		global $wgTitle, $wgSharedUploadPath, $wgSharedUploadDirectory;
+		global $wgUploadDirectory;
+
 		if ( $this->noOverwrite ) {
 			$fileName = $this->dest.'/'.$this->getHashedFilename( $title );
 			if ( file_exists( $fileName ) ) {
@@ -483,7 +484,7 @@ class DumpHTML {
 				print "Writing $file\n";
 				$file = fopen( $path, 'w' );
 				if ( !$file ) {
-					print("Can't open file $path for writing\n");
+					print("Can't open file $fullName for writing\n");
 					continue;
 				}
 				fwrite( $file, $text );
@@ -495,7 +496,7 @@ class DumpHTML {
 	}
 
 	/** Write the given text to the file identified by the given title object */
-	function writeArticle( $title, $text ) {
+	function writeArticle( &$title, $text ) {
 		$filename = $this->getHashedFilename( $title );
 
 		# Temporary hack for current dump, this should be moved to 
@@ -535,7 +536,7 @@ class DumpHTML {
 
 	/** Set up globals required for parsing */
 	function setupGlobals( $currentDepth = NULL ) {
-		global $wgUser, $wgStylePath, $wgArticlePath, $wgMathPath;
+		global $wgUser, $wgTitle, $wgStylePath, $wgArticlePath, $wgMathPath;
 		global $wgUploadPath, $wgLogo, $wgMaxCredits, $wgSharedUploadPath;
 		global $wgHideInterlanguageLinks, $wgUploadDirectory, $wgThumbnailScriptPath;
 		global $wgSharedThumbnailScriptPath, $wgEnableParserCache, $wgHooks, $wgServer;
@@ -622,7 +623,7 @@ class DumpHTML {
 	}
 
 	/** Reads the content of a title object, executes the skin and captures the result */
-	function getArticleHTML( $title ) {
+	function getArticleHTML( &$title ) {
 		global $wgOut, $wgTitle, $wgArticle, $wgUser;
 
 		$linkCache =& LinkCache::singleton();
@@ -799,7 +800,6 @@ ENDTEXT;
 
 		$url = false;
 		if ( $query != '' ) {
-			$params = array();
 			parse_str( $query, $params );
 			if ( isset($params['action']) && $params['action'] == 'raw' ) {
 				if ( $params['gen'] == 'css' || $params['gen'] == 'js' ) {
@@ -807,7 +807,6 @@ ENDTEXT;
 				} else {
 					$file = $this->getFriendlyName( $title->getPrefixedDBkey() );
 					// Clean up Monobook.css etc.
-					$matches = array();
 					if ( preg_match( '/^(.*)\.(css|js)_[0-9a-f]{4}$/', $file, $matches ) ) {
 						$file = $matches[1] . '.' . $matches[2];
 					}
@@ -883,7 +882,6 @@ ENDTEXT;
 		}
 
 		# Split into characters
-		$m = array();
 		preg_match_all( '/./us', $dbk, $m );
 
 		$chars = $m[0];
@@ -960,7 +958,7 @@ ENDTEXT;
 
 	function getMaxPageID() {
 		if ( $this->maxPageID === false ) {
-			$dbr = wfGetDB( DB_SLAVE );
+			$dbr =& wfGetDB( DB_SLAVE );
 			$this->maxPageID = $dbr->selectField( 'page', 'max(page_id)', false, __METHOD__ );
 		}
 		return $this->maxPageID;
