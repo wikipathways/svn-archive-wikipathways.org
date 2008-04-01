@@ -9,7 +9,11 @@ function renderPathwayPage(&$parser, &$text, &$strip_state) {
 	{
 		$parser->disableCache();
 		$pathway = Pathway::newFromTitle($title);
-		$pathway->updateCache(FILETYPE_IMG); //In case the image page is removed
+		try {
+			$pathway->updateCache(FILETYPE_IMG); //In case the image page is removed
+		} catch(Exception $e) {
+			echo("Error while refreshing image cache");
+		}
 		$page = new PathwayPage($pathway);
 		$text = $page->getContent();
 	}
