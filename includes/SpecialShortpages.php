@@ -1,13 +1,15 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
  * SpecialShortpages extends QueryPage. It is used to return the shortest
  * pages in the database.
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class ShortPagesPage extends QueryPage {
 
@@ -27,7 +29,7 @@ class ShortPagesPage extends QueryPage {
 	}
 
 	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$page = $dbr->tableName( 'page' );
 		$name = $dbr->addQuotes( $this->getName() );
 
@@ -41,7 +43,7 @@ class ShortPagesPage extends QueryPage {
 			WHERE page_namespace=".NS_MAIN." AND page_is_redirect=0";
 	}
 
-	function preprocessResults( $db, $res ) {
+	function preprocessResults( &$db, &$res ) {
 		# There's no point doing a batch check if we aren't caching results;
 		# the page must exist for it to have been pulled out of the table
 		if( $this->isCached() ) {
@@ -89,4 +91,4 @@ function wfSpecialShortpages() {
 	return $spp->doQuery( $offset, $limit );
 }
 
-
+?>

@@ -4,14 +4,16 @@
  * Wikimedia specific!
  *
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
 
 /**
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 class Site {
 	var $suffix, $lateral, $url;
@@ -50,10 +52,15 @@ function getRebuildInterwikiDump() {
 	# List of all database names
 	$dblist = array_map( "trim", file( "/home/wikipedia/common/all.dblist" ) );
 
-	# Special-case databases
-	$specials = array_flip(
-		array_map( "trim",
-			file( "/home/wikipedia/common/special.dblist" ) ) );
+	# Special-case hostnames
+	$specials = array(
+		'sourceswiki' => 'sources.wikipedia.org',
+		'quotewiki' => 'wikiquote.org',
+		'textbookwiki' => 'wikibooks.org',
+		'sep11wiki' => 'sep11.wikipedia.org',
+		'metawiki' => 'meta.wikimedia.org',
+		'commonswiki' => 'commons.wikimedia.org',
+	);
 
 	# Extra interwiki links that can't be in the intermap for some reason
 	$extraLinks = array(
@@ -99,7 +106,8 @@ function getRebuildInterwikiDump() {
 		wfDie( "m:Interwiki_map not found" );
 	}
 
-	# Global iterwiki map
+	$iwArray = array();
+        # Global iterwiki map
 	foreach ( $lines as $line ) {
 		if ( preg_match( '/^\|\s*(.*?)\s*\|\|\s*(.*?)\s*$/', $line, $matches ) ) {
 			$prefix = strtolower( $matches[1] );
@@ -122,7 +130,7 @@ function getRebuildInterwikiDump() {
         
         #Multilanguage sites
         foreach ($sites as $site) 
-            makeLanguageLinks ( $site, "_".$site->suffix );
+            $sql .= makeLanguageLinks ( $site, "_".$site->suffix );
 
 
         foreach ( $dblist as $db ) {
@@ -154,6 +162,7 @@ function getRebuildInterwikiDump() {
 				continue;
 			}
 			$lang = $matches[1];
+			$host = "$lang." . $site->url;
 
 			# Lateral links
 			foreach ( $sites as $targetSite ) {
@@ -178,7 +187,7 @@ function getRebuildInterwikiDump() {
 
 # ------------------------------------------------------------------------------------------
 
-# Executes part of an INSERT statement, corresponding to all interlanguage links to a particular site
+# Returns part of an INSERT statement, corresponding to all interlanguage links to a particular site
 function makeLanguageLinks( &$site, $source ) {
 	global $langlist, $languageAliases;
 	# Actual languages with their own databases

@@ -1,28 +1,26 @@
 <?php
 /** Croatian (hrvatski)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 
 class LanguageHr extends Language {
-
-	function convertPlural( $count, $forms ) {
-		if ( !count($forms) ) { return ''; }
-		$forms = $this->preConvertPlural( $forms, 3 );
-
+	function convertPlural( $count, $wordform1, $wordform2, $wordform3, $w4, $w5) {
+		$count = str_replace ('.', '', $count);
 		if ($count > 10 && floor(($count % 100) / 10) == 1) {
-			return $forms[2];
+			return $wordform3;
 		} else {
 			switch ($count % 10) {
-				case 1:  return $forms[0];
+				case 1: return $wordform1;
 				case 2:
 				case 3:
-				case 4:  return $forms[1];
-				default: return $forms[2];
+				case 4: return $wordform2;
+				default: return $wordform3;
 			}
 		}
 	}
 
 }
 
-
+?>

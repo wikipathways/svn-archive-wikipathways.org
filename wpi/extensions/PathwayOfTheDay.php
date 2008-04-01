@@ -42,17 +42,17 @@ function wfPathwayOfTheDay_Magic( &$magicWords, $langCode ) {
         return true;
 }
 
-function getPathwayOfTheDay( &$parser, $date, $listpage = 'FeaturedPathways') {
+function getPathwayOfTheDay( &$parser, $date ) {
 	$parser->disableCache();	
 	wfDebug("GETTING PATHWAY OF THE DAY for date: $date\n");
 	try {
-		$potd = new FeaturedPathway($listpage, $date, $listpage);
+		$potd = new FeaturedPathway($date);
 		$out =  $potd->getWikiOutput();
 		wfDebug("END GETTING PATHWAY OF THE DAY for date: $date\n");
 	} catch(Exception $e) {
 		$out = "Unable to get pathway of the day: {$e->getMessage()}";
 	}
-	return array( $out, 'noparse' => false);
+	return $out;
 }
 
 /**
@@ -60,12 +60,7 @@ Featured pathway is a slight modification on PathwayOfTheDay, it does get
 pathways from a limited collection, kept on the FeaturedPathway wiki page
 **/
 class FeaturedPathway extends PathwayOfTheDay {
-	private $listPage;
-	
-	function __construct($id, $date, $listPage) {
-		$this->listPage = $listPage;
-		parent::__construct($id, $date);
-	}
+	private $listPage = "FeaturedPathways";
 	
 	/**
 	Select a random pathway from the list
@@ -73,11 +68,34 @@ class FeaturedPathway extends PathwayOfTheDay {
 	**/
 	protected function fetchRandomPathway() {
 		wfDebug("Fetching random pathway...\n");
-		$pathwayList = Pathway::parsePathwayListPage($this->listPage);
+		
+		$listRev = Revision::newFromTitle(Title::newFromText($this->listPage), 0);
+		if($listRev != null) {
+			$lines = explode("\n", $listRev->getText());
+		} else {
+			throw new Exception("[[{$this->listPage}]] doesn't exist!");
+		}
+		$pathwayList = array();
+		
+		//Try to parse a pathway from each line
+		foreach($lines as $title) {
+			//Regex to fetch title from "* [[title|...]]"
+			// \*\ *\[\[(.*)\]\]
+			$title = preg_replace('/\*\ *\[\[(.*)\]\]/', '$1', $title);
+			try {
+				//If pathway creation works and the pathway exists, add to array
+				$pathway = Pathway::newFromTitle($title);
+				if(!is_null($pathway) && $pathway->exists()) {
+					$pathwayList[] = $title;
+				}
+			} catch(Exception $e) {
+				//Ignore the pathway
+			}
+		}
 		if(count($pathwayList) == 0) {
 			throw new Exception("{$this->listPage} doesn't contain any valid pathway!");
 		}
-		return $pathwayList[rand(0, count($pathwayList) - 1)]->getTitleObject()->getDbKey();
+		return $pathwayList[rand(0, count($pathwayList) - 1)];
 	}
 }
 
@@ -86,11 +104,9 @@ class PathwayOfTheDay {
 	
 	var $todaysPw; //Todays pathway
 	var $today; //Day todaysPw was marked as today's
-	var $id; //Id to support multiple pathway of the day caches
-	
-	function __construct($id, $date) {
+		
+	function __construct($date) {
 		PathwayOfTheDay::setupDB(); //TODO: remove this after first use
-		$this->id = $id;
 		if($date) {
 			$this->today = $date;
 		} else {
@@ -116,7 +132,7 @@ class PathwayOfTheDay {
 	
 	private function fetchTodaysPathway() {
 		$dbr =& wfGetDB(DB_SLAVE);
-		$res = $dbr->select( PathwayOfTheDay::$table, array('pathway'), array('day' => $this->id . $this->today));
+		$res = $dbr->select( PathwayOfTheDay::$table, array('pathway'), array('day' => $this->today));
 		$row = $dbr->fetchRow( $res );
 		$dbr->freeResult( $res );
 		return $row[0];
@@ -208,7 +224,7 @@ class PathwayOfTheDay {
 		
 	private function updateHistory() {
 		$dbw =& wfGetDB(DB_MASTER);
-		$dbw->insert(PathwayOfTheDay::$table, array('pathway' => $this->todaysPw, 'day' => $this->id . $this->today));
+		$dbw->insert(PathwayOfTheDay::$table, array('pathway' => $this->todaysPw, 'day' => $this->today));
 	}
 	
 	//Select a random pathway

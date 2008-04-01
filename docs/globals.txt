@@ -72,13 +72,3 @@ $wgParser
 
 $wgLoadBalancer
 	A LoadBalancer object, manages database connections.
-
-$wgRequest
-	WebRequest object, to get request data
-
-$wgMemc, $messageMemc, $parserMemc
-	Object caches
-
-$wgMessageCache
-	Message cache, to manage interface messages
-

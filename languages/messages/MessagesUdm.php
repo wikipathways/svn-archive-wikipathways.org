@@ -1,7 +1,8 @@
 <?php
 /** Udmurt (Удмурт)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  */
 
@@ -34,28 +35,17 @@ $separatorTransformTable = array(',' => ' ', '.' => ',' );
 
 $messages = array(
 'linkprefix' => '/^(.*?)(„|«)$/sDu',
-
 'article' => 'Статья',
-'mytalk'  => 'викиавтор сярысь вераськон',
-
-'history'       => 'Бамлэн историез',
-'history_short' => 'история',
-'edit'          => 'тупатыны',
-
-# Short words for each namespace, by default used in the namespace tab in monobook
-'nstab-user' => 'викиавтор',
-
-# Login and logout pages
-'login'         => 'Википедие пырон',
 'createaccount' => 'выль вики-авторлэн регистрациез',
-
-# Preferences page
-'preferences' => 'настройкаос',
-
-# Recent changes
+'edit' => 'тупатыны',
 'hist' => 'история',
-
-# Contributions
+'history' => 'Бамлэн историез',
+'history_short' => 'история',
+'login' => 'Википедие пырон',
 'mycontris' => 'мынам статьяосы',
-
+'mytalk' => 'викиавтор сярысь вераськон',
+'nstab-user' => 'викиавтор',
+'preferences' => 'настройкаос',
 );
+
+?>

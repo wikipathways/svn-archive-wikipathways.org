@@ -17,15 +17,16 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 # http://www.gnu.org/copyleft/gpl.html
 
-
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
+
 class WikiExporter {
 	var $list_authors = false ; # Return distinct author list (when not returning full history)
 	var $author_list = "" ;
-
+	
 	const FULL = 0;
 	const CURRENT = 1;
 
@@ -43,14 +44,14 @@ class WikiExporter {
 	 * main query is still running.
 	 *
 	 * @param Database $db
-	 * @param mixed $history one of WikiExporter::FULL or WikiExporter::CURRENT, or an
+	 * @param mixed $history one of WikiExporter::FULL or WikiExporter::CURRENT, or an 
 	 *                       associative array:
 	 *                         offset: non-inclusive offset at which to start the query
 	 *                         limit: maximum number of rows to return
 	 *                         dir: "asc" or "desc" timestamp order
 	 * @param int $buffer one of WikiExporter::BUFFER or WikiExporter::STREAM
 	 */
-	function __construct( &$db, $history = WikiExporter::CURRENT,
+	function WikiExporter( &$db, $history = WikiExporter::CURRENT,
 			$buffer = WikiExporter::BUFFER, $text = WikiExporter::TEXT ) {
 		$this->db =& $db;
 		$this->history = $history;
@@ -111,7 +112,7 @@ class WikiExporter {
 	function pageByTitle( $title ) {
 		return $this->dumpFrom(
 			'page_namespace=' . $title->getNamespace() .
-			' AND page_title=' . $this->db->addQuotes( $title->getDBkey() ) );
+			' AND page_title=' . $this->db->addQuotes( $title->getDbKey() ) );
 	}
 
 	function pageByName( $name ) {
@@ -139,10 +140,7 @@ class WikiExporter {
 		$fname = "do_list_authors" ;
 		wfProfileIn( $fname );
 		$this->author_list = "<contributors>";
-		//rev_deleted
-		$nothidden = '(rev_deleted & '.Revision::DELETED_USER.') = 0';
-		
-		$sql = "SELECT DISTINCT rev_user_text,rev_user FROM {$page},{$revision} WHERE page_id=rev_page AND $nothidden AND " . $cond ;
+		$sql = "SELECT DISTINCT rev_user_text,rev_user FROM {$page},{$revision} WHERE page_id=rev_page AND " . $cond ;
 		$result = $this->db->query( $sql, $fname );
 		$resultset = $this->db->resultObject( $result );
 		while( $row = $resultset->fetchObject() ) {
@@ -166,10 +164,10 @@ class WikiExporter {
 		$page     = $this->db->tableName( 'page' );
 		$revision = $this->db->tableName( 'revision' );
 		$text     = $this->db->tableName( 'text' );
-
+		
 		$order = 'ORDER BY page_id';
 		$limit = '';
-
+		
 		if( $this->history == WikiExporter::FULL ) {
 			$join = 'page_id=rev_page';
 		} elseif( $this->history == WikiExporter::CURRENT ) {
@@ -187,7 +185,7 @@ class WikiExporter {
 				$order .= ', rev_timestamp DESC';
 			}
 			if ( !empty( $this->history['offset'] ) ) {
-				$join .= " AND rev_timestamp $op " . $this->db->addQuotes(
+				$join .= " AND rev_timestamp $op " . $this->db->addQuotes( 
 					$this->db->timestamp( $this->history['offset'] ) );
 			}
 			if ( !empty( $this->history['limit'] ) ) {
@@ -231,7 +229,7 @@ class WikiExporter {
 		$result = $this->db->query( $sql, $fname );
 		$wrapper = $this->db->resultObject( $result );
 		$this->outputStream( $wrapper );
-
+		
 		if ( $this->list_authors ) {
 			$this->outputStream( $wrapper );
 		}
@@ -281,9 +279,6 @@ class WikiExporter {
 	}
 }
 
-/**
- * @addtogroup Dump
- */
 class XmlDumpWriter {
 
 	/**
@@ -466,7 +461,6 @@ class XmlDumpWriter {
 
 /**
  * Base class for output stream; prints to stdout or buffer or whereever.
- * @addtogroup Dump
  */
 class DumpOutput {
 	function writeOpenStream( $string ) {
@@ -500,7 +494,6 @@ class DumpOutput {
 
 /**
  * Stream outputter to send data to a file.
- * @addtogroup Dump
  */
 class DumpFileOutput extends DumpOutput {
 	var $handle;
@@ -518,7 +511,6 @@ class DumpFileOutput extends DumpOutput {
  * Stream outputter to send data to a file via some filter program.
  * Even if compression is available in a library, using a separate
  * program can allow us to make use of a multi-processor system.
- * @addtogroup Dump
  */
 class DumpPipeOutput extends DumpFileOutput {
 	function DumpPipeOutput( $command, $file = null ) {
@@ -531,7 +523,6 @@ class DumpPipeOutput extends DumpFileOutput {
 
 /**
  * Sends dump output via the gzip compressor.
- * @addtogroup Dump
  */
 class DumpGZipOutput extends DumpPipeOutput {
 	function DumpGZipOutput( $file ) {
@@ -541,7 +532,6 @@ class DumpGZipOutput extends DumpPipeOutput {
 
 /**
  * Sends dump output via the bgzip2 compressor.
- * @addtogroup Dump
  */
 class DumpBZip2Output extends DumpPipeOutput {
 	function DumpBZip2Output( $file ) {
@@ -551,14 +541,13 @@ class DumpBZip2Output extends DumpPipeOutput {
 
 /**
  * Sends dump output via the p7zip compressor.
- * @addtogroup Dump
  */
 class Dump7ZipOutput extends DumpPipeOutput {
 	function Dump7ZipOutput( $file ) {
 		$command = "7za a -bd -si " . wfEscapeShellArg( $file );
 		// Suppress annoying useless crap from p7zip
 		// Unfortunately this could suppress real error messages too
-		$command .= ' >' . wfGetNull() . ' 2>&1';
+		$command .= " >/dev/null 2>&1";
 		parent::DumpPipeOutput( $command );
 	}
 }
@@ -569,7 +558,6 @@ class Dump7ZipOutput extends DumpPipeOutput {
  * Dump output filter class.
  * This just does output filtering and streaming; XML formatting is done
  * higher up, so be careful in what you do.
- * @addtogroup Dump
  */
 class DumpFilter {
 	function DumpFilter( &$sink ) {
@@ -615,7 +603,6 @@ class DumpFilter {
 
 /**
  * Simple dump output filter to exclude all talk pages.
- * @addtogroup Dump
  */
 class DumpNotalkFilter extends DumpFilter {
 	function pass( $page ) {
@@ -625,7 +612,6 @@ class DumpNotalkFilter extends DumpFilter {
 
 /**
  * Dump output filter to include or exclude pages in a given set of namespaces.
- * @addtogroup Dump
  */
 class DumpNamespaceFilter extends DumpFilter {
 	var $invert = false;
@@ -680,7 +666,6 @@ class DumpNamespaceFilter extends DumpFilter {
 
 /**
  * Dump output filter to include only the last revision in each page sequence.
- * @addtogroup Dump
  */
 class DumpLatestFilter extends DumpFilter {
 	var $page, $pageString, $rev, $revString;
@@ -712,7 +697,6 @@ class DumpLatestFilter extends DumpFilter {
 
 /**
  * Base class for output stream; prints to stdout or buffer or whereever.
- * @addtogroup Dump
  */
 class DumpMultiWriter {
 	function DumpMultiWriter( $sinks ) {
@@ -767,4 +751,4 @@ function xmlsafe( $string ) {
 	return $string;
 }
 
-
+?>

@@ -4,7 +4,8 @@
  * Maintenance script to delete revisions which refer to a nonexisting page
  * Sometimes manual deletion done in a rush leaves crap in the database
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  * @author Rob Church <robchur@gmail.com>
  * @todo More efficient cleanup of text records
  */
@@ -19,7 +20,7 @@ if( isset( $options['help'] ) )
 
 $report = isset( $options['report'] );
 
-$dbw = wfGetDB( DB_MASTER );
+$dbw =& wfGetDB( DB_MASTER );
 $dbw->immediateBegin();
 extract( $dbw->tableNames( 'page', 'revision' ) );
 
@@ -51,3 +52,4 @@ $dbw->immediateCommit();
 require_once( 'purgeOldText.inc' );
 PurgeRedundantText( true );
 
+?>

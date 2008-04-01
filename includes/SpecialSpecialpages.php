@@ -1,18 +1,17 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
  *
  */
 function wfSpecialSpecialpages() {
-	global $wgOut, $wgUser, $wgMessageCache;
+	global $wgOut, $wgUser;
 
-	$wgMessageCache->loadAllMessages();
-
-	$wgOut->setRobotpolicy( 'noindex,nofollow' );  # Is this really needed?
+	$wgOut->setRobotpolicy( 'index,nofollow' );
 	$sk = $wgUser->getSkin();
 
 	/** Pages available to all */
@@ -52,10 +51,10 @@ function wfSpecialSpecialpages_gen($pages,$heading,$sk) {
 	/** Now output the HTML */
 	$wgOut->addHTML( '<h2>' . wfMsgHtml( $heading ) . "</h2>\n<ul>" );
 	foreach ( $sortedPages as $desc => $title ) {
-		$link = $sk->makeKnownLinkObj( $title , htmlspecialchars( $desc ) );
+		$link = $sk->makeKnownLinkObj( $title, $desc );
 		$wgOut->addHTML( "<li>{$link}</li>\n" );
 	}
 	$wgOut->addHTML( "</ul>\n" );
 }
 
-
+?>

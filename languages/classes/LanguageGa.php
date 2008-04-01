@@ -1,7 +1,8 @@
 <?php
 /** Irish (Gaeilge)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 class LanguageGa extends Language {
@@ -48,4 +49,4 @@ class LanguageGa extends Language {
 
 }
 
-
+?>

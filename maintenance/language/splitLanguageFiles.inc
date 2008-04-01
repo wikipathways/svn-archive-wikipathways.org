@@ -1122,6 +1122,7 @@ $commonMsg = array (
 'movelogpagetext',
 
 'thumbnail-more',
+'missingimage',
 'filemissing',
 'monobook.css',
 'nodublincore',

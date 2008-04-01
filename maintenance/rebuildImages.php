@@ -26,7 +26,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  *
  * @author Brion Vibber <brion at pobox.com>
- * @addtogroup maintenance
+ * @package MediaWiki
+ * @subpackage maintenance
  */
 
 $options = array( 'missing', 'dry-run' );
@@ -40,16 +41,6 @@ class ImageBuilder extends FiveUpgrade {
 
 		$this->maxLag = 10; # if slaves are lagged more than 10 secs, wait
 		$this->dryrun = $dryrun;
-		if ( $dryrun ) {
-			$GLOBALS['wgReadOnly'] = 'Dry run mode, image upgrades are suppressed';
-		}
-	}
-
-	function getRepo() {
-		if ( !isset( $this->repo ) ) {
-			$this->repo = RepoGroup::singleton()->getLocalRepo();
-		}
-		return $this->repo;
 	}
 
 	function build() {
@@ -84,9 +75,9 @@ class ImageBuilder extends FiveUpgrade {
 			$portion * 100.0,
 			$this->table,
 			wfTimestamp( TS_DB, intval( $eta ) ),
-			$completed,   // $completed does not appear to be defined.
+			$completed,
 			$this->count,
-			$rate,        // $rate does not appear to be defined.
+			$rate,
 			$updateRate * 100.0 );
 		flush();
 	}
@@ -104,7 +95,13 @@ class ImageBuilder extends FiveUpgrade {
 
 		while( $row = $this->dbr->fetchObject( $result ) ) {
 			$update = call_user_func( $callback, $row );
-			if( $update ) {
+			if( is_array( $update ) ) {
+				if( !$this->dryrun ) {
+					$this->dbw->update( $table,
+						$update,
+						array( $key => $row->$key ),
+						$fname );
+				}
 				$this->progress( 1 );
 			} else {
 				$this->progress( 0 );
@@ -120,11 +117,27 @@ class ImageBuilder extends FiveUpgrade {
 	}
 
 	function imageCallback( $row ) {
-		// Create a File object from the row
-		// This will also upgrade it
-		$file = $this->getRepo()->newFileFromRow( $row );
-		return $file->getUpgraded();
+		if( $row->img_width ) {
+			// Already processed
+			return null;
+		}
+
+		// Fill in the new image info fields
+		$info = $this->imageInfo( $row->img_name );
+
+		global $wgMemc;
+		$key = wfMemcKey( "Image", md5( $row->img_name ) );
+		$wgMemc->delete( $key );
+
+		return array(
+			'img_width'      => $info['width'],
+			'img_height'     => $info['height'],
+			'img_bits'       => $info['bits'],
+			'img_media_type' => $info['media'],
+			'img_major_mime' => $info['major'],
+			'img_minor_mime' => $info['minor'] );
 	}
+
 
 	function buildOldImage() {
 		$this->buildTable( 'oldimage', 'oi_archive_name',
@@ -132,31 +145,69 @@ class ImageBuilder extends FiveUpgrade {
 	}
 
 	function oldimageCallback( $row ) {
-		// Create a File object from the row
-		// This will also upgrade it
-		if ( $row->oi_archive_name == '' ) {
-			$this->log( "Empty oi_archive_name for oi_name={$row->oi_name}" );
-			return false;
+		if( $row->oi_width ) {
+			return null;
 		}
-		$file = $this->getRepo()->newFileFromRow( $row );
-		return $file->getUpgraded();
+
+		// Fill in the new image info fields
+		$info = $this->imageInfo( $row->oi_archive_name, 'wfImageArchiveDir', $row->oi_name );
+		return array(
+			'oi_width'  => $info['width' ],
+			'oi_height' => $info['height'],
+			'oi_bits'   => $info['bits'  ] );
 	}
 
 	function crawlMissing() {
-		$repo = RepoGroup::singleton()->getLocalRepo();
-		$repo->enumFilesInFS( array( $this, 'checkMissingImage' ) );
+		global $wgUploadDirectory, $wgHashedUploadDirectory;
+		if( $wgHashedUploadDirectory ) {
+			for( $i = 0; $i < 16; $i++ ) {
+				for( $j = 0; $j < 16; $j++ ) {
+					$dir = sprintf( '%s%s%01x%s%02x',
+						$wgUploadDirectory,
+						DIRECTORY_SEPARATOR,
+						$i,
+						DIRECTORY_SEPARATOR,
+						$i * 16 + $j );
+					$this->crawlDirectory( $dir );
+				}
+			}
+		} else {
+			$this->crawlDirectory( $wgUploadDirectory );
+		}
 	}
 
-	function checkMissingImage( $fullpath ) {
+	function crawlDirectory( $dir ) {
+		if( !file_exists( $dir ) ) {
+			return $this->log( "no directory, skipping $dir" );
+		}
+		if( !is_dir( $dir ) ) {
+			return $this->log( "not a directory?! skipping $dir" );
+		}
+		if( !is_readable( $dir ) ) {
+			return $this->log( "dir not readable, skipping $dir" );
+		}
+		$source = opendir( $dir );
+		if( $source === false ) {
+			return $this->log( "couldn't open dir, skipping $dir" );
+		}
+
+		$this->log( "crawling $dir" );
+		while( false !== ( $filename = readdir( $source ) ) ) {
+			$fullpath = $dir . DIRECTORY_SEPARATOR . $filename;
+			if( is_dir( $fullpath ) ) {
+				continue;
+			}
+			if( is_link( $fullpath ) ) {
+				$this->log( "skipping symlink at $fullpath" );
+				continue;
+			}
+			$this->checkMissingImage( $filename, $fullpath );
+		}
+		closedir( $source );
+	}
+
+	function checkMissingImage( $filename, $fullpath ) {
 		$fname = 'ImageBuilder::checkMissingImage';
-		$filename = wfBaseName( $fullpath );
-		if( is_dir( $fullpath ) ) {
-			return;
-		}
-		if( is_link( $fullpath ) ) {
-			$this->log( "skipping symlink at $fullpath" );
-			return;
-		}
 		$row = $this->dbw->selectRow( 'image',
 			array( 'img_name' ),
 			array( 'img_name' => $filename ),
@@ -173,6 +224,8 @@ class ImageBuilder extends FiveUpgrade {
 	function addMissingImage( $filename, $fullpath ) {
 		$fname = 'ImageBuilder::addMissingImage';
 
+		$size = filesize( $fullpath );
+		$info = $this->imageInfo( $filename );
 		$timestamp = $this->dbw->timestamp( filemtime( $fullpath ) );
 
 		global $wgContLang;
@@ -190,14 +243,23 @@ class ImageBuilder extends FiveUpgrade {
 			$this->log( "Empty filename for $fullpath" );
 			return;
 		}
-		if ( !$this->dryrun ) {
-			$file = wfLocalFile( $filename );
-			if ( !$file->recordUpload( '', '(recovered file, missing upload log entry)', '', '', '', 
-				false, $timestamp ) )
-			{
-				$this->log( "Error uploading file $fullpath" );
-				return;
-			}
+
+		$fields = array(
+			'img_name'       => $filename,
+			'img_size'       => $size,
+			'img_width'      => $info['width'],
+			'img_height'     => $info['height'],
+			'img_metadata'   => '', // filled in on-demand
+			'img_bits'       => $info['bits'],
+			'img_media_type' => $info['media'],
+			'img_major_mime' => $info['major'],
+			'img_minor_mime' => $info['minor'],
+			'img_description' => '(recovered file, missing upload log entry)',
+			'img_user'        => 0,
+			'img_user_text'   => 'Conversion script',
+			'img_timestamp'   => $timestamp );
+		if( !$this->dryrun ) {
+			$this->dbw->insert( 'image', $fields, $fname );
 		}
 		$this->log( $fullpath );
 	}
@@ -210,4 +272,4 @@ if( isset( $options['missing'] ) ) {
 	$builder->build();
 }
 
-
+?>

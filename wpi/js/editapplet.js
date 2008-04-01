@@ -91,10 +91,8 @@ function checkExit() {
 	var applets = document.applets;
 	for(key in document.applets) {
 		var applet = applets[key];
-		if(typeof(applet) == "object") {
-			if(!applet.mayExit()) {
-				return "Any changes to the pathway will be lost!";
-			}
+		if(!applet.mayExit()) {
+			return "Any changes to the pathway will be lost!";
 		}
 	}
 }

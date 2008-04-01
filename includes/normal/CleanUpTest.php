@@ -17,6 +17,15 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 # http://www.gnu.org/copyleft/gpl.html
 
+/**
+ * Additional tests for UtfNormal::cleanUp() function, inclusion
+ * regression checks for known problems.
+ *
+ * Requires PHPUnit.
+ *
+ * @package UtfNormal
+ * @private
+ */
 
 if( php_sapi_name() != 'cli' ) {
 	die( "Run me from the command line please.\n" );
@@ -29,20 +38,20 @@ if( isset( $_SERVER['argv'] ) && in_array( '--icu', $_SERVER['argv'] ) ) {
 
 #ini_set( 'memory_limit', '40M' );
 
-require_once 'PHPUnit/Framework.php';
-require_once 'PHPUnit/TextUI/TestRunner.php';
-
-require_once 'UtfNormal.php';
+require_once( 'PHPUnit.php' );
+require_once( 'UtfNormal.php' );
 
 /**
- * Additional tests for UtfNormal::cleanUp() function, inclusion
- * regression checks for known problems.
- * Requires PHPUnit.
- *
- * @addtogroup UtfNormal
- * @private
+ * @package UtfNormal
  */
-class CleanUpTest extends PHPUnit_Framework_TestCase {
+class CleanUpTest extends PHPUnit_TestCase {
+	/**
+	 * @param $name String: FIXME
+	 */
+	function CleanUpTest( $name ) {
+		$this->PHPUnit_TestCase( $name );
+	}
+
 	/** @todo document */
 	function setUp() {
 	}
@@ -403,11 +412,12 @@ class CleanUpTest extends PHPUnit_Framework_TestCase {
 }
 
 
-$suite = new PHPUnit_Framework_TestSuite( 'CleanUpTest' );
-$result = PHPUnit_TextUI_TestRunner::run( $suite );
+$suite = new PHPUnit_TestSuite( 'CleanUpTest' );
+$result = PHPUnit::run( $suite );
+echo $result->toString();
 
 if( !$result->wasSuccessful() ) {
 	exit( -1 );
 }
 exit( 0 );
-
+?>

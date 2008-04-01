@@ -1,10 +1,10 @@
 <?php
-/** Serbian Cyrillic ekavian (ијекавица)
- *
- * @addtogroup Language
- *
- */
+/**
+  * @package MediaWiki
+  * @subpackage Language
+  */
 
 # Inherit everything for now
 $fallback = 'sr-ec';
 
+?>

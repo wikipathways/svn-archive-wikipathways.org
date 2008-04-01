@@ -1,4 +1,9 @@
 <?php
+/**
+ * This is a class used to hold configuration settings, particularly for multi-wiki sites.
+ *
+ * @package MediaWiki
+ */
 
 /**
  * The include paths change after this file is included from commandLine.inc,
@@ -8,10 +13,7 @@
 if (!defined('SITE_CONFIGURATION')) {
 define('SITE_CONFIGURATION', 1);
 
-/**
- * This is a class used to hold configuration settings, particularly for multi-wiki sites.
- *
- */
+/** @package MediaWiki */
 class SiteConfiguration {
 	var $suffixes = array();
 	var $wikis = array();
@@ -19,61 +21,34 @@ class SiteConfiguration {
 	var $localVHosts = array();
 
 	/** */
-	function get( $settingName, $wiki, $suffix, $params = array(), $wikiTags = array() ) {
-		if ( array_key_exists( $settingName, $this->settings ) ) {
-			$thisSetting =& $this->settings[$settingName];
-			do {
-				if ( array_key_exists( $wiki, $thisSetting ) ) {
-					$retval = $thisSetting[$wiki];
-					break;
-				}
-				foreach ( $wikiTags as $tag ) {
-					if ( array_key_exists( $tag, $thisSetting ) ) {
-						$retval = $thisSetting[$tag];
-						break 2;
-					}
-				}
-				if ( array_key_exists( $suffix, $thisSetting ) ) {
-					$retval = $thisSetting[$suffix];
-					break;
-				}
-				if ( array_key_exists( 'default', $thisSetting ) ) {
-					$retval = $thisSetting['default'];
-					break;
-				}
-				$retval = null;
-			} while ( false );
+	function get( $setting, $wiki, $suffix, $params = array() ) {
+		if ( array_key_exists( $setting, $this->settings ) ) {
+			if ( array_key_exists( $wiki, $this->settings[$setting] ) ) {
+				$retval = $this->settings[$setting][$wiki];
+			} elseif ( array_key_exists( $suffix, $this->settings[$setting] ) ) {
+				$retval = $this->settings[$setting][$suffix];
+			} elseif ( array_key_exists( 'default', $this->settings[$setting] ) ) {
+				$retval = $this->settings[$setting]['default'];
+			} else {
+				$retval = NULL;
+			}
 		} else {
 			$retval = NULL;
 		}
 
 		if ( !is_null( $retval ) && count( $params ) ) {
 			foreach ( $params as $key => $value ) {
-				$retval = $this->doReplace( '$' . $key, $value, $retval );
+				$retval = str_replace( '$' . $key, $value, $retval );
 			}
 		}
 		return $retval;
 	}
-	
-	/** Type-safe string replace; won't do replacements on non-strings */
-	function doReplace( $from, $to, $in ) {
-		if( is_string( $in ) ) {
-			return str_replace( $from, $to, $in );
-		} elseif( is_array( $in ) ) {
-			foreach( $in as $key => $val ) {
-				$in[$key] = $this->doReplace( $from, $to, $val );
-			}
-			return $in;
-		} else {
-			return $in;
-		}
-	}
 
 	/** */
-	function getAll( $wiki, $suffix, $params, $wikiTags = array() ) {
+	function getAll( $wiki, $suffix, $params ) {
 		$localSettings = array();
 		foreach ( $this->settings as $varname => $stuff ) {
-			$value = $this->get( $varname, $wiki, $suffix, $params, $wikiTags );
+			$value = $this->get( $varname, $wiki, $suffix, $params );
 			if ( !is_null( $value ) ) {
 				$localSettings[$varname] = $value;
 			}
@@ -82,8 +57,8 @@ class SiteConfiguration {
 	}
 
 	/** */
-	function getBool( $setting, $wiki, $suffix, $wikiTags = array() ) {
-		return (bool)($this->get( $setting, $wiki, $suffix, array(), $wikiTags ) );
+	function getBool( $setting, $wiki, $suffix ) {
+		return (bool)($this->get( $setting, $wiki, $suffix ));
 	}
 
 	/** */
@@ -96,25 +71,25 @@ class SiteConfiguration {
 	}
 
 	/** */
-	function extractVar( $setting, $wiki, $suffix, &$var, $params, $wikiTags = array() ) {
-		$value = $this->get( $setting, $wiki, $suffix, $params, $wikiTags );
+	function extractVar( $setting, $wiki, $suffix, &$var, $params ) {
+		$value = $this->get( $setting, $wiki, $suffix, $params );
 		if ( !is_null( $value ) ) {
 			$var = $value;
 		}
 	}
 
 	/** */
-	function extractGlobal( $setting, $wiki, $suffix, $params, $wikiTags = array() ) {
-		$value = $this->get( $setting, $wiki, $suffix, $params, $wikiTags );
+	function extractGlobal( $setting, $wiki, $suffix, $params ) {
+		$value = $this->get( $setting, $wiki, $suffix, $params );
 		if ( !is_null( $value ) ) {
 			$GLOBALS[$setting] = $value;
 		}
 	}
 
 	/** */
-	function extractAllGlobals( $wiki, $suffix, $params, $wikiTags = array() ) {
+	function extractAllGlobals( $wiki, $suffix, $params ) {
 		foreach ( $this->settings as $varName => $setting ) {
-			$this->extractGlobal( $varName, $wiki, $suffix, $params, $wikiTags );
+			$this->extractGlobal( $varName, $wiki, $suffix, $params );
 		}
 	}
 
@@ -143,4 +118,4 @@ class SiteConfiguration {
 }
 }
 
-
+?>

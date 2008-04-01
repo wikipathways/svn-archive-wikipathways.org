@@ -1,11 +1,12 @@
 <?php
 
+
 /*
  * Created on Oct 13, 2006
  *
  * API for MediaWiki 1.8+
  *
- * Copyright (C) 2006 Yuri Astrakhan <Firstname><Lastname>@gmail.com
+ * Copyright (C) 2006 Yuri Astrakhan <FirstnameLastname@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,9 +29,6 @@ if (!defined('MEDIAWIKI')) {
 	require_once ("ApiBase.php");
 }
 
-/**
- * @addtogroup API
- */
 class ApiOpenSearch extends ApiBase {
 
 	public function __construct($main, $action) {
@@ -42,14 +40,39 @@ class ApiOpenSearch extends ApiBase {
 	}
 
 	public function execute() {
-		$params = $this->extractRequestParams();
-		$search = $params['search'];
-		$limit = $params['limit'];
+		$search = null;
+		extract($this->ExtractRequestParams());
 
 		// Open search results may be stored for a very long time
 		$this->getMain()->setCacheMaxAge(1200);
-		
-		$srchres = PrefixSearch::titleSearch( $search, $limit );
+
+		$title = Title :: newFromText($search);
+		if(!$title)
+			return; // Return empty result
+			
+		// Prepare nested request
+		$params = new FauxRequest(array (
+			'action' => 'query',
+			'list' => 'allpages',
+			'apnamespace' => $title->getNamespace(),
+			'aplimit' => 10,
+			'apprefix' => $title->getDBkey()
+		));
+
+		// Execute
+		$module = new ApiMain($params);
+		$module->execute();
+
+		// Get resulting data
+		$data = $module->getResultData();
+
+		// Reformat useful data for future printing by JSON engine
+		$srchres = array ();
+		foreach ($data['query']['allpages'] as & $pageinfo) {
+			// Note: this data will no be printable by the xml engine
+			// because it does not support lists of unnamed items
+			$srchres[] = $pageinfo['title'];
+		}
 
 		// Set top level elements
 		$result = $this->getResult();
@@ -57,27 +80,19 @@ class ApiOpenSearch extends ApiBase {
 		$result->addValue(null, 1, $srchres);
 	}
 
-	public function getAllowedParams() {
+	protected function getAllowedParams() {
 		return array (
-			'search' => null,
-			'limit' => array (
-				ApiBase :: PARAM_DFLT => 10,
-				ApiBase :: PARAM_TYPE => 'limit',
-				ApiBase :: PARAM_MIN => 1,
-				ApiBase :: PARAM_MAX => 100,
-				ApiBase :: PARAM_MAX2 => 100
-			)
+			'search' => null
 		);
 	}
 
-	public function getParamDescription() {
+	protected function getParamDescription() {
 		return array (
-			'search' => 'Search string',
-			'limit' => 'Maximum amount of results to return'
+			'search' => 'Search string'
 		);
 	}
 
-	public function getDescription() {
+	protected function getDescription() {
 		return 'This module implements OpenSearch protocol';
 	}
 
@@ -88,7 +103,7 @@ class ApiOpenSearch extends ApiBase {
 	}
 
 	public function getVersion() {
-		return __CLASS__ . ': $Id: ApiOpenSearch.php 30275 2008-01-30 01:07:49Z brion $';
+		return __CLASS__ . ': $Id: ApiOpenSearch.php 17880 2006-11-23 08:25:56Z nickj $';
 	}
 }
-
+?>

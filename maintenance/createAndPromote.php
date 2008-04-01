@@ -3,19 +3,14 @@
 /**
  * Maintenance script to create an account and grant it administrator rights
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  * @author Rob Church <robchur@gmail.com>
  */
-
-$options = array( 'help', 'bureaucrat' );
+ 
 require_once( 'commandLine.inc' );
 
-if( isset( $options['help'] ) ) {
-	showHelp();
-	exit( 1 );
-}
-
-if( count( $args ) < 2 ) {
+if( !count( $args ) == 2 ) {
 	echo( "Please provide a username and password for the new account.\n" );
 	die( 1 );
 }
@@ -38,12 +33,10 @@ if( !is_object( $user ) ) {
 # Insert the account into the database
 $user->addToDatabase();
 $user->setPassword( $password );
-$user->saveSettings();
+$user->setToken();
 
 # Promote user
 $user->addGroup( 'sysop' );
-if( isset( $option['bureaucrat'] ) )
-	$user->addGroup( 'bureaucrat' );
 
 # Increment site_stats.ss_users
 $ssu = new SiteStatsUpdate( 0, 0, 0, 0, 1 );
@@ -51,17 +44,4 @@ $ssu->doUpdate();
 
 echo( "done.\n" );
 
-function showHelp() {
-	echo( <<<EOT
-Create a new user account with administrator rights
-
-USAGE: php createAndPromote.php [--bureaucrat|--help] <username> <password>
-
-	--bureaucrat
-		Grant the account bureaucrat rights
-	--help
-		Show this help information
-
-EOT
-	);
-}
+?>

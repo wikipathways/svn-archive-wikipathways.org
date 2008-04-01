@@ -19,7 +19,8 @@
 
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -37,17 +38,18 @@ function wfSpecialLog( $par = '' ) {
 
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class LogReader {
 	var $db, $joinClauses, $whereClauses;
-	var $type = '', $user = '', $title = null, $pattern = false;
+	var $type = '', $user = '', $title = null;
 
 	/**
 	 * @param WebRequest $request For internal use use a FauxRequest object to pass arbitrary parameters.
 	 */
 	function LogReader( $request ) {
-		$this->db = wfGetDB( DB_SLAVE );
+		$this->db =& wfGetDB( DB_SLAVE );
 		$this->setupQuery( $request );
 	}
 
@@ -66,16 +68,11 @@ class LogReader {
 
 		$this->limitType( $request->getVal( 'type' ) );
 		$this->limitUser( $request->getText( 'user' ) );
-		$this->limitTitle( $request->getText( 'page' ) , $request->getBool( 'pattern' ) );
+		$this->limitTitle( $request->getText( 'page' ) );
 		$this->limitTime( $request->getVal( 'from' ), '>=' );
 		$this->limitTime( $request->getVal( 'until' ), '<=' );
 
 		list( $this->limit, $this->offset ) = $request->getLimitOffset();
-		
-		// XXX This all needs to use Pager, ugly hack for now.
-		global $wgMiserMode;
-		if( $wgMiserMode )
-			$this->offset = min( $this->offset, 10000 );
 	}
 
 	/**
@@ -121,24 +118,15 @@ class LogReader {
 	 * @param string $page Title name as text
 	 * @private
 	 */
-	function limitTitle( $page , $pattern ) {
-		global $wgMiserMode;
-		
+	function limitTitle( $page ) {
 		$title = Title::newFromText( $page );
-		
-		if( strlen( $page ) == 0 || !$title instanceof Title )
+		if( empty( $page ) || is_null( $title )  ) {
 			return false;
-
-		$this->title =& $title;
-		$this->pattern = $pattern;
-		$ns = $title->getNamespace();
-		if ( $pattern && !$wgMiserMode ) {
-			$safetitle = $this->db->escapeLike( $title->getDBkey() ); // use escapeLike to avoid expensive search patterns like 't%st%'
-			$this->whereClauses[] = "log_namespace=$ns AND log_title LIKE '$safetitle%'";
-		} else {
-			$safetitle = $this->db->strencode( $title->getDBkey() );
-			$this->whereClauses[] = "log_namespace=$ns AND log_title = '$safetitle'";
 		}
+		$this->title =& $title;
+		$safetitle = $this->db->strencode( $title->getDBkey() );
+		$ns = $title->getNamespace();
+		$this->whereClauses[] = "log_namespace=$ns AND log_title='$safetitle'";
 	}
 
 	/**
@@ -183,7 +171,7 @@ class LogReader {
 	 * @return ResultWrapper result object to return the relevant rows
 	 */
 	function getRows() {
-		$res = $this->db->query( $this->getQuery(), __METHOD__ );
+		$res = $this->db->query( $this->getQuery(), 'LogReader::getRows' );
 		return $this->db->resultObject( $res );
 	}
 
@@ -202,13 +190,6 @@ class LogReader {
 	}
 
 	/**
-	 * @return boolean The checkbox, if titles should be searched by a pattern too
-	 */
-	function queryPattern() {
-		return $this->pattern;
-	}
-
-	/**
 	 * @return string The text of the title that this LogReader has been limited to.
 	 */
 	function queryTitle() {
@@ -218,49 +199,27 @@ class LogReader {
 			return $this->title->getPrefixedText();
 		}
 	}
-	
-	/**
-	 * Is there at least one row?
-	 *
-	 * @return bool
-	 */
-	public function hasRows() {
-		# Little hack...
-		$limit = $this->limit;
-		$this->limit = 1;
-		$res = $this->db->query( $this->getQuery() );
-		$this->limit = $limit;
-		$ret = $this->db->numRows( $res ) > 0;
-		$this->db->freeResult( $res );
-		return $ret;
-	}
-	
 }
 
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class LogViewer {
-	const NO_ACTION_LINK = 1;
-	
 	/**
 	 * @var LogReader $reader
 	 */
 	var $reader;
 	var $numResults = 0;
-	var $flags = 0;
 
 	/**
 	 * @param LogReader &$reader where to get our data from
-	 * @param integer $flags Bitwise combination of flags:
-	 *     self::NO_ACTION_LINK   Don't show restore/unblock/block links
 	 */
-	function LogViewer( &$reader, $flags = 0 ) {
+	function LogViewer( &$reader ) {
 		global $wgUser;
-		$this->skin = $wgUser->getSkin();
+		$this->skin =& $wgUser->getSkin();
 		$this->reader =& $reader;
-		$this->flags = $flags;
 	}
 
 	/**
@@ -271,13 +230,9 @@ class LogViewer {
 		$this->showHeader( $wgOut );
 		$this->showOptions( $wgOut );
 		$result = $this->getLogRows();
-		if ( $this->numResults > 0 ) {
-			$this->showPrevNext( $wgOut );
-			$this->doShowList( $wgOut, $result );
-			$this->showPrevNext( $wgOut );
-		} else {
-			$this->showError( $wgOut );
-		}
+		$this->showPrevNext( $wgOut );
+		$this->doShowList( $wgOut, $result );
+		$this->showPrevNext( $wgOut );
 	}
 
 	/**
@@ -297,8 +252,8 @@ class LogViewer {
 		$batch = new LinkBatch;
 		while ( $s = $result->fetchObject() ) {
 			// User link
-			$batch->addObj( Title::makeTitleSafe( NS_USER, $s->user_name ) );
-			$batch->addObj( Title::makeTitleSafe( NS_USER_TALK, $s->user_name ) );
+			$title = Title::makeTitleSafe( NS_USER, $s->user_name );
+			$batch->addObj( $title );
 
 			// Move destination link
 			if ( $s->log_type == 'move' ) {
@@ -321,28 +276,23 @@ class LogViewer {
 	 * @param OutputPage $out where to send output
 	 */
 	function showList( &$out ) {
-		$result = $this->getLogRows();
-		if ( $this->numResults > 0 ) {
-			$this->doShowList( $out, $result );
-		} else {
-			$this->showError( $out );
-		}
+		$this->doShowList( $out, $this->getLogRows() );
 	}
 
 	function doShowList( &$out, $result ) {
 		// Rewind result pointer and go through it again, making the HTML
-		$html = "\n<ul>\n";
-		$result->seek( 0 );
-		while( $s = $result->fetchObject() ) {
-			$html .= $this->logLine( $s );
+		if ($this->numResults > 0) {
+			$html = "\n<ul>\n";
+			$result->seek( 0 );
+			while( $s = $result->fetchObject() ) {
+				$html .= $this->logLine( $s );
+			}
+			$html .= "\n</ul>\n";
+			$out->addHTML( $html );
+		} else {
+			$out->addWikiText( wfMsg( 'logempty' ) );
 		}
-		$html .= "\n</ul>\n";
-		$out->addHTML( $html );
 		$result->free();
-	}
-
-	function showError( &$out ) {
-		$out->addWikiMsg( 'logempty' );
 	}
 
 	/**
@@ -351,8 +301,7 @@ class LogViewer {
 	 * @private
 	 */
 	function logLine( $s ) {
-		global $wgLang, $wgUser, $wgContLang;
-		$skin = $wgUser->getSkin();
+		global $wgLang;
 		$title = Title::makeTitle( $s->log_namespace, $s->log_title );
 		$time = $wgLang->timeanddate( wfTimestamp(TS_MW, $s->log_timestamp), true );
 
@@ -365,50 +314,23 @@ class LogViewer {
 			$linkCache->addBadLinkObj( $title );
 		}
 
-		$userLink = $this->skin->userLink( $s->log_user, $s->user_name ) . $this->skin->userToolLinksRedContribs( $s->log_user, $s->user_name );
-		$comment = $wgContLang->getDirMark() . $this->skin->commentBlock( $s->log_comment );
+		$userLink = $this->skin->userLink( $s->log_user, $s->user_name ) . $this->skin->userToolLinks( $s->log_user, $s->user_name );
+		$comment = $this->skin->commentBlock( $s->log_comment );
 		$paramArray = LogPage::extractParams( $s->log_params );
 		$revert = '';
-		// show revertmove link
-		if ( !( $this->flags & self::NO_ACTION_LINK ) ) {
-			if ( $s->log_type == 'move' && isset( $paramArray[0] ) && $wgUser->isAllowed( 'move' ) ) {
-				$destTitle = Title::newFromText( $paramArray[0] );
-				if ( $destTitle ) {
-					$revert = '(' . $this->skin->makeKnownLinkObj( SpecialPage::getTitleFor( 'Movepage' ),
-						wfMsg( 'revertmove' ),
-						'wpOldTitle=' . urlencode( $destTitle->getPrefixedDBkey() ) .
-						'&wpNewTitle=' . urlencode( $title->getPrefixedDBkey() ) .
-						'&wpReason=' . urlencode( wfMsgForContent( 'revertmove' ) ) .
-						'&wpMovetalk=0' ) . ')';
-				}
-			// show undelete link
-			} elseif ( $s->log_action == 'delete' && $wgUser->isAllowed( 'delete' ) ) {
-				$revert = '(' . $this->skin->makeKnownLinkObj( SpecialPage::getTitleFor( 'Undelete' ),
-					wfMsg( 'undeletelink' ) ,
-					'target='. urlencode( $title->getPrefixedDBkey() ) ) . ')';
-			// show unblock link
-			} elseif ( $s->log_action == 'block' && $wgUser->isAllowed( 'block' ) ) {
-				$revert = '(' .  $skin->makeKnownLinkObj( SpecialPage::getTitleFor( 'Ipblocklist' ),
-					wfMsg( 'unblocklink' ),
-					'action=unblock&ip=' . urlencode( $s->log_title ) ) . ')';
-			// show change protection link
-			} elseif ( ( $s->log_action == 'protect' || $s->log_action == 'modify' ) && $wgUser->isAllowed( 'protect' ) ) {
-				$revert = '(' .  $skin->makeKnownLinkObj( $title, wfMsg( 'protect_change' ), 'action=unprotect' ) . ')';
-			// Show unmerge link
-			} elseif ( $s->log_action == 'merge' ) {
-				$merge = SpecialPage::getTitleFor( 'Mergehistory' );
-				$revert = '(' .  $this->skin->makeKnownLinkObj( $merge, wfMsg('revertmerge'),
-					wfArrayToCGI( 
-						array('target' => $paramArray[0], 'dest' => $title->getPrefixedText(), 'mergepoint' => $paramArray[1] ) 
-					) 
-				) . ')';
-			} elseif ( wfRunHooks( 'LogLine', array( $s->log_type, $s->log_action, $title, $paramArray, &$comment, &$revert, $s->log_timestamp ) ) ) {
-				// wfDebug( "Invoked LogLine hook for " $s->log_type . ", " . $s->log_action . "\n" );
-				// Do nothing. The implementation is handled by the hook modifiying the passed-by-ref parameters.
+		if ( $s->log_type == 'move' && isset( $paramArray[0] ) ) {
+			$specialTitle = SpecialPage::getTitleFor( 'Movepage' );
+			$destTitle = Title::newFromText( $paramArray[0] );
+			if ( $destTitle ) {
+				$revert = '(' . $this->skin->makeKnownLinkObj( $specialTitle, wfMsg( 'revertmove' ),
+					'wpOldTitle=' . urlencode( $destTitle->getPrefixedDBkey() ) .
+					'&wpNewTitle=' . urlencode( $title->getPrefixedDBkey() ) .
+					'&wpReason=' . urlencode( wfMsgForContent( 'revertmove' ) ) .
+					'&wpMovetalk=0' ) . ')';
 			}
 		}
 
-		$action = LogPage::actionText( $s->log_type, $s->log_action, $title, $this->skin, $paramArray, true );
+		$action = LogPage::actionText( $s->log_type, $s->log_action, $title, $this->skin, $paramArray, true, true );
 		$out = "<li>$time $userLink $action $comment $revert</li>\n";
 		return $out;
 	}
@@ -430,20 +352,17 @@ class LogViewer {
 	 * @private
 	 */
 	function showOptions( &$out ) {
-		global $wgScript, $wgMiserMode;
+		global $wgScript;
 		$action = htmlspecialchars( $wgScript );
 		$title = SpecialPage::getTitleFor( 'Log' );
 		$special = htmlspecialchars( $title->getPrefixedDBkey() );
 		$out->addHTML( "<form action=\"$action\" method=\"get\">\n" .
-			'<fieldset>' .
-			Xml::element( 'legend', array(), wfMsg( 'log' ) ) .
-			Xml::hidden( 'title', $special ) . "\n" .
-			$this->getTypeMenu() . "\n" .
-			$this->getUserInput() . "\n" .
-			$this->getTitleInput() . "\n" .
-			(!$wgMiserMode?($this->getTitlePattern()."\n"):"") .
-			Xml::submitButton( wfMsg( 'allpagessubmit' ) ) . "\n" .
-			"</fieldset></form>" );
+			"<input type='hidden' name='title' value=\"$special\" />\n" .
+			$this->getTypeMenu() .
+			$this->getUserInput() .
+			$this->getTitleInput() .
+			"<input type='submit' value=\"" . wfMsg( 'allpagessubmit' ) . "\" />" .
+			"</form>" );
 	}
 
 	/**
@@ -452,26 +371,12 @@ class LogViewer {
 	 */
 	function getTypeMenu() {
 		$out = "<select name='type'>\n";
-
-		$validTypes = LogPage::validTypes();
-		$m = array(); // Temporary array
-
-		// First pass to load the log names
-		foreach( $validTypes as $type ) {
-			$text = LogPage::logName( $type );
-			$m[$text] = $type;
+		foreach( LogPage::validTypes() as $type ) {
+			$text = htmlspecialchars( LogPage::logName( $type ) );
+			$selected = ($type == $this->reader->queryType()) ? ' selected="selected"' : '';
+			$out .= "<option value=\"$type\"$selected>$text</option>\n";
 		}
-
-		// Second pass to sort by name
-		ksort($m);
-
-		// Third pass generates sorted XHTML content
-		foreach( $m as $text => $type ) {
-			$selected = ($type == $this->reader->queryType());
-			$out .= Xml::option( $text, $type, $selected ) . "\n";
-		}
-
-		$out .= '</select>';
+		$out .= "</select>\n";
 		return $out;
 	}
 
@@ -480,8 +385,8 @@ class LogViewer {
 	 * @private
 	 */
 	function getUserInput() {
-		$user =  $this->reader->queryUser();
-		return Xml::inputLabel( wfMsg( 'specialloguserlabel' ), 'user', 'user', 12, $user );
+		$user = htmlspecialchars( $this->reader->queryUser() );
+		return wfMsg('specialloguserlabel') . "<input type='text' name='user' size='12' value=\"$user\" />\n";
 	}
 
 	/**
@@ -489,17 +394,8 @@ class LogViewer {
 	 * @private
 	 */
 	function getTitleInput() {
-		$title = $this->reader->queryTitle();
-		return Xml::inputLabel( wfMsg( 'speciallogtitlelabel' ), 'page', 'page', 20, $title );
-	}
-
-	/**
-	 * @return boolean Checkbox
-	 * @private
-	 */
-	function getTitlePattern() {
-		$pattern = $this->reader->queryPattern();
-		return Xml::checkLabel( wfMsg( 'log-title-wildcard' ), 'pattern', 'pattern', $pattern );
+		$title = htmlspecialchars( $this->reader->queryTitle() );
+		return wfMsg('speciallogtitlelabel') . "<input type='text' name='page' size='20' value=\"$title\" />\n";
 	}
 
 	/**
@@ -512,7 +408,6 @@ class LogViewer {
 		$pieces[] = 'type=' . urlencode( $this->reader->queryType() );
 		$pieces[] = 'user=' . urlencode( $this->reader->queryUser() );
 		$pieces[] = 'page=' . urlencode( $this->reader->queryTitle() );
-		$pieces[] = 'pattern=' . urlencode( $this->reader->queryPattern() );
 		$bits = implode( '&', $pieces );
 		list( $limit, $offset ) = $wgRequest->getLimitOffset();
 
@@ -525,3 +420,6 @@ class LogViewer {
 		$out->addHTML( '<p>' . $html . '</p>' );
 	}
 }
+
+
+?>

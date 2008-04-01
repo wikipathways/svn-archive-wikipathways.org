@@ -1,25 +1,11 @@
 <?php
 /** Old Norse (Norrǿna)
- *
- * @addtogroup Language
- *
- * @author SPQRobin
- */
-
+  *
+  * Defaults to Icelandic instead of English.
+  *
+  * @package MediaWiki
+  * @subpackage Language
+  */
 $fallback = 'is';
 
-$messages = array(
-'help'             => 'Ásjá',
-'search'           => 'Leita',
-'searchbutton'     => 'Leita',
-'talkpagelinktext' => 'Umræða',
-'talk'             => 'Umræða',
-'jumptosearch'     => 'leita',
-
-'showtoc' => 'syna',
-'hidetoc' => 'fela',
-
-# Search results
-'powersearch' => 'Leita',
-
-);
+?>

@@ -1,7 +1,8 @@
 <?php
 /** Azerbaijani (Azərbaycan)
   *
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 class LanguageAz extends Language {
 	function ucfirst ( $string ) {
@@ -13,4 +14,4 @@ class LanguageAz extends Language {
 	}
 
 }
-
+?>

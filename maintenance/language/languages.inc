@@ -2,16 +2,19 @@
 /**
  * Handle messages in the language files.
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
+require_once( 'messageTypes.inc' );
+
 class languages {
-	protected $mLanguages; # List of languages
-	protected $mRawMessages; # Raw list of the messages in each language
-	protected $mMessages; # Messages in each language (except for English), divided to groups
-	protected $mGeneralMessages; # General messages in English, divided to groups
-	protected $mIgnoredMessages; # All the messages which should be exist only in the English file
-	protected $mOptionalMessages; # All the messages which may be translated or not, depending on the language
+	private $mLanguages; # List of languages
+	private $mRawMessages; # Raw list of the messages in each language
+	private $mMessages; # Messages in each language (except for English), divided to groups
+	private $mGeneralMessages; # General messages in English, divided to groups
+	private $mIgnoredMessages; # All the messages which should be exist only in the English file
+	private $mOptionalMessages; # All the messages which may be translated or not, depending on the language
 
 	/**
 	 * Load the list of languages: all the Messages*.php
@@ -20,7 +23,7 @@ class languages {
 	 * @param $exif Treat the EXIF messages?
 	 */
 	function __construct( $exif = true ) {
-		require( dirname(__FILE__) . '/messageTypes.inc' );
+		global $wgIgnoredMessages, $wgOptionalMessages, $wgEXIFMessages;
 		$this->mIgnoredMessages = $wgIgnoredMessages;
 		if ( $exif ) {
 			$this->mOptionalMessages = array_merge( $wgOptionalMessages );
@@ -60,11 +63,11 @@ class languages {
 	}
 
 	/**
-	 * Load the raw messages for a specific language from the messages file.
+	 * Load the raw messages for a specific langauge from the messages file.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 */
-	protected function loadRawMessages( $code ) {
+	private function loadRawMessages( $code ) {
 		if ( isset( $this->mRawMessages[$code] ) ) {
 			return;
 		}
@@ -147,7 +150,7 @@ class languages {
 	}
 
 	/**
-	 * Get all the messages for a specific language (not English), without the
+	 * Get all the messages for a specific langauge (not English), without the
 	 * fallback language messages, divided to groups:
 	 * all - all the messages.
 	 * required - messages which should be translated in order to get a complete translation.
@@ -155,7 +158,7 @@ class languages {
 	 * obsolete - messages which should not be translated, either because they are not exist, or they are ignored messages.
 	 * translated - messages which are either required or optional, but translated from English and needed.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The messages in this language.
 	 */
@@ -182,7 +185,7 @@ class languages {
 	/**
 	 * Get the untranslated messages for a specific language.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The untranslated messages for this language.
 	 */
@@ -201,7 +204,7 @@ class languages {
 	/**
 	 * Get the duplicate messages for a specific language.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The duplicate messages for this language.
 	 */
@@ -217,16 +220,10 @@ class languages {
 		return $duplicateMessages;
 	}
 
-	public function getObsoleteMessages( $code ) {
-		$this->loadGeneralMessages();
-		$this->loadMessages( $code );
-		return $this->mMessages[$code]['obsolete'];
-	}
-
 	/**
 	 * Get the messages which do not use some variables.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The messages which do not use some variables in this language.
 	 */
@@ -251,28 +248,9 @@ class languages {
 	}
 
 	/**
-	 * Get the messages which do not use plural.
-	 *
-	 * @param $code The language code.
-	 *
-	 * @return The messages which do not use plural in this language.
-	 */
-	public function getMessagesWithoutPlural( $code ) {
-		$this->loadGeneralMessages();
-		$this->loadMessages( $code );
-		$messagesWithoutPlural = array();
-		foreach ( $this->mMessages[$code]['translated'] as $key => $value ) {
-			if ( stripos( $this->mGeneralMessages['translatable'][$key], '{{plural:' ) !== false && stripos( $value, '{{plural:' ) === false ) {
-				$messagesWithoutPlural[$key] = $value;
-			}
-		}
-		return $messagesWithoutPlural;
-	}
-
-	/**
 	 * Get the empty messages.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The empty messages for this language.
 	 */
@@ -291,7 +269,7 @@ class languages {
 	/**
 	 * Get the messages with trailing whitespace.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The messages with trailing whitespace in this language.
 	 */
@@ -310,7 +288,7 @@ class languages {
 	/**
 	 * Get the non-XHTML messages.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The non-XHTML messages for this language.
 	 */
@@ -336,7 +314,7 @@ class languages {
 	/**
 	 * Get the messages which include wrong characters.
 	 *
-	 * @param $code The language code.
+	 * @param $code The langauge code.
 	 *
 	 * @return The messages which include wrong characters in this language.
 	 */
@@ -370,52 +348,49 @@ class languages {
 		return $wrongCharsMessages;
 	}
 
-	public function getMessagesWithDubiousLinks( $code ) {
-		$this->loadGeneralMessages();
-		$this->loadMessages( $code );
-		$tc = Title::legalChars() . '#%{}';
-		$messages = array();
-		foreach ( $this->mMessages[$code]['translated'] as $key => $value ) {
-			$matches = array();
-			preg_match_all( "/\[\[([{$tc}]+)(?:\\|(.+?))?]]/sDu", $value, $matches);
-			for ($i = 0; $i < count($matches[0]); $i++ ) {
-				if ( preg_match( "/.*project.*/isDu",  $matches[1][$i]) ) {
-					$messages[$key][] = $matches[0][$i];
+	/**
+	 * Output a messages list
+	 *
+	 * @param $messages The messages list
+	 * @param $code The language code
+	 * @param $text The text to show before the list (optional)
+	 * @param $level The display level (optional)
+	 * @param $links Show links (optional)
+	 * @param $wikilang The langauge of the wiki to display the list in, for the links (optional)
+	 */
+	public function outputMessagesList( $messages, $code, $text = '', $level = 2, $links = false, $wikilang = null ) {
+		if ( count( $messages ) == 0 ) {
+			return;
+		}
+		if ( $text ) {
+			echo "$text\n";
+		}
+		if ( $level == 1 ) {
+			echo "[messages are hidden]\n";
+		} else {
+			foreach ( $messages as $key => $value ) {
+				if ( $links ) {
+					$displayKey = ucfirst( $key );
+					if ( !isset( $wikilang ) ) {
+						global $wgContLang;
+						$wikilang = $wgContLang->getCode();
+					}
+					if ( $code == $wikilang ) {
+						$displayKey = "[[MediaWiki:$displayKey|$key]]";
+					} else {
+						$displayKey = "[[MediaWiki:$displayKey/$code|$key]]";
+					}
+				} else {
+					$displayKey = $key;
+				}
+				if ( $level == 2 ) {
+					echo "* $displayKey\n";
+				} else {
+					echo "* $displayKey:		'$value'\n";
 				}
 			}
-
-
-			if ( isset( $messages[$key] ) ) {
-				$messages[$key] = implode( $messages[$key],", " );
-			}
 		}
-		return $messages;
 	}
-
-	public function getMessagesWithUnbalanced( $code ) {
-		$this->loadGeneralMessages();
-		$this->loadMessages( $code );
-		$messages = array();
-		foreach ( $this->mMessages[$code]['translated'] as $key => $value ) {
-
-			$a = $b = $c = $d = 0;
-			foreach ( preg_split('//', $value) as $char ) {
-				switch ($char) {
-					case '[': $a++; break;
-					case ']': $b++; break;
-					case '{': $c++; break;
-					case '}': $d++; break;
-				}
-			}
-
-			if ( $a !== $b || $c !== $d ) {
-				$messages[$key] = "$a, $b, $c, $d";
-			}
-			
-		}
-		return $messages;
-	}
-
 }
 
 ?>

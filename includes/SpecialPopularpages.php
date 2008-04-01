@@ -1,12 +1,14 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
- * implements Special:Popularpages
- * @addtogroup SpecialPage
+ *
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class PopularPagesPage extends QueryPage {
 
@@ -21,28 +23,16 @@ class PopularPagesPage extends QueryPage {
 	function isSyndicated() { return false; }
 
 	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$page = $dbr->tableName( 'page' );
 
-		$query = 
+		return
 			"SELECT 'Popularpages' as type,
 			        page_namespace as namespace,
 			        page_title as title,
 			        page_counter as value
-			FROM $page ";
-		$where =
-			"WHERE page_is_redirect=0 AND page_namespace";
-
-		global $wgContentNamespaces;
-		if( empty( $wgContentNamespaces ) ) {
-			$where .= '='.NS_MAIN;
-		} else if( count( $wgContentNamespaces ) > 1 ) {
-			$where .= ' in (' . implode( ', ', $wgContentNamespaces ) . ')';
-		} else {
-			$where .= '='.$wgContentNamespaces[0];
-		}
-
-		return $query . $where;
+			FROM $page
+			WHERE page_namespace=".NS_MAIN." AND page_is_redirect=0";
 	}
 
 	function formatResult( $skin, $result ) {
@@ -59,11 +49,11 @@ class PopularPagesPage extends QueryPage {
  * Constructor
  */
 function wfSpecialPopularpages() {
-	list( $limit, $offset ) = wfCheckLimits();
+    list( $limit, $offset ) = wfCheckLimits();
 
-	$ppp = new PopularPagesPage();
+    $ppp = new PopularPagesPage();
 
-	return $ppp->doQuery( $offset, $limit );
+    return $ppp->doQuery( $offset, $limit );
 }
 
-
+?>

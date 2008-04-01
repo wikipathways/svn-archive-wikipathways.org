@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  *
  * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>
  * @copyright Copyright © 2005, Ævar Arnfjörð Bjarmason
@@ -8,8 +9,8 @@
  */
 
 /**
- * implements Special:Mostcategories
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class MostcategoriesPage extends QueryPage {
 
@@ -18,7 +19,7 @@ class MostcategoriesPage extends QueryPage {
 	function isSyndicated() { return false; }
 
 	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		list( $categorylinks, $page) = $dbr->tableNamesN( 'categorylinks', 'page' );
 		return
 			"
@@ -38,7 +39,6 @@ class MostcategoriesPage extends QueryPage {
 	function formatResult( $skin, $result ) {
 		global $wgLang;
 		$title = Title::makeTitleSafe( $result->namespace, $result->title );
-		if ( !$title instanceof Title ) { throw new MWException('Invalid title in database'); }
 		$count = wfMsgExt( 'ncategories', array( 'parsemag', 'escape' ), $wgLang->formatNum( $result->value ) );
 		$link = $skin->makeKnownLinkObj( $title, $title->getText() );
 		return wfSpecialList( $link, $count );
@@ -56,4 +56,4 @@ function wfSpecialMostcategories() {
 	$wpp->doQuery( $offset, $limit );
 }
 
-
+?>

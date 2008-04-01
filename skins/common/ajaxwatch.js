@@ -2,10 +2,10 @@
 // * ajax.js:
   /*extern sajax_init_object, sajax_do_call */
 // * wikibits.js:
-  /*extern changeText, akeytt, hookEvent, jsMsg */
+  /*extern changeText, akeytt, hookEvent */
 
 // These should have been initialized in the generated js
-/*extern wgAjaxWatch, wgPageName */
+/*extern wgAjaxWatch, wgArticleId */
 
 if(typeof wgAjaxWatch === "undefined" || !wgAjaxWatch) {
 	var wgAjaxWatch = {
@@ -20,60 +20,32 @@ wgAjaxWatch.supported = true; // supported on current page and by browser
 wgAjaxWatch.watching = false; // currently watching page
 wgAjaxWatch.inprogress = false; // ajax request in progress
 wgAjaxWatch.timeoutID = null; // see wgAjaxWatch.ajaxCall
-wgAjaxWatch.watchLinks = []; // "watch"/"unwatch" links
+wgAjaxWatch.watchLink1 = null; // "watch"/"unwatch" link
+wgAjaxWatch.watchLink2 = null; // second one, for (some?) non-Monobook-based
+wgAjaxWatch.oldHref = null; // url for action=watch/action=unwatch
 
 wgAjaxWatch.setLinkText = function(newText) {
-	for (i = 0; i < wgAjaxWatch.watchLinks.length; i++) {
-		changeText(wgAjaxWatch.watchLinks[i], newText);
+	changeText(wgAjaxWatch.watchLink1, newText);
+	if (wgAjaxWatch.watchLink2) {
+		changeText(wgAjaxWatch.watchLink2, newText);
 	}
 };
 
 wgAjaxWatch.setLinkID = function(newId) {
-	// We can only set the first one
-	wgAjaxWatch.watchLinks[0].setAttribute( 'id', newId );
+	wgAjaxWatch.watchLink1.id = newId;
 	akeytt(newId); // update tooltips for Monobook
 };
 
-wgAjaxWatch.setHref = function( string ) {
-	for( i = 0; i < wgAjaxWatch.watchLinks.length; i++ ) {
-		if( string == 'watch' ) {
-			wgAjaxWatch.watchLinks[i].href = wgAjaxWatch.watchLinks[i].href
-				.replace( /&action=unwatch/, '&action=watch' );
-		} else if( string == 'unwatch' ) {
-			wgAjaxWatch.watchLinks[i].href = wgAjaxWatch.watchLinks[i].href
-				.replace( /&action=watch/, '&action=unwatch' );
-		}
-	}
-}
-
 wgAjaxWatch.ajaxCall = function() {
-	if(!wgAjaxWatch.supported) {
-		return true;
-	} else if (wgAjaxWatch.inprogress) {
-		return false;
+	if(!wgAjaxWatch.supported || wgAjaxWatch.inprogress) {
+		return;
 	}
-	if(!wfSupportsAjax()) {
-		// Lazy initialization so we don't toss up
-		// ActiveX warnings on initial page load
-		// for IE 6 users with security settings.
-		wgAjaxWatch.supported = false;
-		return true;
-	}
-
 	wgAjaxWatch.inprogress = true;
-	wgAjaxWatch.setLinkText( wgAjaxWatch.watching
-		? wgAjaxWatch.unwatchingMsg : wgAjaxWatch.watchingMsg);
-	sajax_do_call(
-		"wfAjaxWatch",
-		[wgPageName, (wgAjaxWatch.watching ? "u" : "w")], 
-		wgAjaxWatch.processResult
-	);
+	wgAjaxWatch.setLinkText(wgAjaxWatch.watching ? wgAjaxWatch.unwatchingMsg : wgAjaxWatch.watchingMsg);
+	sajax_do_call("wfAjaxWatch", [wgArticleId, (wgAjaxWatch.watching ? "u" : "w")], wgAjaxWatch.processResult);
 	// if the request isn't done in 10 seconds, allow user to try again
-	wgAjaxWatch.timeoutID = window.setTimeout(
-		function() { wgAjaxWatch.inprogress = false; },
-		10000
-	);
-	return false;
+	wgAjaxWatch.timeoutID = window.setTimeout(function() { wgAjaxWatch.inprogress = false; }, 10000);
+	return;
 };
 
 wgAjaxWatch.processResult = function(request) {
@@ -81,22 +53,20 @@ wgAjaxWatch.processResult = function(request) {
 		return;
 	}
 	var response = request.responseText;
-	if( response.match(/^<w#>/) ) {
+	if(response == "<err#>") {
+		window.location.href = wgAjaxWatch.oldHref;
+		return;
+	} else if(response == "<w#>") {
 		wgAjaxWatch.watching = true;
 		wgAjaxWatch.setLinkText(wgAjaxWatch.unwatchMsg);
 		wgAjaxWatch.setLinkID("ca-unwatch");
-		wgAjaxWatch.setHref( 'unwatch' );
-	} else if( response.match(/^<u#>/) ) {
+		wgAjaxWatch.oldHref = wgAjaxWatch.oldHref.replace(/action=watch/, "action=unwatch");
+	} else if(response == "<u#>") {
 		wgAjaxWatch.watching = false;
 		wgAjaxWatch.setLinkText(wgAjaxWatch.watchMsg);
 		wgAjaxWatch.setLinkID("ca-watch");
-		wgAjaxWatch.setHref( 'watch' );
-	} else {
-		// Either we got a <err#> error code or it just plain broke.
-		window.location.href = wgAjaxWatch.watchLinks[0].href;
-		return;
+		wgAjaxWatch.oldHref = wgAjaxWatch.oldHref.replace(/action=unwatch/, "action=watch");
 	}
-	jsMsg( response.substr(4), 'watch' );
 	wgAjaxWatch.inprogress = false;
 	if(wgAjaxWatch.timeoutID) {
 		window.clearTimeout(wgAjaxWatch.timeoutID);
@@ -105,8 +75,6 @@ wgAjaxWatch.processResult = function(request) {
 };
 
 wgAjaxWatch.onLoad = function() {
-	// This document structure hardcoding sucks.  We should make a class and
-	// toss all this out the window.
 	var el1 = document.getElementById("ca-unwatch");
 	var el2 = null;
 	if (!el1) {
@@ -128,19 +96,20 @@ wgAjaxWatch.onLoad = function() {
 		}
 	}
 
-	// The id can be either for the parent (Monobook-based) or the element
-	// itself (non-Monobook)
-	wgAjaxWatch.watchLinks.push( el1.tagName.toLowerCase() == "a"
-		? el1 : el1.firstChild );
-
-	if( el2 ) {
-		wgAjaxWatch.watchLinks.push( el2 );
+	if(!wfSupportsAjax()) {
+		wgAjaxWatch.supported = false;
+		return;
 	}
 
-	// I couldn't get for (watchLink in wgAjaxWatch.watchLinks) to work, if
-	// you can be my guest.
-	for( i = 0; i < wgAjaxWatch.watchLinks.length; i++ ) {
-		wgAjaxWatch.watchLinks[i].onclick = wgAjaxWatch.ajaxCall;
+	// The id can be either for the parent (Monobook-based) or the element
+	// itself (non-Monobook)
+	wgAjaxWatch.watchLink1 = el1.tagName.toLowerCase() == "a" ? el1 : el1.firstChild;
+	wgAjaxWatch.watchLink2 = el2 ? el2 : null;
+
+	wgAjaxWatch.oldHref = wgAjaxWatch.watchLink1.getAttribute("href");
+	wgAjaxWatch.watchLink1.setAttribute("href", "javascript:wgAjaxWatch.ajaxCall()");
+	if (wgAjaxWatch.watchLink2) {
+		wgAjaxWatch.watchLink2.setAttribute("href", "javascript:wgAjaxWatch.ajaxCall()");
 	}
 	return;
 };

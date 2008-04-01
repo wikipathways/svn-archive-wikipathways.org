@@ -64,17 +64,8 @@ class PathwayInfo extends PathwayData {
 
 TABLE;
 //style="border:1px #AAA solid;margin:1em 1em 0;background:#F9F9F9"
-		$all = $this->getElements('DataNode');
-
-		//Check for uniqueness, based on textlabel and xref
-		$nodes = array();
-		foreach($all as $elm) {
-			$key = $elm['TextLabel'];
-			$key .= $elm->Xref['ID'];
-			$key .= $elm->Xref['Database'];
-			$nodes[(string)$key] = $elm;
-		}
-		
+		$nodes = $this->getUniqueElements('DataNode', 'TextLabel');
+			
 		//Create collapse button
 		$nrShow = 6;
 		$nrNodes = count($nodes);
@@ -92,18 +83,10 @@ TABLE;
 			$table .= '<td>' . $datanode['TextLabel'];
 			$table .= '<td>' . $datanode['Type'];
 			$table .= '<td>' . $datanode['BackpageHead'];
-			$table .= '<td>';
 			$xref = $datanode->Xref;
-			$link = getXrefLink($xref);
-			if($link) {
-				$link = "<a href='$link'>{$xref[ID]} ({$xref[Database]})</a>";
-			} else {
-				$link = $xref['ID'];
-				if($xref['Database'] != '') {
-					$link .= ' (' . $xref['Database'] . ')';
-				}
+			if($xref['ID']) {
+				$table .= '<td><a href="' . getXrefLink($xref) . '">' . " $xref[ID] ($xref[Database])</a>";
 			}
-			$table .= $link;
 		}
 		$table .= '</tbody></table>';
 		return array($button . $table, 'isHTML'=>1, 'noparse'=>1);
@@ -134,9 +117,7 @@ TABLE;
 function getXrefLink($xref) {
 	$db = $xref['Database'];
 	$id = $xref['ID'];
-	
-	if(!(string)$id) return false;
-	
+
 	switch($db) {
 	case 'Ensembl':
 		return "http://www.ensembl.org/Homo_sapiens/searchview?species=all&idx=Gene&q=" . $id;
@@ -194,7 +175,7 @@ function getXrefLink($xref) {
 	case 'HMDB':
 		return "http://www.hmdb.ca/scripts/show_card.cgi?METABOCARD=$id";
 	default:
-		return false;
+		return $id;
 	}
 }
 ?>

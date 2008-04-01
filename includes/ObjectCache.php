@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup Cache
+ * @package MediaWiki
+ * @subpackage Cache
  */
 
 /**
@@ -8,7 +9,8 @@
  * It acts as a memcached server with no RAM, that is, all objects are
  * cleared the moment they are set. All set operations succeed and all
  * get operations return null.
- * @addtogroup Cache
+ * @package MediaWiki
+ * @subpackage Cache
  */
 class FakeMemCachedClient {
 	function add ($key, $val, $exp = 0) { return true; }
@@ -70,8 +72,6 @@ function &wfGetCache( $inputType ) {
 				$wgCaches[CACHE_ACCEL] = new eAccelBagOStuff;
 			} elseif ( function_exists( 'apc_fetch') ) {
 				$wgCaches[CACHE_ACCEL] = new APCBagOStuff;
-			} elseif( function_exists( 'xcache_get' ) ) {
-				$wgCaches[CACHE_ACCEL] = new XCacheBagOStuff();
 			} elseif ( function_exists( 'mmcache_get' ) ) {
 				$wgCaches[CACHE_ACCEL] = new TurckBagOStuff;
 			} else {
@@ -123,4 +123,4 @@ function &wfGetParserCacheStorage() {
 	return $ret;
 }
 
-
+?>

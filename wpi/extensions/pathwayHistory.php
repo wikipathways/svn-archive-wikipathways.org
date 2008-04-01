@@ -75,8 +75,7 @@ function historyLine($pathway, $row, $nr, $counter = '', $cur = false, $firstInL
 	}
 	
 	$dt = $wgLang->timeanddate( wfTimestamp(TS_MW, $rev->getTimestamp()), true );
-	$oldid = $firstInList ? '' : "oldid=" . $rev->getId();
-	$view = $wgUser->getSkin()->makeKnownLinkObj($pathway->getTitleObject(), 'view', $oldid );
+	$view = $wgUser->getSkin()->makeKnownLinkObj($pathway->getTitleObject(), 'view', "oldid=" . $rev->getId() );
 
 	$date = $wgLang->timeanddate( $rev->getTimestamp(), true );
 	$user = $wgUser->getSkin()->userLink( $rev->getUser(), $rev->getUserText() );

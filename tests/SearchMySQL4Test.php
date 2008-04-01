@@ -1,16 +1,19 @@
 <?php
-require_once( 'SearchEngineTest.php' );
 
-class SearchMySQL4Test extends SearchEngineTest {
+require_once( 'SearchEngineTest.php' );
+require_once( '../includes/SearchMySQL4.php' );
+
+class SearchMySQL4Test extends SearchEngine_TestCase {
 	var $db;
 
-	function __construct( $name ) {
-		parent::__construct( $name );
+	function SearchMySQL4Test( $name ) {
+		$this->PHPUnit_TestCase( $name );
 	}
 
 	function setUp() {
 		$GLOBALS['wgContLang'] = new Language;
-		$this->db = $this->buildTestDatabase(
+		$this->db =& buildTestDatabase(
+			'mysql4',
 			array( 'page', 'revision', 'text', 'searchindex' ) );
 		if( $this->db ) {
 			$this->insertSearchData();
@@ -28,4 +31,4 @@ class SearchMySQL4Test extends SearchEngineTest {
 
 }
 
-
+?>

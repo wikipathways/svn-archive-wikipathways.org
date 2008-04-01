@@ -82,14 +82,6 @@ class PathwayData {
 	}
 	
 	/**
-	 * Get a list of elements of the given type
-	 * @param name the name of the elements to include
-	 */
-	function getElements($name) {
-		return $this->getGpml()->$name;
-	}
-	
-	/**
 	 * Get a list of unique elements
 	 * \param name The name of the elements to include
 	 * \param uniqueAttribute The attribute of which the value has to be unique

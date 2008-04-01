@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
@@ -13,7 +14,7 @@ function updateSearchIndex( $start, $end, $maxLockTime, $quiet ) {
 	$wgQuiet = $quiet;
 	$wgDisableSearchUpdate = false;
 
-	$dbw = wfGetDB( DB_MASTER );
+	$dbw =& wfGetDB( DB_MASTER );
 	$recentchanges = $dbw->tableName( 'recentchanges' );
 
 	output( "Updating searchindex between $start and $end\n" );
@@ -73,9 +74,7 @@ function updateSearchIndex( $start, $end, $maxLockTime, $quiet ) {
 
 	# Unlock searchindex
 	if ( $maxLockTime ) {
-		output( "    --- Unlocking --" );
 		unlockSearchindex( $dbw );
-		output( "\n" );
 	}
 	output( "Done\n" );
 }
@@ -92,11 +91,11 @@ function lockSearchindex( &$db ) {
 		$items[] = $db->tableName( $table ) . ' READ';
 	}
 	$sql = "LOCK TABLES " . implode( ',', $items );
-	$db->query( $sql, 'updateSearchIndex.inc ' . __METHOD__ );
+	$db->query( $sql );
 }
 
 function unlockSearchindex( &$db ) {
-	$db->query( "UNLOCK TABLES", 'updateSearchIndex.inc ' . __METHOD__ );
+	$db->query( "UNLOCK TABLES" );
 }
 
 # Unlock and lock again

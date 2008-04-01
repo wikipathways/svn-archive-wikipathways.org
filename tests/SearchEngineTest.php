@@ -1,9 +1,18 @@
 <?php
 
-require_once 'MediaWiki_TestCase.php';
+$IP = '..';
+require_once( 'PHPUnit.php' );
+require_once( '../includes/Defines.php' );
+require_once( '../includes/DefaultSettings.php' );
+require_once( '../includes/Profiling.php' );
+require_once( '../includes/Hooks.php' );
+require_once( '../includes/MagicWord.php' );
+require_once( '../languages/Language.php' );
+
+require_once( '../includes/SearchEngine.php' );
 
 /** @todo document */
-class SearchEngineTest extends MediaWiki_TestCase {
+class SearchEngine_TestCase extends PHPUnit_TestCase {
 	var $db, $search;
 
 	function insertSearchData() {
@@ -67,8 +76,8 @@ END
 
 	function fetchIds( &$results ) {
 		$matches = array();
-		while( $row = $results->next() ) {
-			$matches[] = $row->getTitle()->getPrefixedText();
+		while( $row = $results->fetchObject() ) {
+			$matches[] = intval( $row->page_id );
 		}
 		$results->free();
 		# Search is not guaranteed to return results in a certain order;
@@ -82,7 +91,7 @@ END
 		$this->assertFalse( is_null( $this->db ), "Can't find a database to test with." );
 		if( !is_null( $this->db ) ) {
 			$this->assertEquals(
-				array( 'Smithee' ),
+				array( 3 ),
 				$this->fetchIds( $this->search->searchText( 'smithee' ) ),
 				"Plain search failed" );
 		}
@@ -93,10 +102,7 @@ END
 		if( !is_null( $this->db ) ) {
 			$this->search->setNamespaces( array( 0, 1, 4 ) );
 			$this->assertEquals(
-				array(
-					'Smithee',
-					'Talk:Main Page',
-				),
+				array( 2, 3 ),
 				$this->fetchIds( $this->search->searchText( 'smithee' ) ),
 				"Power search failed" );
 		}
@@ -106,10 +112,7 @@ END
 		$this->assertFalse( is_null( $this->db ), "Can't find a database to test with." );
 		if( !is_null( $this->db ) ) {
 			$this->assertEquals(
-				array(
-					'Alan Smithee',
-					'Smithee',
-				),
+				array( 3, 9 ),
 				$this->fetchIds( $this->search->searchTitle( 'smithee' ) ),
 				"Title search failed" );
 		}
@@ -120,11 +123,7 @@ END
 		if( !is_null( $this->db ) ) {
 			$this->search->setNamespaces( array( 0, 1, 4 ) );
 			$this->assertEquals(
-				array(
-					'Alan Smithee',
-					'Smithee',
-					'Talk:Smithee',
-				),
+				array( 3, 4, 9 ),
 				$this->fetchIds( $this->search->searchTitle( 'smithee' ) ),
 				"Title power search failed" );
 		}
@@ -133,4 +132,4 @@ END
 }
 
 
-
+?>

@@ -12,10 +12,12 @@ function cleanupArticle( $id, $domain ) {
 
 	print $title->getPrefixedDBkey() . " ...";
 	$rev = Revision::newFromTitle( $title );
+	$reverted = false;
 	$revId = $rev->getId();
 	$currentRevId = $revId;
+	$regex = LinkFilter::makeRegex( $domain );
 	
-	while ( $rev && LinkFilter::matchEntry( $rev->getText() , $domain ) ) {
+	while ( $rev && preg_match( $regex, $rev->getText() ) ) {
 		# Revision::getPrevious can't be used in this way before MW 1.6 (Revision.php 1.26)
 		#$rev = $rev->getPrevious();
 		$revId = $title->getPreviousRevisionID( $revId );
@@ -30,7 +32,7 @@ function cleanupArticle( $id, $domain ) {
 		// This happens e.g. when a link comes from a template rather than the page itself
 		print "False match\n";
 	} else {
-		$dbw = wfGetDB( DB_MASTER );
+		$dbw =& wfGetDB( DB_MASTER );
 		$dbw->immediateBegin();
 		if ( !$rev ) {
 			// Didn't find a non-spammy revision, blank the page
@@ -73,11 +75,11 @@ if ( !$like ) {
 	exit(1);
 }
 
-$dbr = wfGetDB( DB_SLAVE );
+$dbr =& wfGetDB( DB_SLAVE );
 
-if ( isset($options['all']) ) {
+if ( $options['all'] ) {
 	// Clean up spam on all wikis
-	$dbr = wfGetDB( DB_SLAVE );
+	$dbr =& wfGetDB( DB_SLAVE );
 	print "Finding spam on " . count($wgLocalDatabases) . " wikis\n";
 	$found = false;
 	foreach ( $wgLocalDatabases as $db ) {
@@ -107,4 +109,4 @@ if ( isset($options['all']) ) {
 	}
 }
 
-
+?>

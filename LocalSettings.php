@@ -123,13 +123,12 @@ $configdate = gmdate( 'YmdHis', @filemtime( __FILE__ ) );
 $wgCacheEpoch = max( $wgCacheEpoch, $configdate );
 
 $wgGroupPermissions['user']['edit'] = true;
-$wgGroupPermissions['user']['createtalk'] = true;
 
 $wgGroupPermissions['*'    ]['createaccount']   = true;
 $wgGroupPermissions['*'    ]['read']            = true;
 $wgGroupPermissions['*'    ]['edit']            = false;
 $wgGroupPermissions['*'    ]['createpage']      = false;
-$wgGroupPermissions['*'    ]['createtalk']      = false;
+$wgGroupPermissions['*'    ]['createtalk']      = true;
 
 #Non-defaults:
 
@@ -177,32 +176,6 @@ $wgNamespacesToBeSearchedDefault +=
 			100 => false, 100 => false); //Old namespace
 $wgContentNamespaces += array(NS_PATHWAY, NS_PATHWAY_TALK);
 
-//AP20080328 - setting permissions for custom namespaces
-$wgGroupPermissions[ '*' ][ 'ns102_read'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns102_edit'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns102_create'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns102_move'] = true;
-$wgGroupPermissions[ '*' ][ 'ns103_read'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns103_edit'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns103_create'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns103_move'] = true;
-$wgGroupPermissions[ '*' ][ 'ns104_read'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns104_edit'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns104_create'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns104_move'] = true;
-$wgGroupPermissions[ '*' ][ 'ns105_read'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns105_edit'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns105_create'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns105_move'] = true;
-$wgGroupPermissions[ '*' ][ 'ns106_read'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns106_edit'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns106_create'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns106_move'] = true;
-$wgGroupPermissions[ '*' ][ 'ns107_read'] = true;
-$wgGroupPermissions[ 'user' ][ 'ns107_edit'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns107_create'] = true;
-$wgGroupPermissions[ 'bureaucrat' ][ 'ns107_move'] = true;
-
 //AP20071027 
 # Reject user creation from specific domains
 function abortOnBadDomain($user, $message) {
@@ -227,7 +200,7 @@ $wgDebugLogFile = '/var/www/wikipathways/wpi/tmp/wikipathwaysdebug.txt';
 ##Extensions
 require_once('extensions/analytics.php'); //Google Analytics support
 require_once('extensions/inputbox.php');
-//require_once('extensions/ParserFunctions.php');
+require_once('extensions/ParserFunctions.php');
 //require_once('wpi/extensions/redirectImage.php'); //Redirect all image pages to file
 require_once('wpi/extensions/PathwayOfTheDay.php');
 require_once('wpi/extensions/siteStats.php');
@@ -258,8 +231,6 @@ require_once('wpi/extensions/SpecialWishList/SpecialWishList.php');
 require_once('wpi/extensions/SpecialWishList/TopWishes.php');
 require_once('wpi/extensions/DiffAppletPage/DiffAppletPage.php');
 require_once('wpi/extensions/RecentPathwayChanges/RecentPathwayChanges.php');
-require_once('wpi/extensions/ParserFunctions/ParserFunctions.php' );
-require_once('wpi/extensions/NamespacePermissions.php' );
 
 require_once('wpi/extensions/recaptcha/ReCaptcha.php'); 
 

@@ -1,7 +1,8 @@
 <?php
 /** Czech (česky)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 #--------------------------------------------------------------------------
@@ -19,20 +20,6 @@ class LanguageCs extends Language {
 		# allowed values for $case:
 		#	1sg, 2sg, ..., 7sg -- nominative, genitive, ... (in singular)
 		switch ( $word ) {
-			case 'Wikibooks':
-			case 'Wikiknihy':
-				switch ( $case ) {
-					case '2sg':
-						return 'Wikiknih';
-					case '3sg':
-						return 'Wikiknihám';
-					case '6sg';
-						return 'Wikiknihách';
-					case '7sg':
-						return 'Wikiknihami';
-					default:
-						return 'Wikiknihy';
-				}
 			case 'Wikipedia':
 			case 'Wikipedie':
 				switch ( $case ) {
@@ -48,17 +35,17 @@ class LanguageCs extends Language {
 
 			case 'Wiktionary':
 			case 'Wikcionář':
-			case 'Wikislovník':
 				switch ( $case ) {
 					case '2sg':
+						return 'Wikcionáře';
 					case '3sg':
 					case '5sg';
 					case '6sg';
-						return 'Wikislovníku';
+						return 'Wikcionáři';
 					case '7sg':
-						return 'Wikislovníkem';
+						return 'Wikcionářem';
 					default:
-						return 'Wikislovník';
+						return 'Wikcionář';
 				}
 
 			case 'Wikiquote':
@@ -78,17 +65,23 @@ class LanguageCs extends Language {
 		return $word;
 	}
 
-	function convertPlural( $count, $forms ) {
-		if ( !count($forms) ) { return ''; }
-		$forms = $this->preConvertPlural( $forms, 3 );
+  # Plural form transformations, needed for some languages.
+  # Invoked by {{plural:count|wordform1|wordform2|wordform3}}
+  function convertPlural( $count, $wordform1, $wordform2, $wordform3, $w4, $w5) {
+    $count = str_replace( '\xc2\xa0', '', $count );
+    switch ( $count ) {
+      case 1:
+        return $wordform1;
 
-		switch ( $count ) {
-			case 1:  return $forms[0];
-			case 2:
-			case 3:
-			case 4:  return $forms[1];
-			default: return $forms[2];
-		}
-	}
+      case 2:
+      case 3:
+      case 4:
+        return $wordform2;
 
+      default:
+        return $wordform3;
+    };
+  }
 }
+
+?>

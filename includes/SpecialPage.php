@@ -17,7 +17,8 @@
  * SpecialPage::$mList. To remove a core static special page at runtime, use
  * a SpecialPage_initList hook.
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -26,8 +27,8 @@
 
 /**
  * Parent special page class, also static functions for handling the special
- * page list.
- * @addtogroup SpecialPage
+ * page list
+ * @package MediaWiki
  */
 class SpecialPage
 {
@@ -73,6 +74,7 @@ class SpecialPage
 	 */
 	var $mAllowedRedirectParams = array();
 
+	
 	//AP20070718
 	//Add ", 'block'" to arrays for pages to restrict from general users (users w/o block permissions)
 
@@ -83,7 +85,6 @@ class SpecialPage
 
 		'Userlogin'                 => array( 'SpecialPage', 'Userlogin' ),
 		'Userlogout'                => array( 'UnlistedSpecialPage', 'Userlogout' ),
-		'CreateAccount'             => array( 'SpecialRedirectToSpecial', 'CreateAccount', 'Userlogin', 'signup', array( 'uselang' ) ),
 		'Preferences'               => array( 'SpecialPage', 'Preferences' ),
 		'Watchlist'                 => array( 'SpecialPage', 'Watchlist' ),
 
@@ -93,69 +94,60 @@ class SpecialPage
 		'Newimages'                 => array( 'IncludableSpecialPage', 'Newimages' ),
 		'Listusers'                 => array( 'SpecialPage', 'Listusers', 'block' ),
 		'Statistics'                => array( 'SpecialPage', 'Statistics', 'block' ),
-		'Randompage'                => array( 'SpecialPage', 'Randompage', 'block'),
+		'Randompage'                => array( 'SpecialPage', 'Randompage', 'block' ),
 		'Lonelypages'               => array( 'SpecialPage', 'Lonelypages', 'block' ),
 		'Uncategorizedpages'        => array( 'SpecialPage', 'Uncategorizedpages', 'block' ),
 		'Uncategorizedcategories'   => array( 'SpecialPage', 'Uncategorizedcategories', 'block' ),
 		'Uncategorizedimages'       => array( 'SpecialPage', 'Uncategorizedimages', 'block' ),
-		'Uncategorizedtemplates'    => array( 'SpecialPage', 'Uncategorizedtemplates', 'block' ),
 		'Unusedcategories'          => array( 'SpecialPage', 'Unusedcategories', 'block' ),
 		'Unusedimages'              => array( 'SpecialPage', 'Unusedimages', 'block' ),
 		'Wantedpages'               => array( 'IncludableSpecialPage', 'Wantedpages', 'block' ),
 		'Wantedcategories'          => array( 'SpecialPage', 'Wantedcategories', 'block' ),
 		'Mostlinked'                => array( 'SpecialPage', 'Mostlinked', 'block' ),
 		'Mostlinkedcategories'      => array( 'SpecialPage', 'Mostlinkedcategories', 'block' ),
-		'Mostlinkedtemplates'       => array( 'SpecialPage', 'Mostlinkedtemplates', 'block' ),
 		'Mostcategories'            => array( 'SpecialPage', 'Mostcategories', 'block' ),
 		'Mostimages'                => array( 'SpecialPage', 'Mostimages', 'block' ),
 		'Mostrevisions'             => array( 'SpecialPage', 'Mostrevisions', 'block' ),
-		'Fewestrevisions'           => array( 'SpecialPage', 'Fewestrevisions', 'block' ),
 		'Shortpages'                => array( 'SpecialPage', 'Shortpages', 'block' ),
 		'Longpages'                 => array( 'SpecialPage', 'Longpages', 'block' ),
 		'Newpages'                  => array( 'IncludableSpecialPage', 'Newpages', 'block' ),
 		'Ancientpages'              => array( 'SpecialPage', 'Ancientpages', 'block' ),
 		'Deadendpages'              => array( 'SpecialPage', 'Deadendpages', 'block' ),
-		'Protectedpages'            => array( 'SpecialPage', 'Protectedpages', 'block' ),
-		'Protectedtitles'           => array( 'SpecialPage', 'Protectedtitles', 'block' ),
 		'Allpages'                  => array( 'IncludableSpecialPage', 'Allpages', 'block' ),
 		'Prefixindex'               => array( 'IncludableSpecialPage', 'Prefixindex', 'block' ) ,
 		'Ipblocklist'               => array( 'SpecialPage', 'Ipblocklist', 'block' ),
 		'Specialpages'              => array( 'UnlistedSpecialPage', 'Specialpages' ),
-		'Contributions'             => array( 'SpecialPage', 'Contributions' ),
+		'Contributions'             => array( 'UnlistedSpecialPage', 'Contributions' ),
 		'Emailuser'                 => array( 'UnlistedSpecialPage', 'Emailuser' ),
-		'Whatlinkshere'             => array( 'SpecialPage', 'Whatlinkshere' ),
+		'Whatlinkshere'             => array( 'UnlistedSpecialPage', 'Whatlinkshere' ),
 		'Recentchangeslinked'       => array( 'UnlistedSpecialPage', 'Recentchangeslinked' ),
 		'Movepage'                  => array( 'UnlistedSpecialPage', 'Movepage' ),
 		'Blockme'                   => array( 'UnlistedSpecialPage', 'Blockme' ),
 		'Resetpass'                 => array( 'UnlistedSpecialPage', 'Resetpass' ),
-		'Booksources'               => array( 'SpecialPage', 'SpecialBookSources', 'block' ),
+		'Booksources'               => array( 'SpecialPage', 'Booksources', 'block'),
 		'Categories'                => array( 'SpecialPage', 'Categories', 'block' ),
 		'Export'                    => array( 'SpecialPage', 'Export', 'block' ),
 		'Version'                   => array( 'SpecialPage', 'Version', 'block' ),
 		'Allmessages'               => array( 'SpecialPage', 'Allmessages', 'block' ),
 		'Log'                       => array( 'SpecialPage', 'Log', 'block' ),
-		'Blockip'                   => array( 'SpecialPage', 'Blockip', 'block', 'block' ),
+		'Blockip'                   => array( 'SpecialPage', 'Blockip', 'block' ),
 		'Undelete'                  => array( 'SpecialPage', 'Undelete', 'deletedhistory' ),
-		'Import'                    => array( 'SpecialPage', 'Import', 'import' ),
+		'Import'                    => array( 'SpecialPage', "Import", 'import' ),
 		'Lockdb'                    => array( 'SpecialPage', 'Lockdb', 'siteadmin' ),
 		'Unlockdb'                  => array( 'SpecialPage', 'Unlockdb', 'siteadmin' ),
-		'Userrights'                => 'UserrightsPage',
+		'Userrights'                => array( 'SpecialPage', 'Userrights', 'userrights' ),
 		'MIMEsearch'                => array( 'SpecialPage', 'MIMEsearch', 'block' ),
 		'Unwatchedpages'            => array( 'SpecialPage', 'Unwatchedpages', 'unwatchedpages' ),
 		'Listredirects'             => array( 'SpecialPage', 'Listredirects', 'block' ),
-		'Revisiondelete'            => array( 'UnlistedSpecialPage', 'Revisiondelete', 'deleterevision' ),
+		'Revisiondelete'            => array( 'SpecialPage', 'Revisiondelete', 'deleterevision' ),
 		'Unusedtemplates'           => array( 'SpecialPage', 'Unusedtemplates', 'block' ),
-		'Randomredirect'            => array('SpecialPage', 'SpecialRandomredirect', 'block' ),
-		'Withoutinterwiki'          => array( 'SpecialPage', 'Withoutinterwiki', 'block' ),
-		'Filepath'                  => array( 'SpecialPage', 'Filepath', 'block' ),
+		'Randomredirect'            => array( 'SpecialPage', 'Randomredirect', 'block' ),
 
 		'Mypage'                    => array( 'SpecialMypage' ),
 		'Mytalk'                    => array( 'SpecialMytalk' ),
 		'Mycontributions'           => array( 'SpecialMycontributions' ),
 		'Listadmins'                => array( 'SpecialRedirectToSpecial', 'Listadmins', 'Listusers', 'sysop' ),
-		'MergeHistory'              => array( 'SpecialPage', 'MergeHistory', 'mergehistory' ),
-		'Listbots'                  => array( 'SpecialRedirectToSpecial', 'Listbots', 'Listusers', 'bot' ),
-		);
+	);
 
 	static public $mAliases;
 	static public $mListInitialised = false;
@@ -179,7 +171,7 @@ class SpecialPage
 		self::$mListInitialised = true;
 
 		if( !$wgDisableCounters ) {
-			self::$mList['Popularpages'] = array( 'SpecialPage', 'Popularpages' );
+			self::$mList['Popularpages'] = array( 'SpecialPage', 'Popularpages', 'block' );
 		}
 
 		if( !$wgDisableInternalSearch ) {
@@ -187,7 +179,7 @@ class SpecialPage
 		}
 
 		if( $wgEmailAuthentication ) {
-			self::$mList['Confirmemail'] = 'EmailConfirmation';
+			self::$mList['Confirmemail'] = array( 'UnlistedSpecialPage', 'Confirmemail' );
 		}
 
 		# Add extension special pages
@@ -285,30 +277,6 @@ class SpecialPage
 	}
 
 	/**
-	 * Check if a given name exist as a special page or as a special page alias
-	 * @param $name string: name of a special page
-	 * @return boolean: true if a special page exists with this name
-	 */
-	static function exists( $name ) {
-		global $wgContLang;
-		if ( !self::$mListInitialised ) {
-			self::initList();
-		}
-		if( !self::$mAliases ) {
-			self::initAliasList();
-		}
-
-		# Remove special pages inline parameters:
-		$bits = explode( '/', $name );
-		$name = $wgContLang->caseFold($bits[0]);
-
-		return
-			array_key_exists( $name, self::$mList )
-			or array_key_exists( $name, self::$mAliases )
-		;
-	}
-
-	/**
 	 * Find the object with a given name and return it (or NULL)
 	 * @static
 	 * @param string $name
@@ -357,7 +325,7 @@ class SpecialPage
 
 		foreach ( self::$mList as $name => $rec ) {
 			$page = self::getPage( $name );
-			if ( $page->isListed() && !$page->isRestricted() ) {
+			if ( $page->isListed() && $page->getRestriction() == '' ) {
 				$pages[$name] = $page;
 			}
 		}
@@ -378,12 +346,11 @@ class SpecialPage
 
 		foreach ( self::$mList as $name => $rec ) {
 			$page = self::getPage( $name );
-			if (
-				$page->isListed()
-				and $page->isRestricted()
-				and $page->userCanExecute( $wgUser )
-			) {
-				$pages[$name] = $page;
+			if ( $page->isListed() ) {
+				$restriction = $page->getRestriction();
+				if ( $restriction != '' && $wgUser->isAllowed( $restriction ) ) {
+					$pages[$name] = $page;
+				}
 			}
 		}
 		return $pages;
@@ -413,6 +380,7 @@ class SpecialPage
 			$par = $bits[1];
 		}
 		$page = SpecialPage::getPageByAlias( $name );
+
 		# Nonexistent?
 		if ( !$page ) {
 			if ( !$including ) {
@@ -494,11 +462,6 @@ class SpecialPage
 
 	/**
 	 * Get the local name for a specified canonical name
-	 *
-	 * @param $name
-	 * @param mixed $subpage Boolean false, or string
-	 *
-	 * @return string
 	 */
 	static function getLocalNameFor( $name, $subpage = false ) {
 		global $wgContLang;
@@ -576,7 +539,7 @@ class SpecialPage
 			$this->mFunction = $function;
 		}
 		if ( $file === 'default' ) {
-			$this->mFile = dirname(__FILE__) . "/Special{$name}.php";
+			$this->mFile = "Special{$name}.php";
 		} else {
 			$this->mFile = $file;
 		}
@@ -616,25 +579,10 @@ class SpecialPage
 	}
 
 	/**
-	 * Can be overridden by subclasses with more complicated permissions
-	 * schemes.
-	 *
-	 * @return bool Should the page be displayed with the restricted-access
-	 *   pages?
-	 */
-	public function isRestricted() {
-		return $this->mRestriction != '';
-	}
-
-	/**
 	 * Checks if the given user (identified by an object) can execute this
-	 * special page (as defined by $mRestriction).  Can be overridden by sub-
-	 * classes with more complicated permissions schemes.
-	 *
-	 * @param User $user The user to check
-	 * @return bool Does the user have permission to view the page?
+	 * special page (as defined by $mRestriction)
 	 */
-	public function userCanExecute( $user ) {
+	function userCanExecute( &$user ) {
 		return $user->isAllowed( $this->mRestriction );
 	}
 
@@ -670,7 +618,7 @@ class SpecialPage
 		if ( $this->userCanExecute( $wgUser ) ) {
 			$func = $this->mFunction;
 			// only load file if the function does not exist
-			if(!is_callable($func) and $this->mFile) {
+			if(!function_exists($func) and $this->mFile) {
 				require_once( $this->mFile );
 			}
 			# FIXME: these hooks are broken for extensions and anything else that subclasses SpecialPage. 
@@ -678,7 +626,7 @@ class SpecialPage
 				$this->outputHeader();
 			if ( ! wfRunHooks( 'SpecialPageExecuteBeforePage', array( &$this, &$par, &$func ) ) )
 				return;
-			call_user_func( $func, $par, $this );
+			$func( $par, $this );
 			if ( ! wfRunHooks( 'SpecialPageExecuteAfterPage', array( &$this, &$par, &$func ) ) )
 				return;
 		} else {
@@ -690,10 +638,9 @@ class SpecialPage
 		global $wgOut, $wgContLang;
 
 		$msg = $wgContLang->lc( $this->name() ) . '-summary';
-		$out = wfMsgNoTrans( $msg );
-		if ( ! wfEmptyMsg( $msg, $out ) and  $out !== '' and ! $this->including() ) {
+		$out = wfMsg( $msg );
+		if ( ! wfEmptyMsg( $msg, $out ) and  $out !== '' and ! $this->including() )
 			$wgOut->addWikiText( $out );
-		}
 
 	}
 
@@ -748,7 +695,7 @@ class SpecialPage
 
 /**
  * Shortcut to construct a special page which is unlisted by default
- * @addtogroup SpecialPage
+ * @package MediaWiki
  */
 class UnlistedSpecialPage extends SpecialPage
 {
@@ -759,7 +706,7 @@ class UnlistedSpecialPage extends SpecialPage
 
 /**
  * Shortcut to construct an includable special  page
- * @addtogroup SpecialPage
+ * @package MediaWiki
  */
 class IncludableSpecialPage extends SpecialPage
 {
@@ -768,10 +715,6 @@ class IncludableSpecialPage extends SpecialPage
 	}
 }
 
-/**
- * Shortcut to construct a special page alias.
- * @addtogroup SpecialPage
- */
 class SpecialRedirectToSpecial extends UnlistedSpecialPage {
 	var $redirName, $redirSubpage;
 
@@ -791,21 +734,10 @@ class SpecialRedirectToSpecial extends UnlistedSpecialPage {
 	}
 }
 
-/** SpecialMypage, SpecialMytalk and SpecialMycontributions special pages
- * are used to get user independant links pointing to the user page, talk
- * page and list of contributions.
- * This can let us cache a single copy of any generated content for all
- * users.
- */
-
-/**
- * Shortcut to construct a special page pointing to current user user's page.
- * @addtogroup SpecialPage
- */
 class SpecialMypage extends UnlistedSpecialPage {
 	function __construct() {
 		parent::__construct( 'Mypage' );
-		$this->mAllowedRedirectParams = array( 'action' , 'preload' , 'editintro', 'section' );
+		$this->mAllowedRedirectParams = array( 'action' );
 	}
 
 	function getRedirect( $subpage ) {
@@ -818,14 +750,10 @@ class SpecialMypage extends UnlistedSpecialPage {
 	}
 }
 
-/**
- * Shortcut to construct a special page pointing to current user talk page.
- * @addtogroup SpecialPage
- */
 class SpecialMytalk extends UnlistedSpecialPage {
 	function __construct() {
 		parent::__construct( 'Mytalk' );
-		$this->mAllowedRedirectParams = array( 'action' , 'preload' , 'editintro', 'section' );
+		$this->mAllowedRedirectParams = array( 'action' );
 	}
 
 	function getRedirect( $subpage ) {
@@ -838,10 +766,6 @@ class SpecialMytalk extends UnlistedSpecialPage {
 	}
 }
 
-/**
- * Shortcut to construct a special page pointing to current user contributions.
- * @addtogroup SpecialPage
- */
 class SpecialMycontributions extends UnlistedSpecialPage {
 	function __construct() {
 		parent::__construct(  'Mycontributions' );
@@ -852,3 +776,5 @@ class SpecialMycontributions extends UnlistedSpecialPage {
 		return SpecialPage::getTitleFor( 'Contributions', $wgUser->getName() );
 	}
 }
+
+?>

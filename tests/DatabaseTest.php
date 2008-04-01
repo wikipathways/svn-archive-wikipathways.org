@@ -1,10 +1,23 @@
 <?php
 
-class DatabaseTest extends PHPUnit_Framework_TestCase {
+require_once( 'PHPUnit.php' );
+require_once( '../includes/Defines.php' );
+require_once( '../includes/Database.php' );
+require_once( '../includes/GlobalFunctions.php' );
+
+class DatabaseTest extends PHPUnit_TestCase {
 	var $db;
 
+	function DatabaseTest( $name ) {
+		$this->PHPUnit_TestCase( $name );
+	}
+
 	function setUp() {
-		$this->db = wfGetDB( DB_SLAVE );
+		$this->db = new Database();
+	}
+
+	function tearDown() {
+		unset( $this->db );
 	}
 
 	function testAddQuotesNull() {
@@ -77,4 +90,4 @@ class DatabaseTest extends PHPUnit_Framework_TestCase {
 
 }
 
-
+?>

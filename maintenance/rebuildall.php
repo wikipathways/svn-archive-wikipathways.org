@@ -3,7 +3,8 @@
  * Rebuild link tracking tables from scratch.  This takes several
  * hours, depending on the database size and server configuration.
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
@@ -22,7 +23,8 @@ rebuildTextIndex( $database );
 createTextIndex( $database );
 
 print "\n\n** Rebuilding recentchanges table:\n";
-rebuildRecentChangesTable();
+rebuildRecentChangesTablePass1();
+rebuildRecentChangesTablePass2();
 
 # Doesn't work anymore
 # rebuildLinkTables();
@@ -34,4 +36,4 @@ refreshLinks( 1 );
 print "Done.\n";
 exit();
 
-
+?>

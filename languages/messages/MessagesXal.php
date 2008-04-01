@@ -1,11 +1,9 @@
 <?php
-/** Kalmyk (Хальмг)
- *
- * @addtogroup Language
- *
- * @author M.M.S.
- * @author לערי ריינהארט
- */
+/**
+  * @package MediaWiki
+  * @subpackage Language
+  */
+# Kalmyk stub localization;
 
 $namespaceNames = array(
 	NS_MEDIA            => 'Аһар',
@@ -30,37 +28,28 @@ $namespaceNames = array(
 
 $fallback8bitEncoding = "windows-1251";
 
+
 $messages = array(
+
+'edit' => 'Чиклх',
 'article' => 'Халх',
-'mytalk'  => 'Мини күүндлһн бəəрм',
-
-'history'          => 'Чикллһнə бүрткл',
-'history_short'    => 'Чикллһнə бүрткл',
-'edit'             => 'Чиклх',
-'talkpage'         => 'Ухалвр',
-'talkpagelinktext' => 'Ухалвр',
-
-# All link text and link target definitions of links into project namespace that get used by other message strings, with the exception of user group pages (see grouppage) and the disambiguation template definition (see disambiguations).
-'mainpage' => 'Эклц',
-
-# Short words for each namespace, by default used in the namespace tab in monobook
-'nstab-main'     => 'Халх',
-'nstab-user'     => 'Орлцач',
+'history' => 'Чикллһнə бүрткл',
+'nstab-main' => 'Халх',
+'nstab-user' => 'Орлцач',
 'nstab-template' => 'Зура',
-'nstab-help'     => 'Цəəлһлһн',
+'nstab-help' => 'Цəəлһлһн',
 'nstab-category' => 'Янз',
+'talkpage' => 'Ухалвр',
+'history_short' => 'Чикллһнə бүрткл',
 
-# Login and logout pages
-'login'         => 'Оруллһн',
+
 'createaccount' => 'Выль вики-авторлэн регистрациез',
-
-# Preferences page
+'login' => 'Оруллһн',
+'mycontris' => 'Мини өгүллһдүд',
+'mytalk' => 'Мини күүндлһн бəəрм',
 'preferences' => 'Дурллһн',
 
-# Image list
-'filehist-user' => 'Орлцач',
-
-# Contributions
-'mycontris' => 'Мини өгүллһдүд',
-
 );
+
+
+?>

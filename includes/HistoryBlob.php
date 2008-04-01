@@ -1,86 +1,82 @@
 <?php
 /**
  *
+ * @package MediaWiki
  */
 
 /**
  * Pure virtual parent
- * @todo document (needs a one-sentence top-level class description, that answers the question: "what is a HistoryBlob?") 
+ * @package MediaWiki
  */
-interface HistoryBlob
+class HistoryBlob
 {
 	/**
 	 * setMeta and getMeta currently aren't used for anything, I just thought
 	 * they might be useful in the future.
 	 * @param $meta String: a single string.
 	 */
-	public function setMeta( $meta );
+	function setMeta( $meta ) {}
 
 	/**
 	 * setMeta and getMeta currently aren't used for anything, I just thought
 	 * they might be useful in the future.
 	 * Gets the meta-value
 	 */
-	public function getMeta();
+	function getMeta() {}
 
 	/**
 	 * Adds an item of text, returns a stub object which points to the item.
 	 * You must call setLocation() on the stub object before storing it to the
 	 * database
 	 */
-	public function addItem( $text );
+	function addItem() {}
 
 	/**
 	 * Get item by hash
 	 */
-	public function getItem( $hash );
+	function getItem( $hash ) {}
 
 	# Set the "default text"
 	# This concept is an odd property of the current DB schema, whereby each text item has a revision
 	# associated with it. The default text is the text of the associated revision. There may, however,
 	# be other revisions in the same object
-	public function setText( $text );
+	function setText() {}
 
 	/**
 	 * Get default text. This is called from Revision::getRevisionText()
 	 */
-	function getText();
+	function getText() {}
 }
 
 /**
  * The real object
- * @todo document (needs one-sentence top-level class description + function descriptions).
+ * @package MediaWiki
  */
-class ConcatenatedGzipHistoryBlob implements HistoryBlob
+class ConcatenatedGzipHistoryBlob extends HistoryBlob
 {
-	public $mVersion = 0, $mCompressed = false, $mItems = array(), $mDefaultHash = '';
-	public $mFast = 0, $mSize = 0;
+	/* private */ var $mVersion = 0, $mCompressed = false, $mItems = array(), $mDefaultHash = '';
+	/* private */ var $mFast = 0, $mSize = 0;
 
-	/** Constructor */
-	public function ConcatenatedGzipHistoryBlob() {
+	function ConcatenatedGzipHistoryBlob() {
 		if ( !function_exists( 'gzdeflate' ) ) {
 			throw new MWException( "Need zlib support to read or write this kind of history object (ConcatenatedGzipHistoryBlob)\n" );
 		}
 	}
 
-	#
-	# HistoryBlob implementation:
-	#
-
 	/** @todo document */
-	public function setMeta( $metaData ) {
+	function setMeta( $metaData ) {
 		$this->uncompress();
 		$this->mItems['meta'] = $metaData;
 	}
 
 	/** @todo document */
-	public function getMeta() {
+	function getMeta() {
 		$this->uncompress();
 		return $this->mItems['meta'];
 	}
 
 	/** @todo document */
-	public function addItem( $text ) {
+	function addItem( $text ) {
 		$this->uncompress();
 		$hash = md5( $text );
 		$this->mItems[$hash] = $text;
@@ -91,7 +87,7 @@ class ConcatenatedGzipHistoryBlob implements HistoryBlob
 	}
 
 	/** @todo document */
-	public function getItem( $hash ) {
+	function getItem( $hash ) {
 		$this->uncompress();
 		if ( array_key_exists( $hash, $this->mItems ) ) {
 			return $this->mItems[$hash];
@@ -101,29 +97,13 @@ class ConcatenatedGzipHistoryBlob implements HistoryBlob
 	}
 
 	/** @todo document */
-	public function setText( $text ) {
-		$this->uncompress();
-		$stub = $this->addItem( $text );
-		$this->mDefaultHash = $stub->mHash;
-	}
-
-	/** @todo document */
-	public function getText() {
-		$this->uncompress();
-		return $this->getItem( $this->mDefaultHash );
-	}
-
-	# HistoryBlob implemented.
-
-
-	/** @todo document */
-	public function removeItem( $hash ) {
+	function removeItem( $hash ) {
 		$this->mSize -= strlen( $this->mItems[$hash] );
 		unset( $this->mItems[$hash] );
 	}
 
 	/** @todo document */
-	public function compress() {
+	function compress() {
 		if ( !$this->mCompressed  ) {
 			$this->mItems = gzdeflate( serialize( $this->mItems ) );
 			$this->mCompressed = true;
@@ -131,13 +111,25 @@ class ConcatenatedGzipHistoryBlob implements HistoryBlob
 	}
 
 	/** @todo document */
-	public function uncompress() {
+	function uncompress() {
 		if ( $this->mCompressed ) {
 			$this->mItems = unserialize( gzinflate( $this->mItems ) );
 			$this->mCompressed = false;
 		}
 	}
 
+	/** @todo document */
+	function getText() {
+		$this->uncompress();
+		return $this->getItem( $this->mDefaultHash );
+	}
+
+	/** @todo document */
+	function setText( $text ) {
+		$this->uncompress();
+		$stub = $this->addItem( $text );
+		$this->mDefaultHash = $stub->mHash;
+	}
 
 	/** @todo document */
 	function __sleep() {
@@ -153,7 +145,7 @@ class ConcatenatedGzipHistoryBlob implements HistoryBlob
 	/**
 	 * Determines if this object is happy
 	 */
-	public function isHappy( $maxFactor, $factorThreshold ) {
+	function isHappy( $maxFactor, $factorThreshold ) {
 		if ( count( $this->mItems ) == 0 ) {
 			return true;
 		}
@@ -187,7 +179,7 @@ $wgBlobCache = array();
 
 
 /**
- * @todo document (needs one-sentence top-level class description + some function descriptions).
+ * @package MediaWiki
  */
 class HistoryBlobStub {
 	var $mOldId, $mHash, $mRef;
@@ -205,28 +197,28 @@ class HistoryBlobStub {
 		$this->mOldId = $id;
 	}
 
-	/**
-	 * Sets the location (old_id) of the referring object
-	 */
+      /**
+       * Sets the location (old_id) of the referring object
+       */
 	function setReferrer( $id ) {
 		$this->mRef = $id;
 	}
 
-	/**
-	 * Gets the location of the referring object
-	 */
+      /**
+       * Gets the location of the referring object
+       */
 	function getReferrer() {
 		return $this->mRef;
 	}
 
 	/** @todo document */
 	function getText() {
-		$fname = 'HistoryBlobStub::getText';
+		$fname = 'HistoryBlob::getText';
 		global $wgBlobCache;
 		if( isset( $wgBlobCache[$this->mOldId] ) ) {
 			$obj = $wgBlobCache[$this->mOldId];
 		} else {
-			$dbr = wfGetDB( DB_SLAVE );
+			$dbr =& wfGetDB( DB_SLAVE );
 			$row = $dbr->selectRow( 'text', array( 'old_flags', 'old_text' ), array( 'old_id' => $this->mOldId ) );
 			if( !$row ) {
 				return false;
@@ -281,6 +273,8 @@ class HistoryBlobStub {
  *
  * Serialized HistoryBlobCurStub objects will be inserted into the text table
  * on conversion if $wgFastSchemaUpgrades is set to true.
+ *
+ * @package MediaWiki
  */
 class HistoryBlobCurStub {
 	var $mCurId;
@@ -300,7 +294,7 @@ class HistoryBlobCurStub {
 
 	/** @todo document */
 	function getText() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$row = $dbr->selectRow( 'cur', array( 'cur_text' ), array( 'cur_id' => $this->mCurId ) );
 		if( !$row ) {
 			return false;
@@ -310,4 +304,4 @@ class HistoryBlobCurStub {
 }
 
 
-
+?>

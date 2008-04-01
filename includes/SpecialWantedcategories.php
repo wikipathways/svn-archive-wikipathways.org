@@ -1,12 +1,18 @@
 <?php
 /**
- * A querypage to list the most wanted categories - implements Special:Wantedcategories
+ * A querypage to list the most wanted categories
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  *
  * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>
  * @copyright Copyright © 2005, Ævar Arnfjörð Bjarmason
  * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
+ */
+
+/**
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class WantedCategoriesPage extends QueryPage {
 
@@ -15,7 +21,7 @@ class WantedCategoriesPage extends QueryPage {
 	function isSyndicated() { return false; }
 
 	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		list( $categorylinks, $page ) = $dbr->tableNamesN( 'categorylinks', 'page' );
 		$name = $dbr->addQuotes( $this->getName() );
 		return
@@ -37,7 +43,7 @@ class WantedCategoriesPage extends QueryPage {
 	/**
 	 * Fetch user page links and cache their existence
 	 */
-	function preprocessResults( $db, $res ) {
+	function preprocessResults( &$db, &$res ) {
 		$batch = new LinkBatch;
 		while ( $row = $db->fetchObject( $res ) )
 			$batch->addObj( Title::makeTitleSafe( $row->namespace, $row->title ) );
@@ -76,4 +82,4 @@ function wfSpecialWantedCategories() {
 	$wpp->doQuery( $offset, $limit );
 }
 
-
+?>

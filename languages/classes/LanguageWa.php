@@ -2,7 +2,8 @@
 /**
  * Walloon (Walon)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 # NOTE: cweri après "NOTE:" po des racsegnes so des ratournaedjes
@@ -67,4 +68,4 @@ class LanguageWa extends Language {
 	}
 }
 
-
+?>

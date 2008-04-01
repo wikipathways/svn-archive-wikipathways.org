@@ -1,34 +1,33 @@
 <?php
 /**
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
 define( "REPORTING_INTERVAL", 100 );
 #define( "REPORTING_INTERVAL", 1 );
 
-function refreshLinks( $start, $newOnly = false, $maxLag = false, $end = 0, $redirectsOnly = false ) {
+function refreshLinks( $start, $newOnly = false, $maxLag = false, $end = 0 ) {
 	global $wgUser, $wgParser, $wgUseImageResize, $wgUseTidy;
 
 	$fname = 'refreshLinks';
-	$dbr = wfGetDB( DB_SLAVE );
+	$dbr =& wfGetDB( DB_SLAVE );
 	$start = intval( $start );
 
 	# Don't generate TeX PNGs (lack of a sensible current directory causes errors anyway)
 	$wgUser->setOption('math', MW_MATH_SOURCE);
 
 	# Don't generate extension images (e.g. Timeline)
-	$wgParser->clearTagHooks();
+	$wgParser->mTagHooks = array();
 
 	# Don't generate thumbnail images
 	$wgUseImageResize = false;
 	$wgUseTidy = false;
 
-	$what = ($redirectsOnly)? "redirects" : "links";
-
 	if ( $newOnly ) {
-		print "Refreshing $what from ";
+		print "Refreshing links from ";
 		$res = $dbr->select( 'page',
 			array( 'page_id' ),
 			array(
@@ -45,13 +44,11 @@ function refreshLinks( $start, $newOnly = false, $maxLag = false, $end = 0, $red
 				print "$i\n";
 				wfWaitForSlaves( $maxLag );
 			}
-			if($redirectsOnly)
-				fixRedirect( $row->page_id );
-			else
-				fixLinksFromArticle( $row->page_id );
+
+			fixLinksFromArticle( $row->page_id );
 		}
 	} else {
-		print "Refreshing $what table.\n";
+		print "Refreshing link table.\n";
 		if ( !$end ) {
 			$end = $dbr->selectField( 'page', 'max(page_id)', false );
 		}
@@ -63,38 +60,16 @@ function refreshLinks( $start, $newOnly = false, $maxLag = false, $end = 0, $red
 				print "$id\n";
 				wfWaitForSlaves( $maxLag );
 			}
-			if($redirectsOnly)
-				fixRedirect( $id );
-			else
-				fixLinksFromArticle( $id );
+			fixLinksFromArticle( $id );
 		}
 	}
-}
-
-function fixRedirect( $id ){
-	global $wgTitle, $wgArticle;
-
-	$wgTitle = Title::newFromID( $id );
-	$dbw = wfGetDB( DB_MASTER );
-
-	if ( is_null( $wgTitle ) ) {
-		return;
-	}
-	$wgArticle = new Article($wgTitle);
-
-	$rt = $wgArticle->followRedirect();
-
-	if($rt == false || !is_object($rt))
-		return;
-
-	$wgArticle->updateRedirectOn($dbw,$rt);
 }
 
 function fixLinksFromArticle( $id ) {
 	global $wgTitle, $wgParser;
 	
 	$wgTitle = Title::newFromID( $id );
-	$dbw = wfGetDB( DB_MASTER );
+	$dbw =& wfGetDB( DB_MASTER );
 
 	$linkCache =& LinkCache::singleton();
 	$linkCache->clear();
@@ -121,7 +96,7 @@ function deleteLinksFromNonexistent( $maxLag = 0 ) {
 
 	wfWaitForSlaves( $maxLag );
 
-	$dbw = wfGetDB( DB_WRITE );
+	$dbw =& wfGetDB( DB_WRITE );
 
 	$linksTables = array(
 		'pagelinks' => 'pl_from',

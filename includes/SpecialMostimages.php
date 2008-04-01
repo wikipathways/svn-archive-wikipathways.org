@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  *
  * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>
  * @copyright Copyright © 2005, Ævar Arnfjörð Bjarmason
@@ -8,17 +9,17 @@
  */
 
 /**
- * implements Special:Mostimages
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
-class MostimagesPage extends ImageQueryPage {
+class MostimagesPage extends QueryPage {
 
 	function getName() { return 'Mostimages'; }
 	function isExpensive() { return true; }
 	function isSyndicated() { return false; }
 
 	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$imagelinks = $dbr->tableName( 'imagelinks' );
 		return
 			"
@@ -33,12 +34,20 @@ class MostimagesPage extends ImageQueryPage {
 			";
 	}
 
-	function getCellHtml( $row ) {
-		global $wgLang;
-		return wfMsgExt( 'nlinks',  array( 'parsemag', 'escape' ), 
-			$wgLang->formatNum( $row->value ) ) . '<br />';
-	}
+	function formatResult( $skin, $result ) {
+		global $wgLang, $wgContLang;
 
+		$nt = Title::makeTitle( $result->namespace, $result->title );
+		$text = $wgContLang->convert( $nt->getPrefixedText() );
+
+		$plink = $skin->makeKnownLink( $nt->getPrefixedText(), $text );
+
+		$nl = wfMsgExt( 'nlinks', array( 'parsemag', 'escape'),
+			$wgLang->formatNum ( $result->value ) );
+		$nlink = $skin->makeKnownLink( $nt->getPrefixedText() . '#filelinks', $nl );
+
+		return wfSpecialList($plink, $nlink);
+	}
 }
 
 /**
@@ -52,4 +61,4 @@ function wfSpecialMostimages() {
 	$wpp->doQuery( $offset, $limit );
 }
 
-
+?>

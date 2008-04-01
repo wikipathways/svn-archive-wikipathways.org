@@ -1,17 +1,16 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
- * implements Special:Unusedimages
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
-class UnusedimagesPage extends ImageQueryPage {
-	
-	function isExpensive() { return true; }
-	
+class UnusedimagesPage extends QueryPage {
+
 	function getName() {
 		return 'Unusedimages';
 	}
@@ -23,28 +22,54 @@ class UnusedimagesPage extends ImageQueryPage {
 
 	function getSQL() {
 		global $wgCountCategorizedImagesAsUsed;
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 
 		if ( $wgCountCategorizedImagesAsUsed ) {
 			list( $page, $image, $imagelinks, $categorylinks ) = $dbr->tableNamesN( 'page', 'image', 'imagelinks', 'categorylinks' );
 
-			return "SELECT 'Unusedimages' as type, 6 as namespace, img_name as title, img_timestamp as value,
-						img_user, img_user_text,  img_description
-					FROM ((($page AS I LEFT JOIN $categorylinks AS L ON I.page_id = L.cl_from)
-						LEFT JOIN $imagelinks AS P ON I.page_title = P.il_to)
-						INNER JOIN $image AS G ON I.page_title = G.img_name)
-					WHERE I.page_namespace = ".NS_IMAGE." AND L.cl_from IS NULL AND P.il_to IS NULL";
+			return 'SELECT img_name as title, img_user, img_user_text, img_timestamp as value, img_description
+					FROM ((('.$page.' AS I LEFT JOIN '.$categorylinks.' AS L ON I.page_id = L.cl_from)
+						LEFT JOIN '.$imagelinks.' AS P ON I.page_title = P.il_to)
+						INNER JOIN '.$image.' AS G ON I.page_title = G.img_name)
+					WHERE I.page_namespace = '.NS_IMAGE.' AND L.cl_from IS NULL AND P.il_to IS NULL';
 		} else {
 			list( $image, $imagelinks ) = $dbr->tableNamesN( 'image','imagelinks' );
 
-			return "SELECT 'Unusedimages' as type, 6 as namespace, img_name as title, img_timestamp as value, 
-				img_user, img_user_text,  img_description
-				FROM $image LEFT JOIN $imagelinks ON img_name=il_to WHERE il_to IS NULL ";
+			return 'SELECT img_name as title, img_user, img_user_text, img_timestamp as value, img_description' .
+			' FROM '.$image.' LEFT JOIN '.$imagelinks.' ON img_name=il_to WHERE il_to IS NULL ';
 		}
 	}
 
+	function formatResult( $skin, $result ) {
+		global $wgLang, $wgContLang;
+		$title = Title::makeTitle( NS_IMAGE, $result->title );
+
+		$imageUrl = htmlspecialchars( Image::imageUrl( $result->title ) );
+		$dirmark = $wgContLang->getDirMark(); // To keep text in correct order
+
+		$return =
+		# The 'desc' linking to the image page
+		'('.$skin->makeKnownLinkObj( $title, wfMsg('imgdesc') ).') ' . $dirmark .
+
+		# Link to the image itself
+		'<a href="' . $imageUrl . '">' . htmlspecialchars( $title->getText() ) .
+			'</a> . . ' . $dirmark .
+
+		# Last modified date
+		$wgLang->timeanddate($result->value) . ' . . ' . $dirmark .
+
+		# Link to username
+		$skin->makeLinkObj( Title::makeTitle( NS_USER, $result->img_user_text ),
+			$result->img_user_text) . $dirmark .
+
+		# If there is a description, show it
+		$skin->commentBlock( $wgContLang->convert( $result->img_description ) );
+
+		return $return;
+	}
+
 	function getPageHeader() {
-		return wfMsgExt( 'unusedimagestext', array( 'parse') );
+		return wfMsg( "unusedimagestext" );
 	}
 
 }
@@ -58,4 +83,4 @@ function wfSpecialUnusedimages() {
 
 	return $uip->doQuery( $offset, $limit );
 }
-
+?>

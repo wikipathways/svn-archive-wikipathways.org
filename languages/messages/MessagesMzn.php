@@ -1,9 +1,11 @@
 <?php
-/** Mazandarani (مَزِروني)
- *
- * @addtogroup Language
- *
- */
+/** Mazandarani
+  *
+  * Minimalistic setup, needed to switch to right-to-left writing.
+  *
+  * @package MediaWiki
+  * @subpackage Language
+  */
 
 $linkPrefixExtension = true;
 $fallback8bitEncoding = 'windows-1256';
@@ -17,3 +19,5 @@ $defaultUserOptionOverrides = array(
 );
 
 $fallback = 'fa';
+
+?>

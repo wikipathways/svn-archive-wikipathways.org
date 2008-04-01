@@ -1,15 +1,26 @@
 <?php
 /** Maltese (Malti)
  *
- * @addtogroup Language
- *
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 $messages = array(
-'mytalk'     => 'Diskussjonijiet tiegħi',
-'navigation' => 'Navigazzjoni',
+'mainpage' => 'Paġna prinċipali',
 
-'help'             => 'Għajnuna',
+'portal'          => 'Portal tal-komunità',
+'portal-url'      => 'Project:Portal tal-komunità',
+'aboutsite'       => 'Dwar {{SITENAME}}',
+'help'            => 'Għajnuna',
+'sitesupport'     => 'Donazzjonijiet',
+'sitesupport-url' => 'Project:Donazzjonijiet',
+'mytalk'          => 'Diskussjonijiet tiegħi',
+'navigation'      => 'Navigazzjoni',
+
+'currentevents'     => 'Ġrajjiet kurrenti',
+'currentevents-url' => 'Project:Ġrajjiet kurrenti',
+
+'disclaimers'      => 'Ċaħdiet',
 'search'           => 'Fittex',
 'go'               => 'Mur',
 'history_short'    => 'Kronoloġija',
@@ -23,20 +34,9 @@ $messages = array(
 'talk'             => 'Diskussjoni',
 'toolbox'          => 'Għodda',
 
-# All link text and link target definitions of links into project namespace that get used by other message strings, with the exception of user group pages (see grouppage) and the disambiguation template definition (see disambiguations).
-'aboutsite'         => 'Dwar {{SITENAME}}',
-'currentevents'     => 'Ġrajjiet kurrenti',
-'currentevents-url' => 'Project:Ġrajjiet kurrenti',
-'disclaimers'       => 'Ċaħdiet',
-'mainpage'          => 'Paġna prinċipali',
-'portal'            => 'Portal tal-komunità',
-'portal-url'        => 'Project:Portal tal-komunità',
-'sitesupport'       => 'Donazzjonijiet',
-'sitesupport-url'   => 'Project:Donazzjonijiet',
-
 'youhavenewmessages' => 'Għandek $1 ($2).',
 
-# Short words for each namespace, by default used in the namespace tab in monobook
+# Short words for each namespace, by default used in the 'article' tab in monobook
 'nstab-main'      => 'Artiklu',
 'nstab-mediawiki' => 'Messaġġ',
 
@@ -58,19 +58,15 @@ $messages = array(
 # Recent changes
 'recentchanges' => 'Tibdil riċenti',
 
-# Recent changes linked
-'recentchangeslinked' => 'Tibdil relatat',
-
 # Upload
 'upload' => "Tella' file",
 
-# Random page
-'randompage' => 'Paġna kwalunkwe',
-
 # Miscellaneous special pages
-'allpages'     => 'Il-paġni kollha',
-'specialpages' => 'Paġni speċjali',
-'move'         => 'Mexxi',
+'allpages'            => 'Il-paġni kollha',
+'randompage'          => 'Paġna kwalunkwe',
+'specialpages'        => 'Paġni speċjali',
+'recentchangeslinked' => 'Tibdil relatat',
+'move'                => 'Mexxi',
 
 'version' => 'Verżjoni',
 
@@ -78,10 +74,9 @@ $messages = array(
 'emailuser' => 'Ibgħat e-mail lil dan l-utent',
 
 # Watchlist
-'watchlist'   => "Lista t'osservazzjoni tiegħi",
-'mywatchlist' => "Lista t'osservazzjoni tiegħi",
-'watch'       => 'Segwi',
-'unwatch'     => 'Tibqax issegwi',
+'watchlist' => "Lista t'osservazzjoni tiegħi",
+'watch'     => 'Segwi',
+'unwatch'   => 'Tibqax issegwi',
 
 # Undelete
 'undelete' => 'Irkupra l-paġna mħassra',
@@ -100,3 +95,5 @@ $messages = array(
 'allmessages' => 'Il-messaġġi kollha tas-sistema',
 
 );
+
+?>

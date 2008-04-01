@@ -1,5 +1,6 @@
 <?php
-
+# Basic support for outputting syndication feeds in RSS, other formats
+#
 # Copyright (C) 2004 Brion Vibber <brion@pobox.com>
 # http://www.mediawiki.org/
 #
@@ -19,13 +20,15 @@
 # http://www.gnu.org/copyleft/gpl.html
 
 /**
- * Basic support for outputting syndication feeds in RSS, other formats.
  * Contain a feed class as well as classes to build rss / atom ... feeds
  * Available feeds are defined in Defines.php
+ * @package MediaWiki
  */
 
+
 /**
- * A base class for basic support for outputting syndication feeds in RSS and other formats.
+ * @todo document
+ * @package MediaWiki
  */
 class FeedItem {
 	/**#@+
@@ -41,9 +44,8 @@ class FeedItem {
 
 	/**#@+
 	 * @todo document
-	 * @param $Url URL uniquely designating the item.
 	 */
-	function __construct( $Title, $Description, $Url, $Date = '', $Author = '', $Comments = '' ) {
+	function FeedItem( $Title, $Description, $Url, $Date = '', $Author = '', $Comments = '' ) {
 		$this->Title = $Title;
 		$this->Description = $Description;
 		$this->Url = $Url;
@@ -75,7 +77,8 @@ class FeedItem {
 }
 
 /**
- * @todo document (needs one-sentence top-level class description).
+ * @todo document
+ * @package MediaWiki
  */
 class ChannelFeed extends FeedItem {
 	/**#@+
@@ -146,18 +149,19 @@ class ChannelFeed extends FeedItem {
 	 * @private
 	 */
 	function outXmlHeader() {
-		global $wgStylePath, $wgStyleVersion;
+		global $wgServer, $wgStylePath, $wgStyleVersion;
 
 		$this->httpHeaders();
 		echo '<?xml version="1.0" encoding="utf-8"?>' . "\n";
 		echo '<?xml-stylesheet type="text/css" href="' .
-			htmlspecialchars( wfExpandUrl( "$wgStylePath/common/feed.css?$wgStyleVersion" ) ) .
-			'"?' . ">\n";
+			htmlspecialchars( "$wgServer$wgStylePath/common/feed.css?$wgStyleVersion" ) . '"?' . ">\n";
 	}
 }
 
 /**
  * Generate a RSS feed
+ * @todo document
+ * @package MediaWiki
  */
 class RSSFeed extends ChannelFeed {
 
@@ -217,6 +221,8 @@ class RSSFeed extends ChannelFeed {
 
 /**
  * Generate an Atom feed
+ * @todo document
+ * @package MediaWiki
  */
 class AtomFeed extends ChannelFeed {
 	/**

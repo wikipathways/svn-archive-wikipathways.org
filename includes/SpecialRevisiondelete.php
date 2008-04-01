@@ -35,10 +35,6 @@ function wfSpecialRevisiondelete( $par = null ) {
 	}
 }
 
-/**
- * Implements the GUI for Revision Deletion.
- * @addtogroup SpecialPage
- */
 class RevisionDeleteForm {
 	/**
 	 * @param Title $page
@@ -66,7 +62,7 @@ class RevisionDeleteForm {
 	function show( $request ) {
 		global $wgOut, $wgUser;
 
-		$wgOut->addWikiMsg( 'revdelete-selected', $this->page->getPrefixedText() );
+		$wgOut->addWikiText( wfMsg( 'revdelete-selected', $this->page->getPrefixedText() ) );
 		
 		$wgOut->addHtml( "<ul>" );
 		foreach( $this->revisions as $revid ) {
@@ -80,7 +76,7 @@ class RevisionDeleteForm {
 		}
 		$wgOut->addHtml( "</ul>" );
 	
-		$wgOut->addWikiMsg( 'revdelete-text' );
+		$wgOut->addWikiText( wfMsg( 'revdelete-text' ) );
 		
 		$items = array(
 			wfInputLabel( wfMsg( 'revdelete-log' ), 'wpReason', 'wpReason', 60 ),
@@ -174,10 +170,7 @@ class RevisionDeleteForm {
 	}
 }
 
-/**
- * Implements the actions for Revision Deletion.
- * @addtogroup SpecialPage
- */
+
 class RevisionDeleter {
 	function __construct( $db ) {
 		$this->db = $db;
@@ -272,4 +265,4 @@ class RevisionDeleter {
 	}
 }
 
-
+?>

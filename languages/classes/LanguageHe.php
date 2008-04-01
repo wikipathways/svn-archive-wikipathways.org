@@ -2,7 +2,8 @@
 /**
  * Hebrew (עברית)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  * @author Rotem Liss
  */
@@ -57,18 +58,15 @@ class LanguageHe extends Language {
 	 *
 	 * @return string of the suited form of word
 	 */
-	function convertPlural( $count, $forms ) {
-		if ( !count($forms) ) { return ''; }
-		$forms = $this->preConvertPlural( $forms, 3 );
-
+	public function convertPlural( $count, $w1, $w2, $w3, $w4, $w5) {
 		if ( $count == '1' ) {
-			return $forms[0];
-		} elseif ( $count == '2' && isset($forms[2]) ) {
-			return $forms[2];
+			return $w1;
+		} elseif ( $count == '2' && $w3 ) {
+			return $w3;
 		} else {
-			return $forms[1];
+			return $w2;
 		}
 	}
 }
 
-
+?>

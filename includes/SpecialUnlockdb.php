@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -30,7 +31,8 @@ function wfSpecialUnlockdb() {
 
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class DBUnlockForm {
 	function showForm( $err )
@@ -39,12 +41,12 @@ class DBUnlockForm {
 
 		global $wgReadOnlyFile;
 		if( !file_exists( $wgReadOnlyFile ) ) {
-			$wgOut->addWikiMsg( 'databasenotlocked' );
+			$wgOut->addWikiText( wfMsg( 'databasenotlocked' ) );
 			return;
 		}
 
 		$wgOut->setPagetitle( wfMsg( "unlockdb" ) );
-		$wgOut->addWikiMsg( "unlockdbtext" );
+		$wgOut->addWikiText( wfMsg( "unlockdbtext" ) );
 
 		if ( "" != $err ) {
 			$wgOut->setSubtitle( wfMsg( "formerror" ) );
@@ -103,8 +105,8 @@ END
 
 		$wgOut->setPagetitle( wfMsg( "unlockdb" ) );
 		$wgOut->setSubtitle( wfMsg( "unlockdbsuccesssub" ) );
-		$wgOut->addWikiMsg( "unlockdbsuccesstext", $ip );
+		$wgOut->addWikiText( wfMsg( "unlockdbsuccesstext", $ip ) );
 	}
 }
 
-
+?>

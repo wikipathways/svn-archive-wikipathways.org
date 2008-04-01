@@ -1,7 +1,8 @@
 <?php
 /**
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
@@ -16,4 +17,4 @@ foreach ( $wgEnglishMessages as $key )
 print "MediaWiki $wgVersion language file\n";
 print serialize( $messages );
 
-
+?>

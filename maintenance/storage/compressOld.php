@@ -2,7 +2,8 @@
 /**
  * Compress the text of a wiki
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
@@ -30,8 +31,8 @@
  *
  */
 
-$optionsWithArgs = array( 't', 'c', 's', 'f', 'h', 'extdb', 'endid', 'e' );
-require_once( dirname(__FILE__) . '/../commandLine.inc' );
+$optionsWithArgs = array( 't', 'c', 's', 'f', 'h', 'extdb', 'endid' );
+require_once( "../commandLine.inc" );
 require_once( "compressOld.inc" );
 
 if( !function_exists( "gzdeflate" ) ) {
@@ -78,4 +79,4 @@ if ( $success ) {
 
 exit();
 
-
+?>

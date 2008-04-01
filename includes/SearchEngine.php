@@ -1,7 +1,12 @@
 <?php
 /**
  * Contain a class for special pages
- * @addtogroup Search
+ * @package MediaWiki
+ * @subpackage Search
+ */
+
+/**
+ * @package MediaWiki
  */
 class SearchEngine {
 	var $limit = 10;
@@ -40,10 +45,12 @@ class SearchEngine {
 	 * If an exact title match can be find, or a very slightly close match,
 	 * return the title. If no match, returns NULL.
 	 *
+	 * @static
 	 * @param string $term
 	 * @return Title
+	 * @private
 	 */
-	public static function getNearMatch( $searchterm ) {
+	function getNearMatch( $searchterm ) {
 		global $wgContLang;
 
 		$allSearchTerms = array($searchterm);
@@ -51,7 +58,7 @@ class SearchEngine {
 		if($wgContLang->hasVariants()){
 			$allSearchTerms = array_merge($allSearchTerms,$wgContLang->convertLinkToAllVariants($searchterm));
 		}
-		
+
 		foreach($allSearchTerms as $term){
 
 			# Exact match? No need to look further.
@@ -102,12 +109,6 @@ class SearchEngine {
 					return $title;
 				}
 			}
-
-			// Give hooks a chance at better match variants
-			$title = null;
-			if( !wfRunHooks( 'SearchGetNearMatch', array( $term, &$title ) ) ) {
-				return $title;
-			}
 		}
 
 		$title = Title::newFromText( $searchterm );
@@ -115,7 +116,7 @@ class SearchEngine {
 		# Entering an IP address goes to the contributions page
 		if ( ( $title->getNamespace() == NS_USER && User::isIP($title->getText() ) )
 			|| User::isIP( trim( $searchterm ) ) ) {
-			return SpecialPage::getTitleFor( 'Contributions', $title->getDBkey() );
+			return SpecialPage::getTitleFor( 'Contributions', $title->getDbkey() );
 		}
 
 
@@ -123,33 +124,17 @@ class SearchEngine {
 		if ( $title->getNamespace() == NS_USER ) {
 			return $title;
 		}
-		
-		# Go to images that exist even if there's no local page.
-		# There may have been a funny upload, or it may be on a shared
-		# file repository such as Wikimedia Commons.
-		if( $title->getNamespace() == NS_IMAGE ) {
-			$image = wfFindFile( $title );
-			if( $image ) {
-				return $title;
-			}
-		}
-
-		# MediaWiki namespace? Page may be "implied" if not customized.
-		# Just return it, with caps forced as the message system likes it.
-		if( $title->getNamespace() == NS_MEDIAWIKI ) {
-			return Title::makeTitle( NS_MEDIAWIKI, $wgContLang->ucfirst( $title->getText() ) );
-		}
 
 		# Quoted term? Try without the quotes...
 		$matches = array();
 		if( preg_match( '/^"([^"]+)"$/', $searchterm, $matches ) ) {
 			return SearchEngine::getNearMatch( $matches[1] );
 		}
-		
+
 		return NULL;
 	}
 
-	public static function legalSearchChars() {
+	function legalSearchChars() {
 		return "A-Za-z_'0-9\\x80-\\xFF\\-";
 	}
 
@@ -180,8 +165,9 @@ class SearchEngine {
 	/**
 	 * Make a list of searchable namespaces and their canonical names.
 	 * @return array
+	 * @access public
 	 */
-	public static function searchableNamespaces() {
+	function searchableNamespaces() {
 		global $wgContLang;
 		$arr = array();
 		foreach( $wgContLang->getNamespaces() as $ns => $name ) {
@@ -207,8 +193,9 @@ class SearchEngine {
 	 * active database backend, and return a configured instance.
 	 *
 	 * @return SearchEngine
+	 * @private
 	 */
-	public static function create() {
+	function create() {
 		global $wgDBtype, $wgSearchType;
 		if( $wgSearchType ) {
 			$class = $wgSearchType;
@@ -216,8 +203,6 @@ class SearchEngine {
 			$class = 'SearchMySQL4';
 		} else if ( $wgDBtype == 'postgres' ) {
 			$class = 'SearchPostgres';
-		} else if ( $wgDBtype == 'oracle' ) {
-			$class = 'SearchOracle';
 		} else {
 			$class = 'SearchEngineDummy';
 		}
@@ -247,15 +232,12 @@ class SearchEngine {
 	 * @param string $title
 	 * @abstract
 	 */
-	function updateTitle( $id, $title ) {
+    function updateTitle( $id, $title ) {
 		// no-op
-	}
+    }
 }
 
-
-/**
- * @addtogroup Search
- */
+/** @package MediaWiki */
 class SearchResultSet {
 	/**
 	 * Fetch an array of regular expression fragments for matching
@@ -328,30 +310,10 @@ class SearchResultSet {
 	function next() {
 		return false;
 	}
-	
-	/**
-	 * Frees the result set, if applicable.
-	 * @ access public
-	 */
-	function free() {
-		// ...
-	}
 }
 
-
-/**
- * @addtogroup Search
- */
-class SearchResultTooMany {
-	## Some search engines may bail out if too many matches are found
-}
-
-
-/**
- * @addtogroup Search
- */
+/** @package MediaWiki */
 class SearchResult {
-
 	function SearchResult( $row ) {
 		$this->mTitle = Title::makeTitle( $row->page_namespace, $row->page_title );
 	}
@@ -373,7 +335,7 @@ class SearchResult {
 }
 
 /**
- * @addtogroup Search
+ * @package MediaWiki
  */
 class SearchEngineDummy {
 	function search( $term ) {
@@ -386,4 +348,4 @@ class SearchEngineDummy {
 	function searchtitle() {}
 	function searchtext() {}
 }
-
+?>

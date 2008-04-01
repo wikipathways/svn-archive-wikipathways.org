@@ -1,7 +1,8 @@
 <?php
 /**
  * Contain the HTMLFileCache class
- * @addtogroup Cache
+ * @package MediaWiki
+ * @subpackage Cache
  */
 
 /**
@@ -15,6 +16,7 @@
  * $wgUseFileCache
  * $wgFileCacheDirectory
  * $wgUseGzip
+ * @package MediaWiki
  */
 class HTMLFileCache {
 	var $mTitle, $mFileCache;
@@ -154,4 +156,4 @@ class HTMLFileCache {
 
 }
 
-
+?>

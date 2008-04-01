@@ -1,9 +1,9 @@
 <?php
 /** Komi (Коми)
- *
- * @addtogroup Language
- *
- */
+  *
+  * @package MediaWiki
+  * @subpackage Language
+  */
 
 $fallback = 'ru';
-
+?>

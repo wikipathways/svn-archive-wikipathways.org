@@ -2,7 +2,8 @@
 /**
  * Turkish (Türkçe)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 class LanguageTr extends Language {
 	function ucfirst ( $string ) {
@@ -14,4 +15,4 @@ class LanguageTr extends Language {
 	}
 
 }
-
+?>

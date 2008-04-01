@@ -21,7 +21,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 require_once( 'commandLine.inc' );
@@ -45,4 +46,4 @@ while( $row = $dbr->fetchObject( $result ) ) {
 
 $dbr->freeResult( $result );
 
-
+?>

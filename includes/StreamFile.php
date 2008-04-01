@@ -2,7 +2,7 @@
 /** */
 
 /** */
-function wfStreamFile( $fname, $headers = array() ) {
+function wfStreamFile( $fname ) {
 	$stat = @stat( $fname );
 	if ( !$stat ) {
 		header( 'HTTP/1.0 404 Not Found' );
@@ -29,13 +29,6 @@ function wfStreamFile( $fname, $headers = array() ) {
 		header("Content-type: $type");
 	} else {
 		header('Content-type: application/x-wiki');
-	}
-
-	global $wgContLanguageCode;
-	header( "Content-Disposition: inline;filename*=utf-8'$wgContLanguageCode'" . urlencode( basename( $fname ) ) );
-
-	foreach ( $headers as $header ) {
-		header( $header );
 	}
 
 	if ( !empty( $_SERVER['HTTP_IF_MODIFIED_SINCE'] ) ) {
@@ -76,4 +69,4 @@ function wfGetType( $filename ) {
 	}
 }
 
-
+?>

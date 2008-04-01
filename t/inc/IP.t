@@ -57,5 +57,4 @@ foreach ( $private as $p ) {
 	ok( ! IP::isPublic( $p ), "$p is not a public IP address" ); 
 }
 
-/* vim: set filetype=php: */
 ?>

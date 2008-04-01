@@ -1,12 +1,14 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
- * Implements Special:Ancientpages
- * @addtogroup SpecialPage
+ *
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 class AncientPagesPage extends QueryPage {
 
@@ -22,7 +24,7 @@ class AncientPagesPage extends QueryPage {
 
 	function getSQL() {
 		global $wgDBtype;
-		$db = wfGetDB( DB_SLAVE );
+		$db =& wfGetDB( DB_SLAVE );
 		$page = $db->tableName( 'page' );
 		$revision = $db->tableName( 'revision' );
 		#$use_index = $db->useIndexClause( 'cur_timestamp' ); # FIXME! this is gone
@@ -60,4 +62,4 @@ function wfSpecialAncientpages() {
 	$app->doQuery( $offset, $limit );
 }
 
-
+?>

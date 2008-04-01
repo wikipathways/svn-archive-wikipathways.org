@@ -28,34 +28,28 @@ class SpecialWishList extends SpecialPage
 					$checkwishes[$wid] = $_REQUEST[$key];
 			}
 		}
-		
-		try {
-			switch($_REQUEST['wishaction']) {
-				case 'add':
-					$done = $this->add($_REQUEST['name'], $_REQUEST['comments']);
-					break;
-				case 'resolved':
-					$done = $this->markResolved($_REQUEST['id'], $_REQUEST['pathway']);
-					break;
-				case 'watch':
-					$done = $this->setWatch($checkwishes);
-					break;
-				case 'remove':
-					$done = $this->remove($_REQUEST['id']);
-					break;
-				case 'vote':
-					$done = $this->vote($_REQUEST['id']);
-					break;
-				case 'unvote':
-					$done = $this->unvote($_REQUEST['id']);
-					break;
-				default:
-					$this->showlist();
-			}
-		} catch(Exception $e) {
-			global $wgOut;
-			$wgOut->showErrorPage("Error", $e->getMessage());
-		}	}
+		switch($_REQUEST['wishaction']) {
+			case 'add':
+				$done = $this->add($_REQUEST['name'], $_REQUEST['comments']);
+				break;
+			case 'resolved':
+				$done = $this->markResolved($_REQUEST['id'], $_REQUEST['pathway']);
+				break;
+			case 'watch':
+				$done = $this->setWatch($checkwishes);
+				break;
+			case 'remove':
+				$done = $this->remove($_REQUEST['id']);
+				break;
+			case 'vote':
+				$done = $this->vote($_REQUEST['id']);
+				break;
+			case 'unvote':
+				$done = $this->unvote($_REQUEST['id']);
+				break;
+			default:
+				$this->showlist();
+		}        }
 
 	function reload() {
 		global $wgOut;
@@ -164,15 +158,15 @@ HTML;
 		
 		//Create a small toolbar with 'new' and 'help' actions
 		//TODO: pretty style	 	
-	 	$wgOut->addHTML("<ul><li>");
+	 	$wgOut->addHTML("<table><tbody><tr><td>");
 	 	$elm = $this->getNewFormElements();
 	 	$newdiv = $elm['div'];
 	 	$newbutton = $elm['button'];
-	 	$wgOut->addHTML("$newbutton<li>");
+	 	$wgOut->addHTML("$newbutton<td>");
 	 	$elm = $this->getHelpElements();
 	 	$helpbutton = $elm['button'];
 	 	$helpdiv = $elm['div'];
-		$wgOut->addHTML("$helpbutton</ul>");
+		$wgOut->addHTML("$helpbutton</tbody></table>");
 		$wgOut->addHTML($newdiv . $helpdiv);
 		
 		//Create the actual wishlist
@@ -201,7 +195,7 @@ HTML;
 		$html = "";
 		if($wgUser->isLoggedIn()) {
 			$html = <<<HTML
-<tr class="{$altrow} sortbottom"><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell' align="center">
+<tr class='{$altrow}' class="sortbottom"><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell'><td class='table-blue-contentcell' align="center">
 	<input type="hidden" name="wishaction" value="watch">
 	<input type="submit" value="Apply"><td class='table-blue-contentcell'></tr>
 HTML;
@@ -325,7 +319,7 @@ HELP;
 			$wgOut->addHTML("<tr class='{$altrow2}'><td class='table-green-contentcell'>$title<td class='table-green-contentcell'>$resDate<td>");
 			$wgOut->addWikiText("[[{$pathway->getTitleObject()->getFullText()} | {$pathway->name()} ({$pathway->species()})]]");
 			$wgOut->addHTML("<td class='table-green-contentcell'>$pwDate<td class='table-green-contentcell'>$user");
-			if($wish->userCan('delete')) {
+			if($wish->userCan('delete') && $wgUser->getId() == $wish->getRequestUser()->getId()) {
 				$wgOut->addHTML("<td class='table-green-contentcell'>" . $this->createButton("cancel.gif", "remove", "Remove this item", $wish->getId()));
 			}
 		}	
@@ -364,7 +358,7 @@ HELP;
 				$wgOut->addHTML('<td style="border:0px">' . 
 					$this->createButton("apply.gif", "resolved", "Resolve this item", $id));
 			}
-			if($wish->userCan('delete')) {
+			if($wish->userCan('delete') && $wgUser->getId() == $wish->getRequestUser()->getId()) {
 				$wgOut->addHTML('<td style="border:0px">' . 
 					$this->createButton("cancel.gif", "remove", "Remove this item", $id));
 			}
@@ -406,14 +400,13 @@ HELP;
     function loadMessages() {
         static $messagesLoaded = false;
         global $wgMessageCache;
-        if ( $messagesLoaded ) return true;
+        if ( $messagesLoaded ) return;
         $messagesLoaded = true;
 
         require( dirname( __FILE__ ) . '/SpecialWishList.i18n.php' );
         foreach ( $allMessages as $lang => $langMessages ) {
                 $wgMessageCache->addMessages( $langMessages, $lang );
-        }
-        return true;
+            }
     }
 }
 ?>

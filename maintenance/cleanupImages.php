@@ -25,7 +25,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  *
  * @author Brion Vibber <brion at pobox.com>
- * @addtogroup maintenance
+ * @package MediaWiki
+ * @subpackage maintenance
  */
 
 require_once( 'commandLine.inc' );
@@ -66,8 +67,8 @@ class ImageCleanup extends TableCleanup {
 			return $this->progress( 1 );
 		}
 
-		if( $title->getDBkey() !== $source ) {
-			$munged = $title->getDBkey();
+		if( $title->getDbKey() !== $source ) {
+			$munged = $title->getDbKey();
 			$this->log( "page $source ($munged) doesn't match self." );
 			$this->pokeFile( $source, $munged );
 			return $this->progress( 1 );
@@ -89,10 +90,7 @@ class ImageCleanup extends TableCleanup {
 	}
 	
 	function filePath( $name ) {
-		if ( !isset( $this->repo ) ) {
-			$this->repo = RepoGroup::singleton()->getLocalRepo();
-		}
-		return $this->repo->getRootDirectory() . '/' . $this->repo->getHashPath( $name ) . $name;
+		return wfImageDir( $name ) . "/$name";
 	}
 	
 	function pokeFile( $orig, $new ) {
@@ -154,7 +152,7 @@ class ImageCleanup extends TableCleanup {
 			$name );
 		
 		$test = Title::makeTitleSafe( NS_IMAGE, $x );
-		if( is_null( $test ) || $test->getDBkey() !== $x ) {
+		if( is_null( $test ) || $test->getDbKey() !== $x ) {
 			$this->log( "Unable to generate safe title from '$name', got '$x'" );
 			return false;
 		}
@@ -167,4 +165,4 @@ $wgUser->setName( 'Conversion script' );
 $caps = new ImageCleanup( !isset( $options['fix'] ) );
 $caps->cleanup();
 
-
+?>

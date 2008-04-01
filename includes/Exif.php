@@ -1,6 +1,7 @@
 <?php
 /**
- * @addtogroup Media
+ * @package MediaWiki
+ * @subpackage Metadata
  *
  * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>
  * @copyright Copyright © 2005, Ævar Arnfjörð Bjarmason
@@ -21,12 +22,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
- * @see http://exif.org/Exif2-2.PDF The Exif 2.2 specification
+ * @link http://exif.org/Exif2-2.PDF The Exif 2.2 specification
+ * @bug 1555, 1947
  */
 
 /**
- * @todo document (e.g. one-sentence class-overview description)
- * @addtogroup Media
+ * @package MediaWiki
+ * @subpackage Metadata
  */
 class Exif {
 	//@{
@@ -93,9 +95,9 @@ class Exif {
 	var $basename;
 
 	/**
-	 * The private log to log to, e.g. 'exif'
+	 * The private log to log to
 	 */
-	var $log = false;
+	var $log = 'exif';
 
 	//@}
 
@@ -104,7 +106,7 @@ class Exif {
 	 *
 	 * @param $file String: filename.
 	 */
-	function __construct( $file ) {
+	function Exif( $file ) {
 		/**
 		 * Page numbers here refer to pages in the EXIF 2.2 standard
 		 *
@@ -405,7 +407,7 @@ class Exif {
 	 *
 	 * @return int
 	 */
-	public static function version() {
+	function version() {
 		return 1; // We don't need no bloddy constants!
 	}
 
@@ -561,10 +563,7 @@ class Exif {
 	 * @param $fname String: 
 	 * @param $action Mixed: , default NULL.
 	 */
-	function debug( $in, $fname, $action = NULL ) {
-		if ( !$this->log ) {
-			return;
-		}
+	 function debug( $in, $fname, $action = NULL ) {
 		$type = gettype( $in );
 		$class = ucfirst( __CLASS__ );
 		if ( $type === 'array' )
@@ -589,9 +588,6 @@ class Exif {
 	 * @param $io Boolean: Specify whether we're beginning or ending
 	 */
 	function debugFile( $fname, $io ) {
-		if ( !$this->log ) {
-			return;
-		}
 		$class = ucfirst( __CLASS__ );
 		if ( $io ) {
 			wfDebugLog( $this->log, "$class::$fname: begin processing: '{$this->basename}'\n" );
@@ -603,8 +599,8 @@ class Exif {
 }
 
 /**
- * @todo document (e.g. one-sentence class-overview description)
- * @addtogroup Media
+ * @package MediaWiki
+ * @subpackage Metadata
  */
 class FormatExif {
 	/**
@@ -737,7 +733,7 @@ class FormatExif {
 			case 'DateTimeDigitized':
 				if( $val == '0000:00:00 00:00:00' ) {
 					$tags[$tag] = wfMsg('exif-unknowndate');
-				} elseif( preg_match( '/^(?:\d{4}):(?:\d\d):(?:\d\d) (?:\d\d):(?:\d\d):(?:\d\d)$/', $val ) ) {
+				} elseif( preg_match( '/^(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)$/', $val ) ) {
 					$tags[$tag] = $wgLang->timeanddate( wfTimestamp(TS_MW, $val) );
 				}
 				break;
@@ -1131,4 +1127,4 @@ define( 'MW_EXIF_UNDEFINED', Exif::UNDEFINED );
 define( 'MW_EXIF_SLONG', Exif::SLONG );
 define( 'MW_EXIF_SRATIONAL', Exif::SRATIONAL );
 
-
+?>

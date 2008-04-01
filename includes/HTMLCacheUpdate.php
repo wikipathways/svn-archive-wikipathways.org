@@ -25,7 +25,6 @@ class HTMLCacheUpdate
 {
 	public $mTitle, $mTable, $mPrefix;
 	public $mRowsPerJob, $mRowsPerQuery;
-	public $mResult;
 
 	function __construct( $titleTo, $table ) {
 		global $wgUpdateRowsPerJob, $wgUpdateRowsPerQuery;
@@ -39,16 +38,17 @@ class HTMLCacheUpdate
 	function doUpdate() {
 		# Fetch the IDs
 		$cond = $this->getToCondition();
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$res = $dbr->select( $this->mTable, $this->getFromField(), $cond, __METHOD__ );
-		$this->mResult = $res;
+		$resWrap = new ResultWrapper( $dbr, $res );
 		if ( $dbr->numRows( $res ) != 0 ) {
 			if ( $dbr->numRows( $res ) > $this->mRowsPerJob ) {
-				$this->insertJobs( $res );
+				$this->insertJobs( $resWrap );
 			} else {
-				$this->invalidateIDs( $res );
+				$this->invalidateIDs( $resWrap );
 			}
 		}
+		$dbr->freeResult( $res );
 	}
 
 	function insertJobs( ResultWrapper $res ) {
@@ -67,13 +67,13 @@ class HTMLCacheUpdate
 					break;
 				}
 			}
-			
-			$params = array(
-				'table' => $this->mTable,
-				'start' => $start,
-				'end' => ( $id !== false ? $id - 1 : false ),
-			);
-			$jobs[] = new HTMLCacheUpdateJob( $this->mTitle, $params );
+			if ( $id !== false ) {
+				// One less on the end to avoid duplicating the boundary
+				$job = new HTMLCacheUpdateJob( $this->mTitle, $this->mTable, $start, $id - 1 );
+			} else {
+				$job = new HTMLCacheUpdateJob( $this->mTitle, $this->mTable, $start, false );
+			}
+			$jobs[] = $job;
 
 			$start = $id;
 		} while ( $start );
@@ -87,7 +87,6 @@ class HTMLCacheUpdate
 			'imagelinks' => 'il',
 			'categorylinks' => 'cl',
 			'templatelinks' => 'tl',
-			'redirect' => 'rd',
 			
 			# Not needed
 			# 'externallinks' => 'el',
@@ -108,14 +107,16 @@ class HTMLCacheUpdate
 	}
 
 	function getToCondition() {
-		$prefix = $this->getPrefix();
 		switch ( $this->mTable ) {
 			case 'pagelinks':
-			case 'templatelinks':
-			case 'redirect':
 				return array( 
-					"{$prefix}_namespace" => $this->mTitle->getNamespace(),
-					"{$prefix}_title" => $this->mTitle->getDBkey()
+					'pl_namespace' => $this->mTitle->getNamespace(),
+					'pl_title' => $this->mTitle->getDBkey()
+				);
+			case 'templatelinks':
+				return array(
+					'tl_namespace' => $this->mTitle->getNamespace(),
+					'tl_title' => $this->mTitle->getDBkey()
 				);
 			case 'imagelinks':
 				return array( 'il_to' => $this->mTitle->getDBkey() );
@@ -135,7 +136,7 @@ class HTMLCacheUpdate
 			return;
 		}
 
-		$dbw = wfGetDB( DB_MASTER );
+		$dbw =& wfGetDB( DB_MASTER );
 		$timestamp = $dbw->timestamp();
 		$done = false;
 		
@@ -183,23 +184,26 @@ class HTMLCacheUpdate
 	}
 }
 
-/**
- * @todo document (e.g. one-sentence top-level class description).
- */
 class HTMLCacheUpdateJob extends Job {
 	var $table, $start, $end;
 
 	/**
 	 * Construct a job
 	 * @param Title $title The title linked to
-	 * @param array $params Job parameters (table, start and end page_ids)
+	 * @param string $table The name of the link table.
+	 * @param integer $start Beginning page_id or false for open interval
+	 * @param integer $end End page_id or false for open interval
 	 * @param integer $id job_id
 	 */
-	function __construct( $title, $params, $id = 0 ) {
+	function __construct( $title, $table, $start, $end, $id = 0 ) {
+		$params = array(
+			'table' => $table, 
+			'start' => $start, 
+			'end' => $end );
 		parent::__construct( 'htmlCacheUpdate', $title, $params, $id );
-		$this->table = $params['table'];
-		$this->start = $params['start'];
-		$this->end = $params['end'];
+		$this->table = $table;
+		$this->start = intval( $start );
+		$this->end = intval( $end );
 	}
 
 	function run() {
@@ -214,11 +218,12 @@ class HTMLCacheUpdateJob extends Job {
 			$conds[] = "$fromField <= {$this->end}";
 		}
 
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$res = $dbr->select( $this->table, $fromField, $conds, __METHOD__ );
 		$update->invalidateIDs( new ResultWrapper( $dbr, $res ) );
+		$dbr->freeResult( $res );
 
 		return true;
 	}
 }
-
+?>

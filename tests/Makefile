@@ -1,10 +1,6 @@
 .PHONY: help test
 all test:
-	php run-test.php ArticleTest.php
-	php run-test.php GlobalTest.php
-	php run-test.php DatabaseTest.php
-	php run-test.php ImageFunctionsTest.php
-	php run-test.php SearchMySQL4Test.php
+	php RunTests.php
 install:
 	cvs -z9 -d:pserver:cvsread:@cvs.php.net:/repository/ co -P pear/PHPUnit
 	mv pear/PHPUnit .

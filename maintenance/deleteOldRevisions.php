@@ -3,7 +3,8 @@
 /**
  * Delete old (non-current) revisions from the database
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  * @author Rob Church <robchur@gmail.com>
  */
 
@@ -16,13 +17,14 @@ echo( "Delete Old Revisions\n\n" );
 if( @$options['help'] ) {
 	ShowUsage();
 } else {
-	DeleteOldRevisions( @$options['delete'], $args );
+	DeleteOldRevisions( @$options['delete'] );
 }
 
 function ShowUsage() {
 	echo( "Deletes non-current revisions from the database.\n\n" );
-	echo( "Usage: php deleteOldRevisions.php [--delete|--help] [<page_id> ...]\n\n" );
+	echo( "Usage: php deleteOldRevisions.php [--delete|--help]\n\n" );
 	echo( "delete : Performs the deletion\n" );
 	echo( "  help : Show this usage information\n" );
 }
 
+?>

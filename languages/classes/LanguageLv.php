@@ -1,7 +1,8 @@
 <?php
 /** Latvian (Latviešu)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  * @author Niklas Laxström
  *
@@ -21,11 +22,8 @@ class LanguageLv extends Language {
 	 * @param string $wordform3 (not used)
 	 * @return string
 	 */
-	function convertPlural( $count, $forms ) {
-		if ( !count($forms) ) { return ''; }
-		$forms = $this->preConvertPlural( $forms, 2 );
-
-		return ( ( $count % 10 == 1 ) && ( $count % 100 != 11 ) ) ? $forms[0] : $forms[1];
+	function convertPlural( $count, $wordform1, $wordform2, $wordform3, $w4, $w5 ) {
+		return ( ( $count % 10 == 1 ) && ( $count % 100 != 11 ) ) ? $wordform1 : $wordform2;
 	}
 
 	# Convert from the nominative form of a noun to some other case
@@ -56,4 +54,4 @@ class LanguageLv extends Language {
 
 }
 
-
+?>

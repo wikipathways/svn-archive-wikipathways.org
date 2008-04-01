@@ -1,11 +1,12 @@
 <?php
 
+
 /*
  * Created on Sep 6, 2006
  *
  * API for MediaWiki 1.8+
  *
- * Copyright (C) 2006 Yuri Astrakhan <Firstname><Lastname>@gmail.com
+ * Copyright (C) 2006 Yuri Astrakhan <FirstnameLastname@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +29,6 @@ if (!defined('MEDIAWIKI')) {
 	require_once ('ApiBase.php');
 }
 
-/**
- * This is a simple class to handle action=help
- * 
- * @addtogroup API
- */
 class ApiHelp extends ApiBase {
 
 	public function __construct($main, $action) {
@@ -46,18 +42,14 @@ class ApiHelp extends ApiBase {
 		$this->dieUsage('', 'help');
 	}
 
-	public function shouldCheckMaxlag() {
-		return false;
-	}
-
-	public function getDescription() {
+	protected function getDescription() {
 		return array (
 			'Display this help screen.'
 		);
 	}
 
 	public function getVersion() {
-		return __CLASS__ . ': $Id: ApiHelp.php 30222 2008-01-28 19:05:26Z catrope $';
+		return __CLASS__ . ': $Id: ApiHelp.php 16757 2006-10-03 05:41:55Z yurik $';
 	}
 }
-
+?>

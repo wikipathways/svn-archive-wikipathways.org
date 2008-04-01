@@ -4,7 +4,8 @@
  * hours, depending on the database size and server configuration.
  *
  * @todo document
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 /** */
@@ -15,9 +16,10 @@ $wgTitle = Title::newFromText( "Rebuild recent changes script" );
 $wgDBuser			= $wgDBadminuser;
 $wgDBpassword		= $wgDBadminpassword;
 
-rebuildRecentChangesTable();
+rebuildRecentChangesTablePass1();
+rebuildRecentChangesTablePass2();
 
 print "Done.\n";
 exit();
 
-
+?>

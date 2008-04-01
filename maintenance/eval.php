@@ -12,7 +12,8 @@
  * To get decent line editing behavior, you should compile PHP with support
  * for GNU readline (pass --with-readline to configure).
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 $wgForceLoadBalancing = (getenv('MW_BALANCE') ? true : false);
@@ -59,4 +60,4 @@ while ( ( $line = readconsole( '> ' ) ) !== false ) {
 
 print "\n";
 
-
+?>

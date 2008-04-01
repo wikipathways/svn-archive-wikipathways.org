@@ -23,14 +23,13 @@ class NewPathwaysPage extends SpecialPage
         function loadMessages() {
                 static $messagesLoaded = false;
                 global $wgMessageCache;
-                if ( $messagesLoaded ) return true;
+                if ( $messagesLoaded ) return;
                 $messagesLoaded = true;
 
                 require( dirname( __FILE__ ) . '/NewPathwaysPage.i18n.php' );
                 foreach ( $allMessages as $lang => $langMessages ) {
                         $wgMessageCache->addMessages( $langMessages, $lang );
                 }
-                return true;
         }
 }
 
@@ -69,7 +68,7 @@ class RCQueryPage extends QueryPage {
 		global $wgLang, $wgContLang, $wgUser;
 		$title = Title::makeTitle( $result->namespace, $result->title );
 		$link = $skin->makeKnownLinkObj( $title, htmlspecialchars( $wgContLang->convert( $title->getBaseText() ) ) );
-		$nv = "<b>". $wgLang->date($result->value) . "</b> by <b>" . $wgUser->getSkin()->userlink($result->user_id, $result->utext) ."</b>";
+		$nv = "created ". $wgLang->timeanddate($result->value) . " by " . $wgUser->getSkin()->userlink($result->user_id, $result->utext);
 		return wfSpecialList($link, $nv);
 	}
 }

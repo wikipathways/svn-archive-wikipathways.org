@@ -166,14 +166,13 @@ class BrowsePathwaysPage extends SpecialPage {
        function loadMessages() {
                 static $messagesLoaded = false;
                 global $wgMessageCache;
-                if ( $messagesLoaded ) return true;
+                if ( $messagesLoaded ) return;
                 $messagesLoaded = true;
 
                 require( dirname( __FILE__ ) . '/BrowsePathwaysPage.i18n.php' );
                 foreach ( $allMessages as $lang => $langMessages ) {
                         $wgMessageCache->addMessages( $langMessages, $lang );
                 }
-                return true;
         }
 
 	var $maxPerPage=960;

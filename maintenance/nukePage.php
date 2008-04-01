@@ -4,7 +4,8 @@
  * Erase a page record from the database
  * Irreversible (can't use standard undelete) and does not update link tables
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  * @author Rob Church <robchur@gmail.com>
  */
 
@@ -26,3 +27,4 @@ function ShowUsage() {
 	echo( "	<title> : Page title; spaces escaped with underscores\n\n" );
 }
 
+?>

@@ -1,6 +1,7 @@
 <?php
 /**
-  * @addtogroup Language
+  * @package MediaWiki
+  * @subpackage Language
   */
 #
 # Hungarian localisation for MediaWiki
@@ -49,4 +50,4 @@ class LanguageHu extends Language {
 	}
 }
 
-
+?>

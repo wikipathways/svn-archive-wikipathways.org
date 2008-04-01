@@ -1,11 +1,10 @@
 <?php
-/** ‪Singaporese Chinese (‪中文(新加坡)‬)
- *
- * @addtogroup Language
- *
 
- */
-
+/**
+  * @package MediaWiki
+  * @subpackage Language
+  */
 # Inherit everything for now
-$fallback = 'zh-hans';
+$fallback = 'zh-cn';
 
+?>

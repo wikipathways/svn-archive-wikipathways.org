@@ -23,6 +23,7 @@ function Searching_Go()
 function Search_Typing() {
 	started=true;
 	typing=true;
+	window.status = "Waiting until you're done typing...";
 	setTimeout("Search_doneTyping()", 500);
 
 	// I believe these are needed by IE for when the users press return?
@@ -31,7 +32,7 @@ function Search_Typing() {
 		if (event.keyCode == 13)
 		{
 			event.cancelBubble = true;
-			event.returnValue = true;
+			event.returnValue = false;
 		}
 	}
 }
@@ -43,7 +44,7 @@ function Searching_SetResult( request )
 		alert("Error: " + request.status + " " + request.statusText + ": " + request.responseText);
 		return;
 	}
-
+	
 	var result = request.responseText;
 
         //body.innerHTML = result;
@@ -89,7 +90,7 @@ function Searching_Call()
 		{
 			return;
 		}
-
+		
 		sajax_do_call( "wfSajaxSearch", [ x ], Searching_SetResult );
 	}
 }

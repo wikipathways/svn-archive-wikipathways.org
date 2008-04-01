@@ -1,13 +1,14 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
  *
  */
-require_once( dirname(__FILE__) . '/ChangesList.php' );
+require_once( 'ChangesList.php' );
 
 /**
  * Constructor
@@ -21,7 +22,7 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 	# Get query parameters
 	$feedFormat = $wgRequest->getVal( 'feed' );
 
-	/* Checkbox values can't be true by default, because
+	/* Checkbox values can't be true be default, because
 	 * we cannot differentiate between unset and not set at all
 	 */
 	$defaults = array(
@@ -57,7 +58,7 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 	if( $feedFormat ) {
 		global $wgFeedLimit;
 		if( $limit > $wgFeedLimit ) {
-			$limit = $wgFeedLimit;
+			$options['limit'] = $wgFeedLimit;
 		}
 
 	} else {
@@ -104,7 +105,7 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 
 
 	# Database connection and caching
-	$dbr = wfGetDB( DB_SLAVE );
+	$dbr =& wfGetDB( DB_SLAVE );
 	list( $recentchanges, $watchlist ) = $dbr->tableNamesN( 'recentchanges', 'watchlist' );
 
 
@@ -172,9 +173,13 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 	while( $row = $dbr->fetchObject( $res ) ){
 		$rows[] = $row;
 		if ( !$feedFormat ) {
-			// User page and talk links
-			$batch->add( NS_USER, $row->rc_user_text  );
-			$batch->add( NS_USER_TALK, $row->rc_user_text  );
+			// User page link
+			$title = Title::makeTitleSafe( NS_USER, $row->rc_user_text );
+			$batch->addObj( $title );
+
+			// User talk
+			$title = Title::makeTitleSafe( NS_USER_TALK, $row->rc_user_text );
+			$batch->addObj( $title );
 		}
 
 	}
@@ -217,7 +222,7 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 
 		// And now for the content
 		$wgOut->setSyndicated( true );
-		
+
 		$list = ChangesList::newFromUser( $wgUser );
 		
 		if ( $wgAllowCategorizedRecentChanges ) {
@@ -229,10 +234,6 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 
 		$s = $list->beginRecentChangesList();
 		$counter = 1;
-
-		$showWatcherCount = $wgRCShowWatchingUsers && $wgUser->getOption( 'shownumberswatching' );
-		$watcherCache = array();
-
 		foreach( $rows as $obj ){
 			if( $limit == 0) {
 				break;
@@ -251,19 +252,13 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 					$rc->notificationtimestamp = false;
 				}
 
-				$rc->numberofWatchingusers = 0; // Default
-				if ($showWatcherCount && $obj->rc_namespace >= 0) {
-					if (!isset($watcherCache[$obj->rc_namespace][$obj->rc_title])) {
-						$watcherCache[$obj->rc_namespace][$obj->rc_title] =
-						 	$dbr->selectField( 'watchlist',
-								'COUNT(*)',
-								array(
-									'wl_namespace' => $obj->rc_namespace,
-									'wl_title' => $obj->rc_title,
-								),
-								__METHOD__ . '-watchers' );
-					}
-					$rc->numberofWatchingusers = $watcherCache[$obj->rc_namespace][$obj->rc_title];
+				if ($wgRCShowWatchingUsers && $wgUser->getOption( 'shownumberswatching' )) {
+					$sql3 = "SELECT COUNT(*) AS n FROM $watchlist WHERE wl_title='" . $dbr->strencode($obj->rc_title) ."' AND wl_namespace=$obj->rc_namespace" ;
+					$res3 = $dbr->query( $sql3, 'wfSpecialRecentChanges');
+					$x = $dbr->fetchObject( $res3 );
+					$rc->numberofWatchingusers = $x->n;
+				} else {
+					$rc->numberofWatchingusers = 0;
 				}
 				$s .= $list->recentChangesLine( $rc, !empty( $obj->wl_user ) );
 				--$limit;
@@ -275,9 +270,7 @@ function wfSpecialRecentchanges( $par, $specialPage ) {
 }
 
 function rcFilterByCategories ( &$rows , $categories , $any ) {
-	if( empty( $categories ) ) {
-		return;
-	}
+	require_once ( 'Categoryfinder.php' ) ;
 	
 	# Filter categories
 	$cats = array () ;
@@ -291,7 +284,7 @@ function rcFilterByCategories ( &$rows , $categories , $any ) {
 	$articles = array () ;
 	$a2r = array () ;
 	foreach ( $rows AS $k => $r ) {
-		$nt = Title::makeTitle( $r->rc_title , $r->rc_namespace );
+		$nt = Title::newFromText ( $r->rc_title , $r->rc_namespace ) ;
 		$id = $nt->getArticleID() ;
 		if ( $id == 0 ) continue ; # Page might have been deleted...
 		if ( !in_array ( $id , $articles ) ) {
@@ -342,14 +335,6 @@ function rcOutputFeed( $rows, $feedFormat, $limit, $hideminor, $lastmod ) {
 		htmlspecialchars( wfMsgForContent( 'recentchanges-feed-description' ) ),
 		$wgTitle->getFullUrl() );
 
-	//purge cache if requested
-	global $wgRequest, $wgUser;
-	$purge = $wgRequest->getVal( 'action' ) == 'purge';
-	if ( $purge && $wgUser->isAllowed('purge') ) {
-		$messageMemc->delete( $timekey );
-		$messageMemc->delete( $key );
-	}
-
 	/**
 	 * Bumping around loading up diffs can be pretty slow, so where
 	 * possible we want to cache the feed output so the next visitor
@@ -391,12 +376,9 @@ function rcOutputFeed( $rows, $feedFormat, $limit, $hideminor, $lastmod ) {
 	return true;
 }
 
-/**
- * @todo document
- * @param $rows Database resource with recentchanges rows
- */
 function rcDoOutputFeed( $rows, &$feed ) {
-	wfProfileIn( __METHOD__ );
+	$fname = 'rcDoOutputFeed';
+	wfProfileIn( $fname );
 
 	$feed->outHeader();
 
@@ -421,7 +403,7 @@ function rcDoOutputFeed( $rows, &$feed ) {
 		$item = new FeedItem(
 			$title->getPrefixedText(),
 			rcFormatDiff( $obj ),
-			$title->getFullURL( 'diff=' . $obj->rc_this_oldid . '&oldid=prev' ),
+			$title->getFullURL(),
 			$obj->rc_timestamp,
 			$obj->rc_user_text,
 			$talkpage->getFullURL()
@@ -429,7 +411,7 @@ function rcDoOutputFeed( $rows, &$feed ) {
 		$feed->outItem( $item );
 	}
 	$feed->outFooter();
-	wfProfileOut( __METHOD__ );
+	wfProfileOut( $fname );
 }
 
 /**
@@ -488,7 +470,7 @@ function rcDayLimitLinks( $days, $limit, $page='Recentchanges', $more='', $doall
 
 /**
  * Makes change an option link which carries all the other options
- * @param $title see Title
+ * @param $title @see Title
  * @param $override
  * @param $options
  */
@@ -643,13 +625,7 @@ function rcFormatDiffRow( $title, $oldid, $newid, $timestamp, $comment ) {
 	$skin = $wgUser->getSkin();
 	$completeText = '<p>' . $skin->formatComment( $comment ) . "</p>\n";
 
-	//NOTE: Check permissions for anonymous users, not current user.
-	//      No "privileged" version should end up in the cache.
-	//      Most feed readers will not log in anway.
-	$anon = new User();
-	$accErrors = $title->getUserPermissionsErrors( 'read', $anon, true );
-
-	if( $title->getNamespace() >= 0 && !$accErrors ) {
+	if( $title->getNamespace() >= 0 ) {
 		if( $oldid ) {
 			wfProfileIn( "$fname-dodiff" );
 
@@ -710,13 +686,13 @@ function rcFormatDiffRow( $title, $oldid, $newid, $timestamp, $comment ) {
  */
 function rcApplyDiffStyle( $text ) {
 	$styles = array(
-		'diff'             => 'background-color: white; color:black;',
-		'diff-otitle'      => 'background-color: white; color:black;',
-		'diff-ntitle'      => 'background-color: white; color:black;',
-		'diff-addedline'   => 'background: #cfc; color:black; font-size: smaller;',
-		'diff-deletedline' => 'background: #ffa; color:black; font-size: smaller;',
-		'diff-context'     => 'background: #eee; color:black; font-size: smaller;',
-		'diffchange'       => 'color: red; font-weight: bold; text-decoration: none;',
+		'diff'             => 'background-color: white;',
+		'diff-otitle'      => 'background-color: white;',
+		'diff-ntitle'      => 'background-color: white;',
+		'diff-addedline'   => 'background: #cfc; font-size: smaller;',
+		'diff-deletedline' => 'background: #ffa; font-size: smaller;',
+		'diff-context'     => 'background: #eee; font-size: smaller;',
+		'diffchange'       => 'color: red; font-weight: bold;',
 	);
 	
 	foreach( $styles as $class => $style ) {
@@ -727,4 +703,4 @@ function rcApplyDiffStyle( $text ) {
 	return $text;
 }
 
-
+?>

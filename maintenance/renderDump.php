@@ -2,7 +2,7 @@
 /**
  * Take page text out of an XML dump file and render basic HTML out to files.
  * This is *NOT* suitable for publishing or offline use; it's intended for
- * running comparative tests of parsing behavior using real-world data.
+ * running comparitive tests of parsing behavior using real-world data.
  *
  * Templates etc are pulled from the local wiki database, not from the dump.
  *
@@ -24,12 +24,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  */
 
 $optionsWithArgs = array( 'report' );
 
 require_once( 'commandLine.inc' );
+require_once( 'SpecialImport.php' );
 
 class DumpRenderer {
 	function __construct( $dir ) {
@@ -98,4 +100,4 @@ if( isset( $options['output-dir'] ) ) {
 $render = new DumpRenderer( $dir );
 $render->run();
 
-
+?>

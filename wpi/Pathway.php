@@ -317,7 +317,7 @@ class Pathway {
 			$this->updateCache($fileType);	
 		}
 		$fn = $this->getFileName($fileType);
-		return wfLocalFile( $fn )->getPath();
+		return wfImageDir( $fn ) . "/$fn";
 	}
 	
 	/**
@@ -469,37 +469,6 @@ class Pathway {
 		return $succ;
 	}
 
-	/**
-	 * Parse a mediawiki page that contains a pathway list.
-	 * Assumes one pathway per line, invalid lines will be ignored
-	 */
-	public static function parsePathwayListPage($listPage) {
-		$listRev = Revision::newFromTitle(Title::newFromText($listPage), 0);
-		if($listRev != null) {
-			$lines = explode("\n", $listRev->getText());
-		} else {
-			$lines = array();
-		}
-		$pathwayList = array();
-		
-		//Try to parse a pathway from each line
-		foreach($lines as $title) {
-			//Regex to fetch title from "* [[title|...]]"
-			// \*\ *\[\[(.*)\]\]
-			$title = preg_replace('/\*\ *\[\[(.*)\]\]/', '$1', $title);
-			try {
-				//If pathway creation works and the pathway exists, add to array
-				$pathway = Pathway::newFromTitle($title);
-				if(!is_null($pathway) && $pathway->exists()) {
-					$pathwayList[] = $pathway;
-				}
-			} catch(Exception $e) {
-				//Ignore the pathway
-			}
-		}
-		return $pathwayList;
-	}
-	
 	/**
 	 * Validates the GPML code and returns the error if it's invalid
 	 * @return <code>null</code> if the GPML is valid, the error if it's invalid
@@ -809,17 +778,14 @@ class Pathway {
 		if( wfReadOnly() ) {
 			throw new Exception( "Page is read-only" );
 		}
-		
-		$localFile = wfLocalFile($saveName);
-		$localFile->upload($fileName, $description, "");
-/*
+
 		# Move the file to the proper directory
-		$dest = wfLocalFile( $saveName )->getPath();
+		$dest = wfImageDir( $saveName );
 		$archive = wfImageArchiveDir( $saveName );
 		if ( !is_dir( $dest ) ) wfMkdirParents( $dest );
 		if ( !is_dir( $archive ) ) wfMkdirParents( $archive );
 
-		$toFile = $dest;
+		$toFile = "{$dest}/{$saveName}";
 		if( is_file( $toFile) ) {
 			$oldVersion = gmdate( 'YmdHis' ) . "!{$saveName}";
 			$success = rename($toFile, "{$archive}/{$oldVersion}");
@@ -855,7 +821,6 @@ class Pathway {
 		$wgParser->mTitle = $oldTitle;
 		
 		return $toFile; # return the saved file
-		*/
 	}
 	
 	/**

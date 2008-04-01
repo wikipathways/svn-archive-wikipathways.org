@@ -1,11 +1,12 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
- * You will need the extension MogileClient to use this special page.
+ *
  */
 require_once( 'MogileFS.php' );
 
@@ -18,10 +19,7 @@ function wfSpecialUploadMogile() {
 	$form->execute();
 }
 
-/**
- * Extends Special:Upload with MogileFS.
- * @addtogroup SpecialPage
- */
+/** @package MediaWiki */
 class UploadFormMogile extends UploadForm {
 	/**
 	 * Move the uploaded file from its temporary location to the final
@@ -133,4 +131,4 @@ class UploadFormMogile extends UploadForm {
 		}
 	}
 }
-
+?>

@@ -1,7 +1,8 @@
 <?php
 /** Slovenian (Slovenščina)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  *
  */
 class LanguageSl extends Language {
@@ -18,63 +19,92 @@ class LanguageSl extends Language {
 
 		switch ( $case ) {
 			case 'rodilnik': # genitive
-				switch ( $word ) {
-					case 'Wikipedija': $word = 'Wikipedije'; break 2;
-					case 'Wikiknjige': $word = 'Wikiknjig'; break 2;
-					case 'Wikinovice': $word = 'Wikinovic'; break 2;
-					case 'Wikinavedek': $word = 'Wikinavedka'; break 2;
-					case 'Wikivir': $word = 'Wikivira'; break 2;
-					case 'Wikislovar': $word = 'Wikislovarja'; break 2;
+				if ( $word == 'Wikipedija' ) {
+					$word = 'Wikipedije';
+				} elseif ( $word == 'Wikiknjige' ) {
+					$word = 'Wikiknjig';
+				} elseif ( $word == 'Wikinovice' ) {
+					$word = 'Wikinovic';
+				} elseif ( $word == 'Wikinavedek' ) {
+					$word = 'Wikinavedka';
+				} elseif ( $word == 'Wikivir' ) {
+					$word = 'Wikivira';
+				} elseif ( $word == 'Wikislovar' ) {
+					$word = 'Wikislovarja';
 				}
+			break;
 			case 'dajalnik': # dativ
-				switch ( $word ) {
-					case 'Wikipedija': $word = 'Wikipediji'; break 2;
-					case 'Wikiknjige': $word = 'Wikiknjigam'; break 2;
-					case 'Wikinovice': $word = 'Wikinovicam'; break 2;
-					case 'Wikinavedek': $word = 'Wikinavedku'; break 2;
-					case 'Wikivir': $word = 'Wikiviru'; break 2;
-					case 'Wikislovar': $word = 'Wikislovarju'; break 2;
+				if ( $word == 'Wikipedija' ) {
+					$word = 'Wikipediji';
+				} elseif ( $word == 'Wikiknjige' ) {
+					$word = 'Wikiknjigam';
+				} elseif ( $word == 'Wikinovice' ) {
+					$word = 'Wikinovicam';
+				} elseif ( $word == 'Wikinavedek' ) {
+					$word = 'Wikinavedku';
+				} elseif ( $word == 'Wikivir' ) {
+					$word = 'Wikiviru';
+				} elseif ( $word == 'Wikislovar' ) {
+					$word = 'Wikislovarju';
 				}
+			break;
 			case 'tožilnik': # akuzatív
-				switch ( $word ) {
-					case 'Wikipedija': $word = 'Wikipedijo'; break 2;
-					case 'Wikiknjige':
-					case 'Wikinovice':
-					case 'Wikinavedek':
-					case 'Wikivir':
-					case 'Wikislovar':
-						// Don't change, just fall through
-						break 2;
+				if ( $word == 'Wikipedija' ) {
+					$word = 'Wikipedijo';
+				} elseif ( $word == 'Wikiknjige' ) {
+					$word = 'Wikiknjige';
+				} elseif ( $word == 'Wikinovice' ) {
+					$word = 'Wikinovice';
+				} elseif ( $word == 'Wikinavedek' ) {
+					$word = 'Wikinavedek';
+				} elseif ( $word == 'Wikivir' ) {
+					$word = 'Wikivir';
+				} elseif ( $word == 'Wikislovar' ) {
+					$word = 'Wikislovar';
 				}
+			break;
 			case 'mestnik': # locative
-				switch ( $word ) {
-					case 'Wikipedija': $word = 'o Wikipediji'; break 2;
-					case 'Wikiknjige': $word = 'o Wikiknjigah'; break 2;
-					case 'Wikinovice': $word = 'o Wikinovicah'; break 2;
-					case 'Wikinavedek': $word = 'o Wikinavedku'; break 2;
-					case 'Wikivir': $word = 'o Wikiviru'; break 2;
-					case 'Wikislovar': $word = 'o Wikislovarju'; break 2;
-					default: $word = 'o ' . $word; break 2;
+				if ( $word == 'Wikipedija' ) {
+					$word = 'o Wikipediji';
+				} elseif ( $word == 'Wikiknjige' ) {
+					$word = 'o Wikiknjigah';
+				} elseif ( $word == 'Wikinovice' ) {
+					$word = 'o Wikinovicah';
+				} elseif ( $word == 'Wikinavedek' ) {
+					$word = 'o Wikinavedku';
+				} elseif ( $word == 'Wikivir' ) {
+					$word = 'o Wikiviru';
+				} elseif ( $word == 'Wikislovar' ) {
+					$word = 'o Wikislovarju';
+				} else {
+					$word = 'o ' . $word;
 				}
+			break;
 			case 'orodnik': # instrumental
-				switch ( $word ) {
-					case 'Wikipedija': $word = 'z Wikipedijo'; break 2;
-					case 'Wikiknjige': $word = 'z Wikiknjigami'; break 2;
-					case 'Wikinovice': $word = 'z Wikinovicami'; break 2;
-					case 'Wikinavedek': $word = 'z Wikinavedkom'; break 2;
-					case 'Wikivir': $word = 'z Wikivirom'; break 2;
-					case 'Wikislovar': $word = 'z Wikislovarjem'; break 2;
-					default: $word = 'z ' . $word;
+				if ( $word == 'Wikipedija' ) {
+					$word = 'z Wikipedijo';
+				} elseif ( $word == 'Wikiknjige' ) {
+					$word = 'z Wikiknjigami';
+				} elseif ( $word == 'Wikinovice' ) {
+					$word = 'z Wikinovicami';
+				} elseif ( $word == 'Wikinavedek' ) {
+					$word = 'z Wikinavedkom';
+				} elseif ( $word == 'Wikivir' ) {
+					$word = 'z Wikivirom';
+				} elseif ( $word == 'Wikislovar' ) {
+					$word = 'z Wikislovarjem';
+				} else {
+					$word = 'z ' . $word;
 				}
+			break;
 		}
 
 		return $word; # this will return the original value for 'imenovalnik' (nominativ) and all undefined case values
 	}
 
-	function convertPlural( $count, $forms ) {
-		if ( !count($forms) ) { return ''; }
-		$forms = $this->preConvertPlural( $forms, 5 );
-
+	function convertPlural( $count, $w1, $w2, $w3, $w4, $w5) {
+		$count = str_replace ('.', '', $count);
+		$forms = array( $w1, $w2, $w3, $w4, $w5 );
 		if ( $count % 100 == 1 ) {
 			$index = 0;
 		} elseif ( $count % 100 == 2 ) {
@@ -91,4 +121,4 @@ class LanguageSl extends Language {
 
 
 }
-
+?>

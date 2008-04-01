@@ -1,11 +1,13 @@
 <?php
 /** Bulgarian (Български)
  *
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 
 /**
- * @addtogroup Language
+ * @package MediaWiki
+ * @subpackage Language
  */
 class LanguageBg extends Language {
 	/**
@@ -20,4 +22,4 @@ class LanguageBg extends Language {
 		}
 	}
 }
-
+?>

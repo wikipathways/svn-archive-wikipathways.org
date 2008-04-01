@@ -1,6 +1,7 @@
 <?php
 /**
  *
+ * @package MediaWiki
  */
 
 
@@ -8,6 +9,7 @@
  * Database load balancing object
  *
  * @todo document
+ * @package MediaWiki
  */
 class LoadBalancer {
 	/* private */ var $mServers, $mConnections, $mLoads, $mGroupLoads;
@@ -16,7 +18,13 @@ class LoadBalancer {
 	/* private */ var $mWaitForFile, $mWaitForPos, $mWaitTimeout;
 	/* private */ var $mLaggedSlaveMode, $mLastError = 'Unknown error';
 
-	function __construct( $servers, $failFunction = false, $waitTimeout = 10, $waitForMasterNow = false )
+	/**
+	 * Scale polling time so that under overload conditions, the database server
+	 * receives a SHOW STATUS query at an average interval of this many microseconds
+	 */
+	const AVG_STATUS_POLL = 2000;
+
+	function LoadBalancer( $servers, $failFunction = false, $waitTimeout = 10, $waitForMasterNow = false )
 	{
 		$this->mServers = $servers;
 		$this->mFailFunction = $failFunction;
@@ -24,7 +32,7 @@ class LoadBalancer {
 		$this->mWriteIndex = -1;
 		$this->mForce = -1;
 		$this->mConnections = array();
-		$this->mLastIndex = -1;
+		$this->mLastIndex = 1;
 		$this->mLoads = array();
 		$this->mWaitForFile = false;
 		$this->mWaitForPos = false;
@@ -89,9 +97,7 @@ class LoadBalancer {
 		# Unset excessively lagged servers
 		$lags = $this->getLagTimes();
 		foreach ( $lags as $i => $lag ) {
-			if ( $i != 0 && isset( $this->mServers[$i]['max lag'] ) && 
-				( $lag === false || $lag > $this->mServers[$i]['max lag'] ) ) 
-			{
+			if ( isset( $this->mServers[$i]['max lag'] ) && $lag > $this->mServers[$i]['max lag'] ) {
 				unset( $loads[$i] );
 			}
 		}
@@ -127,7 +133,7 @@ class LoadBalancer {
 	 * Side effect: opens connections to databases
 	 */
 	function getReaderIndex() {
-		global $wgReadOnly, $wgDBClusterTimeout, $wgDBAvgStatusPoll;
+		global $wgReadOnly, $wgDBClusterTimeout;
 
 		$fname = 'LoadBalancer::getReaderIndex';
 		wfProfileIn( $fname );
@@ -174,7 +180,7 @@ class LoadBalancer {
 								# Too much load, back off and wait for a while.
 								# The sleep time is scaled by the number of threads connected,
 								# to produce a roughly constant global poll rate.
-								$sleepTime = $wgDBAvgStatusPoll * $status['Threads_connected'];
+								$sleepTime = self::AVG_STATUS_POLL * $status['Threads_connected'];
 
 								# If we reach the timeout and exit the loop, don't use it
 								$i = false;
@@ -318,13 +324,13 @@ class LoadBalancer {
 
 		# Query groups
 		if ( !is_array( $groups ) ) {
-			$groupIndex = $this->getGroupIndex( $groups );
+			$groupIndex = $this->getGroupIndex( $groups, $i );
 			if ( $groupIndex !== false ) {
 				$i = $groupIndex;
 			}
 		} else {
 			foreach ( $groups as $group ) {
-				$groupIndex = $this->getGroupIndex( $group );
+				$groupIndex = $this->getGroupIndex( $group, $i );
 				if ( $groupIndex !== false ) {
 					$i = $groupIndex;
 					break;
@@ -426,7 +432,8 @@ class LoadBalancer {
 		return $db;
 	}
 
-	function reportConnectionError( &$conn ) {
+	function reportConnectionError( &$conn )
+	{
 		$fname = 'LoadBalancer::reportConnectionError';
 		wfProfileIn( $fname );
 		# Prevent infinite recursion
@@ -497,7 +504,8 @@ class LoadBalancer {
 	 * Save master pos to the session and to memcached, if the session exists
 	 */
 	function saveMasterPos() {
-		if ( session_id() != '' && count( $this->mServers ) > 1 ) {
+		global $wgSessionStarted;
+		if ( $wgSessionStarted && count( $this->mServers ) > 1 ) {
 			# If this entire request was served from a slave without opening a connection to the
 			# master (however unlikely that may be), then we can fetch the position from the slave.
 			if ( empty( $this->mConnections[0] ) ) {
@@ -541,17 +549,6 @@ class LoadBalancer {
 		foreach( $this->mConnections as $i => $conn ) {
 			if ( $this->isOpen( $i ) ) {
 				// Need to use this syntax because $conn is a copy not a reference
-				$this->mConnections[$i]->immediateCommit();
-			}
-		}
-	}
-	
-	/* Issue COMMIT only on master, only if queries were done on connection */
-	function commitMasterChanges() {
-		// Always 0, but who knows.. :)
-		$i = $this->getWriterIndex();
-		if (array_key_exists($i,$this->mConnections)) {
-			if ($this->mConnections[$i]->lastQuery() != '') {
 				$this->mConnections[$i]->immediateCommit();
 			}
 		}
@@ -650,4 +647,4 @@ class LoadBalancer {
 	}
 }
 
-
+?>

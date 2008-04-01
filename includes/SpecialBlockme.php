@@ -1,7 +1,8 @@
 <?php
 /**
  *
- * @addtogroup SpecialPage
+ * @package MediaWiki
+ * @subpackage SpecialPage
  */
 
 /**
@@ -13,12 +14,13 @@ function wfSpecialBlockme() {
 	$ip = wfGetIP();
 	
 	if( !$wgBlockOpenProxies || $wgRequest->getText( 'ip' ) != md5( $ip . $wgProxyKey ) ) {
-		$wgOut->addWikiMsg( 'proxyblocker-disabled' );
+		$wgOut->addWikiText( wfMsg( 'disabled' ) );
 		return;
 	}
 
 	$blockerName = wfMsg( "proxyblocker" );
 	$reason = wfMsg( "proxyblockreason" );
+	$success = wfMsg( "proxyblocksuccess" );
 
 	$u = User::newFromName( $blockerName );
 	$id = $u->idForName();
@@ -33,6 +35,6 @@ function wfSpecialBlockme() {
 	$block = new Block( $ip, 0, $id, $reason, wfTimestampNow() );
 	$block->insert();
 
-	$wgOut->addWikiMsg( "proxyblocksuccess" );
+	$wgOut->addWikiText( $success );
 }
-
+?>

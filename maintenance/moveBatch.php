@@ -3,7 +3,8 @@
 /**
  * Maintenance script to move a batch of pages
  *
- * @addtogroup Maintenance
+ * @package MediaWiki
+ * @subpackage Maintenance
  * @author Tim Starling
  *
  * USAGE: php moveBatch.php [-u <user>] [-r <reason>] [-i <interval>] <listfile>
@@ -55,7 +56,7 @@ if ( !$file ) {
 	exit;
 }
 
-$dbw = wfGetDB( DB_MASTER );
+$dbw =& wfGetDB( DB_MASTER );
 
 for ( $linenum = 1; !feof( $file ); $linenum++ ) {
 	$line = fgets( $file );
@@ -91,4 +92,4 @@ for ( $linenum = 1; !feof( $file ); $linenum++ ) {
 }
 
 
-
+?>

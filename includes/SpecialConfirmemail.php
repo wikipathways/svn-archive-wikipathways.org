@@ -4,18 +4,22 @@
  * Special page allows users to request email confirmation message, and handles
  * processing of the confirmation code when the link in the email is followed
  *
- * @addtogroup SpecialPage
- * @author Brion Vibber
+ * @package MediaWiki
+ * @subpackage Special pages
  * @author Rob Church <robchur@gmail.com>
  */
-class EmailConfirmation extends UnlistedSpecialPage {
-	
-	/**
-	 * Constructor
-	 */
-	public function __construct() {
-		parent::__construct( 'Confirmemail' );
-	}
+ 
+/**
+ * Main execution point
+ *
+ * @param $par Parameters passed to the page
+ */
+function wfSpecialConfirmemail( $par ) {
+	$form = new EmailConfirmation();
+	$form->execute( $par );
+}
+
+class EmailConfirmation extends SpecialPage {
 	
 	/**
 	 * Main execution point
@@ -24,13 +28,12 @@ class EmailConfirmation extends UnlistedSpecialPage {
 	 */
 	function execute( $code ) {
 		global $wgUser, $wgOut;
-		$this->setHeaders();
 		if( empty( $code ) ) {
 			if( $wgUser->isLoggedIn() ) {
 				if( User::isValidEmailAddr( $wgUser->getEmail() ) ) {
 					$this->showRequestForm();
 				} else {
-					$wgOut->addWikiMsg( 'confirmemail_noemail' );
+					$wgOut->addWikiText( wfMsg( 'confirmemail_noemail' ) );
 				}
 			} else {
 				$title = SpecialPage::getTitleFor( 'Userlogin' );
@@ -52,19 +55,19 @@ class EmailConfirmation extends UnlistedSpecialPage {
 		if( $wgRequest->wasPosted() && $wgUser->matchEditToken( $wgRequest->getText( 'token' ) ) ) {
 			$ok = $wgUser->sendConfirmationMail();
 			if ( WikiError::isError( $ok ) ) {
-				$wgOut->addWikiMsg( 'confirmemail_sendfailed', $ok->toString() );
+				$wgOut->addWikiText( wfMsg( 'confirmemail_sendfailed', $ok->toString() ) );
 			} else {
-				$wgOut->addWikiMsg( 'confirmemail_sent' );
+				$wgOut->addWikiText( wfMsg( 'confirmemail_sent' ) );
 			}
 		} else {
 			if( $wgUser->isEmailConfirmed() ) {
 				$time = $wgLang->timeAndDate( $wgUser->mEmailAuthenticated, true );
-				$wgOut->addWikiMsg( 'emailauthenticated', $time );
+				$wgOut->addWikiText( wfMsg( 'emailauthenticated', $time ) );
 			}
 			if( $wgUser->isEmailConfirmationPending() ) {
-				$wgOut->addWikiMsg( 'confirmemail_pending' );
+				$wgOut->addWikiText( wfMsg( 'confirmemail_pending' ) );
 			}
-			$wgOut->addWikiMsg( 'confirmemail_text' );
+			$wgOut->addWikiText( wfMsg( 'confirmemail_text' ) );
 			$self = SpecialPage::getTitleFor( 'Confirmemail' );		
 			$form  = wfOpenElement( 'form', array( 'method' => 'post', 'action' => $self->getLocalUrl() ) );
 			$form .= wfHidden( 'token', $wgUser->editToken() );
@@ -86,19 +89,19 @@ class EmailConfirmation extends UnlistedSpecialPage {
 		if( is_object( $user ) ) {
 			if( $user->confirmEmail() ) {
 				$message = $wgUser->isLoggedIn() ? 'confirmemail_loggedin' : 'confirmemail_success';
-				$wgOut->addWikiMsg( $message );
+				$wgOut->addWikiText( wfMsg( $message ) );
 				if( !$wgUser->isLoggedIn() ) {
 					$title = SpecialPage::getTitleFor( 'Userlogin' );
 					$wgOut->returnToMain( true, $title->getPrefixedText() );
 				}
 			} else {
-				$wgOut->addWikiMsg( 'confirmemail_error' );
+				$wgOut->addWikiText( wfMsg( 'confirmemail_error' ) );
 			}
 		} else {
-			$wgOut->addWikiMsg( 'confirmemail_invalid' );
+			$wgOut->addWikiText( wfMsg( 'confirmemail_invalid' ) );
 		}
 	}
 	
 }
 
-
+?>

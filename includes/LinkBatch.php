@@ -3,8 +3,9 @@
 /**
  * Class representing a list of titles
  * The execute() method checks them all for existence and adds them to a LinkCache object
- *
- * @addtogroup Cache
+ +
+ * @package MediaWiki
+ * @subpackage Cache
  */
 class LinkBatch {
 	/**
@@ -12,7 +13,7 @@ class LinkBatch {
 	 */
 	var $data = array();
 
-	function __construct( $arr = array() ) {
+	function LinkBatch( $arr = array() ) {
 		foreach( $arr as $item ) {
 			$this->addObj( $item );
 		}
@@ -34,7 +35,7 @@ class LinkBatch {
 			$this->data[$ns] = array();
 		}
 
-		$this->data[$ns][str_replace( ' ', '_', $dbkey )] = 1;
+		$this->data[$ns][$dbkey] = 1;
 	}
 
 	/**
@@ -119,7 +120,7 @@ class LinkBatch {
 
 		// Construct query
 		// This is very similar to Parser::replaceLinkHolders
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr =& wfGetDB( DB_SLAVE );
 		$page = $dbr->tableName( 'page' );
 		$set = $this->constructSet( 'page', $dbr );
 		if ( $set === false ) {
@@ -156,26 +157,19 @@ class LinkBatch {
 			} else {
 				$sql .= ' OR ';
 			}
-			
-			if (count($dbkeys)==1) { // avoid multiple-reference syntax if simple equality can be used
-				$singleKey = array_keys($dbkeys);
-				$sql .= "({$prefix}_namespace=$ns AND {$prefix}_title=".
-					$db->addQuotes($singleKey[0]).
-					")";
-			} else {
-				$sql .= "({$prefix}_namespace=$ns AND {$prefix}_title IN (";
-				
-				$firstTitle = true;
-				foreach( $dbkeys as $dbkey => $unused ) {
-					if ( $firstTitle ) {
-						$firstTitle = false;
-					} else {
-						$sql .= ',';
-					}
-					$sql .= $db->addQuotes( $dbkey );
+			$sql .= "({$prefix}_namespace=$ns AND {$prefix}_title IN (";
+
+			$firstTitle = true;
+			foreach( $dbkeys as $dbkey => $unused ) {
+				if ( $firstTitle ) {
+					$firstTitle = false;
+				} else {
+					$sql .= ',';
 				}
-				$sql .= '))';
+				$sql .= $db->addQuotes( $dbkey );
 			}
+
+			$sql .= '))';
 		}
 		if ( $first && $firstTitle ) {
 			# No titles added
@@ -186,4 +180,4 @@ class LinkBatch {
 	}
 }
 
-
+?>

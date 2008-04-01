@@ -6,6 +6,7 @@
  * be necessary to change the cookie settings to work across hostnames.
  * See: http://www.php.net/manual/en/function.session-set-save-handler.php
  *
+ * @package MediaWiki
  */
 
 /**
@@ -69,4 +70,4 @@ function memsess_gc( $maxlifetime ) {
 
 session_set_save_handler( 'memsess_open', 'memsess_close', 'memsess_read', 'memsess_write', 'memsess_destroy', 'memsess_gc' );
 
-
+?>
