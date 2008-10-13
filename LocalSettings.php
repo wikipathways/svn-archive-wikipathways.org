@@ -121,9 +121,9 @@ $wgDefaultSkin = 'wikipathways';
 ## appropriate copyright notice / icon. GNU Free Documentation
 ## License and Creative Commons licenses are supported so far.
 # $wgEnableCreativeCommonsRdf = true;
-$wgRightsPage = ""; # Set to the title of a wiki page that describes your license/copyright
-$wgRightsUrl = "http://creativecommons.org/licenses/by-nc-sa/3.0/";
-$wgRightsText = "a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License";
+$wgRightsPage = "WikiPathways:License_Terms"; # Set to the title of a wiki page that describes your license/copyright
+$wgRightsUrl = "http://creativecommons.org/licenses/by/3.0/";
+$wgRightsText = "our License and Terms";
 $wgRightsIcon = "http://creativecommons.org/images/public/somerights20.png";
 # $wgRightsCode = ""; # Not yet used
 
