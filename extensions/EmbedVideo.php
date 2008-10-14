@@ -137,8 +137,7 @@ class EmbedVideo {
         }
      
         # Build URL and output embedded flash object
-        //AP20081013
-	$ratio = 480 / 397;
+        $ratio = 480 / 397;
         $width = 480;
         
         if ($params['width']!==null) {
