@@ -307,6 +307,8 @@ require_once('wpi/extensions/PrivatePathways/ListPrivatePathways.php' );
 require_once('wpi/extensions/PrivatePathways/PrivateContributions.php' );
 require_once('wpi/extensions/recentChangesBox.php');
 require_once('wpi/extensions/pathwayBibliography.php');
+require_once('wpi/extensions/otag/otags_main.php');
+require_once('wpi/extensions/ontologyindex/ontologyindex.php');
 /* This shouldn't be in LocalSettings.php, since that's checked
 in to the svn repository. Put it in pass.php instead!
 // Sign up for keys at http://recaptcha.net/api/getKey
