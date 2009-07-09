@@ -14,16 +14,49 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 //var path = "http://localhost/wikipathways/";
 
-YAHOO.example.treeExample = function() {
+ontologytree = function() {
 
-    var tree;
+        function buildTree() {
+        var tree = new Array();
+        for (var tree_no=0; tree_no<3; tree_no++) {
+          tree[tree_no] = new YAHOO.widget.TreeView(ontologies[tree_no][3]);
+          tree[tree_no].setDynamicLoad(loadNodeData);
+           var root = tree[tree_no].getRoot();
+           var aConcepts = [ontologies[tree_no][0] + " - " + ontologies[tree_no][1]] ;
 
-        function loadNodeData(node, fnLoadComplete)  {
-            
+           for (var i=0, j=aConcepts.length; i<j; i++) {
+                var tempNode = new YAHOO.widget.TextNode(aConcepts[i], root, false);
+				tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
+                tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
+                }
+            tree[tree_no].subscribe("labelClick", function(node) {
+            display_tag(node.label,node.c_id,0);
+            tree[0].destroy();
+            tree[1].destroy();
+            tree[2].destroy();
+            tree = null;
+            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
+	       });
+           tree[tree_no].draw();
+        }
+        }
+
+    return {
+        init: function() {
+            buildTree();
+        }
+    }
+} ();
+
+function loadNodeData(node, fnLoadComplete)  {
+
+            //Get the node's label and urlencode it; this is the word/s
+            //on which we'll search for related words:
      		// encodeURI(node.label);
-            var sUrl = opath + "/wp_proxy.php?concept_id=" + encodeURI(node.c_id);
-            var callback = {
 
+            var ontology_id = get_ontology_id(node.c_id);
+            var sUrl = opath + "/wp_proxy.php?ontology_id=" + ontology_id + "&concept_id=" + encodeURI(node.c_id);
+            var callback = {
                 success: function(oResponse) {
                     YAHOO.log("XHR transaction was successful.", "info", "example");
                     var oResults = YAHOO.lang.JSON.parse(oResponse.responseText);
@@ -43,67 +76,33 @@ YAHOO.example.treeExample = function() {
                             }
                         }
                     }
-
                     oResponse.argument.fnLoadComplete();
                 },
+
                 failure: function(oResponse) {
                     YAHOO.log("Failed to process XHR transaction.", "info", "example");
                     oResponse.argument.fnLoadComplete();
                 },
+
                 argument: {
                     "node": node,
                     "fnLoadComplete": fnLoadComplete
                 },
+
+                //timeout -- if more than 7 seconds go by, we'll abort
+                //the transaction and assume there are no children:
                 timeout: 13000
             };
+
             YAHOO.util.Connect.asyncRequest('GET', sUrl, callback);
         }
 
-        function buildTree() {
-           //create a new tree:
-           tree = new YAHOO.widget.TreeView("treeDiv1");
-
-           //turn dynamic loading on for entire tree:
-           tree.setDynamicLoad(loadNodeData);
-
-           //get root node for tree:
-           var root = tree.getRoot();
-
-           //add child nodes for tree; our top level nodes are
-           var aConcepts = ["Pathway Ontology - PW:0000001"] ;
 
 
-           for (var i=0, j=aConcepts.length; i<j; i++) {
 
-              var tempNode = new YAHOO.widget.MenuNode(aConcepts[i], root, false);
-				tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
-                tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
-                }
-
-            tree.subscribe("labelClick", function(node) {
-            display_tag(node.label,node.c_id,0);
-            tree.destroy();
-            tree = null;
-            YAHOO.util.Event.onDOMReady(YAHOO.example.treeExample.init, YAHOO.example.treeExample,true);
-	       });
-
-           tree.draw();
-        }
-
-
-    return {
-        init: function() {
-            buildTree();
-        }
-
-    }
-} ();
-
-
-function auto_complete ()
-    {
+function auto_complete (){
     // Use an XHRDataSource
-    var oDS = new YAHOO.util.XHRDataSource(opath + "/search_proxy.php");
+    var oDS = new YAHOO.util.XHRDataSource( opath + "/search_proxy.php");
     // Set the responseType
     oDS.responseType = YAHOO.util.XHRDataSource.TYPE_JSON;
     // Define the schema of the JSON results
@@ -113,26 +112,37 @@ function auto_complete ()
     };
     oDS.maxCacheEntries = 15;
     // Instantiate the AutoComplete
-    var oAC = new YAHOO.widget.AutoComplete("myInput", "myContainer", oDS);
-    // Throttle requests sent
-    oAC.queryDelay = 0.2;
-    oAC.minQueryLength = 3;
-    oAC.useShadow = true;
-    // The webservice needs additional parameters
-    oAC.generateRequest = function(sQuery) {
-        return "?search_term=" + sQuery ;
+
+var oConfigs = {
+        prehighlightClassName: "yui-ac-prehighlight",
+        useShadow: true,
+        queryDelay: 0.3,
+        minQueryLength: 3,
+        animVert: .02
+    }
+
+    var oAC1 = new YAHOO.widget.AutoComplete("ontology_Input_1", "ontology_Container_1", oDS, oConfigs);
+    var oAC2 = new YAHOO.widget.AutoComplete("ontology_Input_2", "ontology_Container_2", oDS, oConfigs);
+    var oAC3 = new YAHOO.widget.AutoComplete("ontology_Input_3", "ontology_Container_3", oDS, oConfigs);
+
+  oAC1.generateRequest = function(sQuery) {
+        return "?search_term=" + sQuery + "&ontology_id=" + ontologies[0][2] ;
     };
+  oAC2.generateRequest = function(sQuery) {
+        return "?search_term=" + sQuery + "&ontology_id=" + ontologies[1][2] ;
+    }
+  oAC3.generateRequest = function(sQuery) {
+        return "?search_term=" + sQuery + "&ontology_id=" + ontologies[2][2] ;
+    }
 
 var itemSelectHandler = function(sType, aArgs) {
-	YAHOO.log(sType); // this is a string representing the event;
-				      // e.g., "itemSelectEvent"
 	var oMyAcInstance = aArgs[0]; // your AutoComplete instance
 	var elListItem = aArgs[1]; // the <li> element selected in the suggestion
 	   					       // container
 	var oData = aArgs[2]; // object literal of data for the result
     if(aArgs[2][0] == "No results !")
         {
-            
+
         }
     else
         {
@@ -140,16 +150,20 @@ var itemSelectHandler = function(sType, aArgs) {
         }
 };
 
-//subscribe your handler to the event, assuming
-//you have an AutoComplete instance myAC:
-oAC.itemSelectEvent.subscribe(itemSelectHandler);
 
+
+oAC1.itemSelectEvent.subscribe(itemSelectHandler);
+oAC2.itemSelectEvent.subscribe(itemSelectHandler);
+oAC3.itemSelectEvent.subscribe(itemSelectHandler);
     return {
         oDS: oDS,
-        oAC: oAC
+        oAC1: oAC1,
+        oAC2: oAC2,
+        oAC3: oAC3
     };
-
 }
+
+
 var out = " ";
 var opentag_id = -1;
 var div = document.getElementById('otags');
@@ -160,6 +174,12 @@ var title = wgPageName;
 var tags = new Array();
 var old_tags = new Array();
 var timeout = null;
+var ontologies = new Array(3);
+ontologies[0] = ["Biological Process","GO:0008150",1070,"treeDiv1"];
+ontologies[1] = ["Pathway Ontology","PW:0000001",1035,"treeDiv2"];
+ontologies[2] = ["Disease","DOID:4",1009,"treeDiv3"];
+
+
 var handleSuccess = function(o){
 
     if(o.responseText.lastIndexOf("php")>0 || o.responseText.lastIndexOf("exception")>0)
@@ -182,13 +202,13 @@ var handleSuccess = function(o){
                         var json_result = YAHOO.lang.JSON.parse(o.responseText);
                         for(i=0;i<json_result.Resultset.length;i++)
                         {
-                            tags[i]=new Array(json_result.Resultset[i].term,json_result.Resultset[i].term_id," ","no");
+                            tags[i]=new Array(json_result.Resultset[i].term,json_result.Resultset[i].term_id,json_result.Resultset[i].ontology,"no");
                         }
                         display_tags();
                     }
                     else
                     {
-                        div.innerHTML = "No Tags yet !";
+                        display_tags();
                     }
                 }
         }
@@ -210,17 +230,16 @@ var callback =
 
 
 
-function makeRequest(){
+function makeRequest(comment){
     disable_save(100);
     document.getElementById('test1').innerHTML = "<br>";
-    var str = "";
     var no_tags = 0;
     var res_array = new Array();
     for(i=0;i<tags.length;i++)
         {
             if(tags[i][3] == "no" && tags[i][0] != "")
                 {
-                res_array[no_tags] = new Array(tags[i][0],tags[i][1]);
+                res_array[no_tags] = new Array(tags[i][0],tags[i][1],tags[i][2]);
                 no_tags++;
                 }
         }
@@ -232,12 +251,48 @@ function makeRequest(){
     else
         var res_json = YAHOO.lang.JSON.stringify(res_array);
 
-    var postData =  "title=" + wgTitle + "&tag=" + res_json;
+    var postData =  "title=" + wgTitle + "&tag=" + res_json + "&comment=" + comment;
     var request = YAHOO.util.Connect.asyncRequest('POST', opath + "/otags.php", callback, postData);
 //	setTimeout("gettags()",2000);
 
 }
 
+function get_ontology_name(tag_id)
+{
+        switch(tag_id.substring(0,2))
+            {
+                case "PW":
+                    ontology_name = "Pathway Ontology";
+                    break;
+                case "GO":
+                    ontology_name = "Biological Process";
+                    break;
+                case "DO":
+                    ontology_name = "Disease";
+                    break;
+                default:
+                    ontology_name = "Unknown";
+                    break;
+            }
+            return ontology_name;
+}
+
+function get_ontology_id(tag_id)
+{
+        switch(tag_id.substring(0,2))
+            {
+                case "PW":
+                    ontology_id = ontologies[1][2];
+                    break;
+                case "GO":
+                    ontology_id = ontologies[0][2];
+                    break;
+                case "DO":
+                    ontology_id = ontologies[2][2];
+                    break;
+            }
+            return ontology_id;
+}
 
 function gettags() {
     
@@ -252,43 +307,50 @@ function gettags() {
     setTimeout("auto_complete()",2000);
     } ();
 
+
 function display_tags(){
 
-    out = "";
-    for(i=0;i<tags.length;i++)
+    out = [" "," "," "];
+    var output = "";
+    for(j=0;j<ontologies.length;j++)
         {
-            if(tags[i][0] !="" && tags[i][3] !="yes")
-            {
-                
-                    out += "<a href='javascript:display_tag(\"" + tags[i][0] + "\",\"" + tags[i][1] + "\","+(i+1)+",\"no\");'>" + tags[i][0] + "</a>";
-
-                if( (i+1) < tags.length)
+            for(i=0;i<tags.length;i++)
+                {
+                    if(tags[i][0] !="" && tags[i][3] !="yes" && tags[i][2] == ontologies[j][0])
                     {
-                        out += ", ";
+
+                        out[j] += "<a href='javascript:display_tag(\"" + tags[i][0] + "\",\"" + tags[i][1] + "\","+(i+1)+",\"no\");'>" + tags[i][0] + "</a>";
+                        if( (i+1) < tags.length && tags[i+1][2] == ontologies[j][0])
+                            {
+                                out[j] += ", ";
+                            }
                     }
-            }
+                }
         }
 
-    if( out == "")
-        out = "No Tags yet!"
-    div.innerHTML =  out ;
-    enable_save(25);
-}
-
+    for(j=0;j<ontologies.length;j++)
+        {
+            if( out[j] == " ")
+                out[j] = "No Tags yet!";
+            output += "<b>" + ontologies[j][0] + "</b> : " + out[j] + "<br>";
+        }
+            div.innerHTML =  output;
+            enable_save(25);
+        
 //addOnloadHook(
 //    function () {
 //        addTab("javascript:doQwikify()", "wikify", "ca-wikify", "Mark for wikification");
 //    }
 //);
-
+}
 
 function add_tag(concept,concept_id)
 {
     var len = tags.length;
-    tags[len]=new Array(concept,concept_id," ","no");
-    document.getElementById('myInput').value = 'type here...';
+    var ontology_name = get_ontology_name(concept_id);
+    tags[len]=new Array(concept,concept_id,ontology_name,"no");
     tag_close();
-    makeRequest();
+    makeRequest("Added tag : " + concept + " (" + ontology_name + ")");
 }
 
 function display_tag(concept,concept_id,id,check){
@@ -321,7 +383,7 @@ else
         opentag_id = -1;
     }
 
-document.getElementById('myInput').value = 'type here...';
+
 document.getElementById('test1').innerHTML = output;
 }
 
@@ -329,6 +391,7 @@ function tag_close()
 {
     opentag_id = -1;
     document.getElementById('test1').innerHTML = "<br>";
+    clear_box(1);
 }
 
 function delete_tags(index)
@@ -336,16 +399,26 @@ function delete_tags(index)
     old_tags = YAHOO.lang.JSON.parse(YAHOO.lang.JSON.stringify(tags));
     tag_close();
     tags[index][3]="yes";
-    makeRequest();
+    var ontology_name = get_ontology_name(tags[index][1]);
+    makeRequest("Deleted tag : " + tags[index][0] + " (" + ontology_name + ")");
 }
 
-
-function clear_box()
+function clear_box(id)
 {
-    if(document.getElementById('myInput').value == 'type here...' || document.getElementById('myInput').value == 'No results !')
+    if(id == 1)
         {
-            document.getElementById('myInput').value='';
+            document.getElementById("ontology_Input_1").value = 'type here...';
+            document.getElementById("ontology_Input_2").value = 'type here...';
+            document.getElementById("ontology_Input_3").value = 'type here...';
         }
+        else
+            {
+                if(document.getElementById(id).value == 'type here...' || document.getElementById(id).value == 'No results !')
+                    {
+                        document.getElementById(id).value='';
+                    }
+            }
+       
 }
 
 function enable_save(opacity)
