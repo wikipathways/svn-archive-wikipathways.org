@@ -60,19 +60,19 @@ $output = <<<HTML
 <tr valign="top">
 <td>
 <div id= "myAutoComplete_1" class="myAutoComplete">
-<input id="ontology_Input_1" type="text" value="type here..." onfocus="clear_box(this.id, this.value);" >
+<input id="ontology_Input_1" type="text" value="..." onfocus="clear_box(this.id, this.value);" >
 <div id="ontology_Container_1"></div>
 </div>
 </td>
 <td>
 <div id= "myAutoComplete_2" class="myAutoComplete">
-<input id="ontology_Input_2" type="text" value="type here..." onfocus="clear_box(this.id, this.value);" >
+<input id="ontology_Input_2" type="text" value="..." onfocus="clear_box(this.id, this.value);" >
 <div id="ontology_Container_2"></div>
 </div>
 </td>
 <td>
 <div id= "myAutoComplete_3" class="myAutoComplete">
-<input id="ontology_Input_3" type="text" value="type here..." onfocus="clear_box(this.id, this.value);" >
+<input id="ontology_Input_3" type="text" value="..." onfocus="clear_box(this.id, this.value);" >
 <div id="ontology_Container_3"></div>
 </div>
 </td></tr>
