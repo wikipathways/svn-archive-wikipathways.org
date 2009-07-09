@@ -407,13 +407,13 @@ function clear_box(id)
 {
     if(id == 1)
         {
-            document.getElementById("ontology_Input_1").value = 'type here...';
-            document.getElementById("ontology_Input_2").value = 'type here...';
-            document.getElementById("ontology_Input_3").value = 'type here...';
+            document.getElementById("ontology_Input_1").value = '...';
+            document.getElementById("ontology_Input_2").value = '...';
+            document.getElementById("ontology_Input_3").value = '...';
         }
         else
             {
-                if(document.getElementById(id).value == 'type here...' || document.getElementById(id).value == 'No results !')
+                if(document.getElementById(id).value == '...' || document.getElementById(id).value == 'No results !')
                     {
                         document.getElementById(id).value='';
                     }
