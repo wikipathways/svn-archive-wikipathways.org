@@ -173,6 +173,7 @@ var handleSuccess = function(o){
             div.innerHTML = "<pre><b><font color='red'>Error ! </font></b></br>" + o.responseText + "</pre>" ;
             enable_save();
         }
+        
     //if(tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);)
     else
         {
@@ -332,11 +333,18 @@ function display_tags(){
 
 function add_tag(concept,concept_id)
 {
-    var len = tags.length;
-    var ontology_name = get_ontology_name(concept_id);
-    tags[len]=new Array(concept,concept_id,ontology_name,"no");
-    tag_close();
-    makeRequest("Added tag : " + concept + " (" + ontology_name + ")");
+    if(tags.toString().indexOf(concept_id)>0)
+        {
+            document.getElementById('test1').innerHTML = "<div class='otag'><font color='red'>Error : The pathway is already tagged with this term !</font><br><a title='Close' href='javascript:tag_close();'><img src='" + opath + "/cancel.png' /></a><br></div>";
+        }
+    else
+        {
+            var len = tags.length;
+            var ontology_name = get_ontology_name(concept_id);
+            tags[len]=new Array(concept,concept_id,ontology_name,"no");
+            tag_close();
+            makeRequest("Added tag : " + concept + " (" + ontology_name + ")");
+        }
 }
 
 function display_tag(concept,concept_id,id,check){
@@ -353,7 +361,7 @@ if(opentag_id != concept_id)
                 if(check == "no")
                     {
                         output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/apply.png' /></a>&nbsp;";
-                        output += "<a title='Remove' href='javascript:delete_tags(" + (id-1) +  ");'><img src='" + opath + "/cancel.png' /></a><br></div>";
+                        output += "<a title='Remove' href='javascript:delete_tags(" + (id-1) +  ");'><img src='" + opath + "/delete.png' /></a><br></div>";
                     }
             }
         else
