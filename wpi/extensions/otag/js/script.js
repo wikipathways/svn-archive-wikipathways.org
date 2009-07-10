@@ -17,30 +17,31 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 ontologytree = function() {
 
         function buildTree() {
-        var tree = new Array();
-        for (var tree_no=0; tree_no<3; tree_no++) {
-          tree[tree_no] = new YAHOO.widget.TreeView(ontologies[tree_no][3]);
-          tree[tree_no].setDynamicLoad(loadNodeData);
-           var root = tree[tree_no].getRoot();
-           var aConcepts = [ontologies[tree_no][0] + " - " + ontologies[tree_no][1]] ;
+
+           var tree;
+           tree = new YAHOO.widget.TreeView("treeDiv1");
+           tree.setDynamicLoad(loadNodeData);
+           var root = tree.getRoot();
+           var aConcepts = ["Biological Process - GO:0008150","Pathway Ontology - PW:0000001","Disease - DOID:4"] ;
 
            for (var i=0, j=aConcepts.length; i<j; i++) {
-                var tempNode = new YAHOO.widget.TextNode(aConcepts[i], root, false);
+
+              var tempNode = new YAHOO.widget.TextNode(aConcepts[i], root, false);
 				tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
                 tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
                 }
-            tree[tree_no].subscribe("labelClick", function(node) {
-            display_tag(node.label,node.c_id,0);
-            tree[0].destroy();
-            tree[1].destroy();
-            tree[2].destroy();
-            tree = null;
-            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
-	       });
-           tree[tree_no].draw();
-        }
-        }
 
+           // var tempNode = new YAHOO.widget.TextNode('This is a leaf node', root, false);
+           // tempNode.isLeaf = true;
+
+            tree.subscribe("labelClick", function(node) {
+            display_tag(node.label,node.c_id,0);
+            tree.destroy();
+            tree = null;
+            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
+	       })
+           tree.draw();
+        }
     return {
         init: function() {
             buildTree();
@@ -98,70 +99,55 @@ function loadNodeData(node, fnLoadComplete)  {
         }
 
 
-
-
 function auto_complete (){
-    // Use an XHRDataSource
-    var oDS = new YAHOO.util.XHRDataSource( opath + "/search_proxy.php");
+   var oDS = new YAHOO.util.XHRDataSource( opath + "/search_proxy.php");
     // Set the responseType
     oDS.responseType = YAHOO.util.XHRDataSource.TYPE_JSON;
     // Define the schema of the JSON results
     oDS.responseSchema = {
         resultsList : "ResultSet.Result",
-        fields : ["label","id"]
+        fields : ["label","id","ontology"]
     };
     oDS.maxCacheEntries = 15;
     // Instantiate the AutoComplete
+    var oAC = new YAHOO.widget.AutoComplete("myInput", "myContainer", oDS);
+    // Throttle requests sent
+    oAC.queryDelay = 0.2;
+    oAC.minQueryLength = 3;
+    oAC.useShadow = true;
+    oAC.prehighlightClassName = "yui-ac-prehighlight";
 
-var oConfigs = {
-        prehighlightClassName: "yui-ac-prehighlight",
-        useShadow: true,
-        queryDelay: 0.3,
-        minQueryLength: 3,
-        animVert: .02
-    }
-
-    var oAC1 = new YAHOO.widget.AutoComplete("ontology_Input_1", "ontology_Container_1", oDS, oConfigs);
-    var oAC2 = new YAHOO.widget.AutoComplete("ontology_Input_2", "ontology_Container_2", oDS, oConfigs);
-    var oAC3 = new YAHOO.widget.AutoComplete("ontology_Input_3", "ontology_Container_3", oDS, oConfigs);
-
-  oAC1.generateRequest = function(sQuery) {
-        return "?search_term=" + sQuery + "&ontology_id=" + ontologies[0][2] ;
+    // The webservice needs additional parameters
+    oAC.generateRequest = function(sQuery) {
+        return "?search_term=" + sQuery ;
     };
-  oAC2.generateRequest = function(sQuery) {
-        return "?search_term=" + sQuery + "&ontology_id=" + ontologies[1][2] ;
-    }
-  oAC3.generateRequest = function(sQuery) {
-        return "?search_term=" + sQuery + "&ontology_id=" + ontologies[2][2] ;
-    }
+
+    oAC.resultTypeList = false;
+    // Customize formatter to show thumbnail images
+    oAC.formatResult = function(oResultData, sQuery, sResultMatch) {
+
+         return  "<em>" + oResultData.label + "</em><br />" + oResultData.ontology ;
+    };
 
 var itemSelectHandler = function(sType, aArgs) {
-	var oMyAcInstance = aArgs[0]; // your AutoComplete instance
-	var elListItem = aArgs[1]; // the <li> element selected in the suggestion
-	   					       // container
 	var oData = aArgs[2]; // object literal of data for the result
-    if(aArgs[2][0] == "No results !")
+    if(oData.label == "No results !")
         {
-
         }
     else
         {
-            display_tag(aArgs[2][0],aArgs[2][1],0);
+            display_tag(oData.label,oData.id,0);
         }
 };
 
+oAC.itemSelectEvent.subscribe(itemSelectHandler);
 
-
-oAC1.itemSelectEvent.subscribe(itemSelectHandler);
-oAC2.itemSelectEvent.subscribe(itemSelectHandler);
-oAC3.itemSelectEvent.subscribe(itemSelectHandler);
     return {
         oDS: oDS,
-        oAC1: oAC1,
-        oAC2: oAC2,
-        oAC3: oAC3
+        oAC: oAC
     };
 }
+
 
 
 var out = " ";
@@ -407,9 +393,7 @@ function clear_box(id)
 {
     if(id == 1)
         {
-            document.getElementById("ontology_Input_1").value = '...';
-            document.getElementById("ontology_Input_2").value = '...';
-            document.getElementById("ontology_Input_3").value = '...';
+            document.getElementById('myInput').value = '...';
         }
         else
             {

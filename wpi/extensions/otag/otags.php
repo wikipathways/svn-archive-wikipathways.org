@@ -156,11 +156,6 @@ $pathway = Pathway::newFromTitle($title);
 return $pathway;
 }
 
-function get_tag_ontology()
-{
-global $title;
-$pathway = Pathway::newFromTitle($title);
-return $pathway;
-}
+
 
 ?>
