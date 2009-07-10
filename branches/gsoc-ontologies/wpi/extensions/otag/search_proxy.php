@@ -3,7 +3,7 @@
 if(isset($_GET['ontology_id']))
 $ontology_id = $_GET['ontology_id'];
 else
-$ontology_id = 1035;
+$ontology_id = "1070,1035,1009";
 
 if(isset($_GET['search_term']))
 $search_term = $_GET['search_term'];
@@ -65,6 +65,7 @@ foreach($xml->data->page->contents->searchResultList->searchBean as $search_resu
             //print_r((string)$search_result->contents);
             $res_array[$count]->label = str_replace('"','',(string)$search_result->contents);
         	$res_array[$count]->id = str_replace('"','',(string)$search_result->conceptId);
+            $res_array[$count]->ontology = (string)$search_result->ontologyDisplayLabel;
             //echo '<a href="' . proxy_url($ontology_id ,$sub_concepts->id ).'">'.$sub_concepts->label . "</a>";
             //echo " " . $sub_concepts->relations->entry->int . "<br/>";
             $count++;

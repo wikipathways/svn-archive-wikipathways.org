@@ -55,39 +55,12 @@ $output = <<<HTML
 <div id="ontology_container" class="yui-skin-sam">
 <div id="otags">Loading ... </div>
 <div id="test1">&nbsp;</div>
-<div id="ontology_AutoComplete" class="yui-skin-sam">
-<table width="100%" >
-<tr valign="top">
-<td>
-<div id= "myAutoComplete_1" class="myAutoComplete">
-<input id="ontology_Input_1" type="text" value="..." onfocus="clear_box(this.id, this.value);" >
-<div id="ontology_Container_1"></div>
+<div id="myAutoComplete">
+<input id="myInput" type="text" value="..." onfocus="clear_box(this.id);" >
+<div id="myContainer"></div>
 </div>
-</td>
-<td>
-<div id= "myAutoComplete_2" class="myAutoComplete">
-<input id="ontology_Input_2" type="text" value="..." onfocus="clear_box(this.id, this.value);" >
-<div id="ontology_Container_2"></div>
-</div>
-</td>
-<td>
-<div id= "myAutoComplete_3" class="myAutoComplete">
-<input id="ontology_Input_3" type="text" value="..." onfocus="clear_box(this.id, this.value);" >
-<div id="ontology_Container_3"></div>
-</div>
-</td></tr>
-<tr><td></hr></td><td></hr></td><td></hr></td></tr>
-<tr><td><hr width="50%"></td><td><hr width="50%"></td><td><hr width="50%"></td></tr>
-<tr valign="top">
-<td>
-<div id="treeDiv1" class="treeDiv"></div>
-</td>
-<td>
-<div id="treeDiv2" class="treeDiv"></div>
-</td>
-<td>
-<div id="treeDiv3" class="treeDiv"></div>
-</td></tr></table></div>
+<hr width="10%">
+<div id="treeDiv1"></div>
 </div>
 <link rel="stylesheet" type="text/css" href="$opath/otag.css" />
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/autocomplete/assets/skins/sam/autocomplete.css" />
