@@ -218,7 +218,7 @@ var callback =
 
 
 function makeRequest(comment){
-    disable_save(100);
+   // disable_save(100);
     document.getElementById('test1').innerHTML = "<br>";
     var no_tags = 0;
     var res_array = new Array();
@@ -322,7 +322,7 @@ function display_tags(){
             output += "<b>" + ontologies[j][0] + "</b> : " + out[j] + "<br>";
         }
             div.innerHTML =  output;
-            enable_save(25);
+           // enable_save(25);
         
 //addOnloadHook(
 //    function () {
