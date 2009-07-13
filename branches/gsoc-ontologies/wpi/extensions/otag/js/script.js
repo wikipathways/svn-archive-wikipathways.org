@@ -162,9 +162,8 @@ var old_tags = new Array();
 var timeout = null;
 var ontologies = new Array(3);
 ontologies[0] = ["Pathway Ontology","PW:0000001",1035,39997];
-ontologies[1] = ["Cell Type","CL:0000000",1006,40177];
-ontologies[2] = ["Disease","DOID:4",1009,40256];
-
+ontologies[1] = ["Disease","DOID:4",1009,40256];
+ontologies[2] = ["Cell Type","CL:0000000",1006,40177];
 
 var handleSuccess = function(o){
 
@@ -272,10 +271,10 @@ function get_ontology_id(type,tag_id)
                 case "PW":
                     ontology_id = ontologies[0][3];
                     break;
-                case "CL":
+                case "DO":
                     ontology_id = ontologies[1][3];
                     break;
-                case "DO":
+                case "CL":
                     ontology_id = ontologies[2][3];
                     break;
             }
@@ -285,10 +284,10 @@ function get_ontology_id(type,tag_id)
                 case "PW":
                     ontology_id = ontologies[0][2];
                     break;
-                case "CL":
+                case "DO":
                     ontology_id = ontologies[1][2];
                     break;
-                case "DO":
+                case "CL":
                     ontology_id = ontologies[2][2];
                     break;
             }
