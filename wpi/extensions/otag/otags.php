@@ -117,8 +117,8 @@ switch ( substr($id,0,2) )
     case "PW":
         $ontology_id = 1035;
         break;
-    case "GO":
-        $ontology_id = 1070;
+    case "CL":
+        $ontology_id = 1006;
         break;
     case "DO":
         $ontology_id = 1009;
@@ -134,7 +134,7 @@ while($row = $dbr->fetchObject($res))
 
 if($path == null)
 {
-$xml = simplexml_load_file("http://rest.bioontology.org/bioportal/virtual/rootpath/$ontology_id/$id?email=chetan1@gmail.com");
+$xml = @simplexml_load_file("http://rest.bioontology.org/bioportal/virtual/rootpath/$ontology_id/$id?email=chetan1@gmail.com");
 if($xml->data->list->classBean->relations->entry)
 {
 foreach($xml->data->list->classBean->relations->entry as $entry )
