@@ -3,7 +3,7 @@
 if(isset($_GET['ontology_id']))
 $ontology_id = $_GET['ontology_id'];
 else
-$ontology_id = "1070,1035,1009";
+$ontology_id = "1006,1035,1009";
 
 if(isset($_GET['search_term']))
 $search_term = $_GET['search_term'];

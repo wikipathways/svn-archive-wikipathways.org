@@ -22,7 +22,7 @@ ontologytree = function() {
            tree = new YAHOO.widget.TreeView("treeDiv1");
            tree.setDynamicLoad(loadNodeData);
            var root = tree.getRoot();
-           var aConcepts = ["Biological Process - GO:0008150","Pathway Ontology - PW:0000001","Disease - DOID:4"] ;
+           var aConcepts = [ontologies[0][0] + " - " + ontologies[0][1],ontologies[1][0] + " - " + ontologies[1][1],ontologies[2][0] + " - " + ontologies[2][1]] ;
 
            for (var i=0, j=aConcepts.length; i<j; i++) {
 
@@ -55,7 +55,7 @@ function loadNodeData(node, fnLoadComplete)  {
             //on which we'll search for related words:
      		// encodeURI(node.label);
 
-            var ontology_id = get_ontology_id(node.c_id);
+            var ontology_id = get_ontology_id(0,node.c_id);
             var sUrl = opath + "/wp_proxy.php?ontology_id=" + ontology_id + "&concept_id=" + encodeURI(node.c_id);
             var callback = {
                 success: function(oResponse) {
@@ -161,10 +161,9 @@ var tags = new Array();
 var old_tags = new Array();
 var timeout = null;
 var ontologies = new Array(3);
-ontologies[0] = ["Biological Process","GO:0008150",1070,"treeDiv1"];
-ontologies[1] = ["Pathway Ontology","PW:0000001",1035,"treeDiv2"];
-ontologies[2] = ["Disease","DOID:4",1009,"treeDiv3"];
-
+ontologies[0] = ["Cell Type","CL:0000000",1006,40177];
+ontologies[1] = ["Disease","DOID:4",1009,40256];
+ontologies[2] = ["Pathway Ontology","PW:0000001",1035,39997];
 
 var handleSuccess = function(o){
 
@@ -218,7 +217,7 @@ var callback =
 
 
 function makeRequest(comment){
-   // disable_save(100);
+    disable_save(100);
     document.getElementById('test1').innerHTML = "<br>";
     var no_tags = 0;
     var res_array = new Array();
@@ -251,8 +250,8 @@ function get_ontology_name(tag_id)
                 case "PW":
                     ontology_name = "Pathway Ontology";
                     break;
-                case "GO":
-                    ontology_name = "Biological Process";
+                case "CL":
+                    ontology_name = "Cell Type";
                     break;
                 case "DO":
                     ontology_name = "Disease";
@@ -264,20 +263,35 @@ function get_ontology_name(tag_id)
             return ontology_name;
 }
 
-function get_ontology_id(tag_id)
+function get_ontology_id(type,tag_id)
 {
+    if(type == "version")
         switch(tag_id.substring(0,2))
             {
                 case "PW":
-                    ontology_id = ontologies[1][2];
+                    ontology_id = ontologies[2][3];
                     break;
-                case "GO":
+                case "CL":
+                    ontology_id = ontologies[0][3];
+                    break;
+                case "DO":
+                    ontology_id = ontologies[1][3];
+                    break;
+            }
+    else
+        switch(tag_id.substring(0,2))
+            {
+                case "PW":
+                    ontology_id = ontologies[2][2];
+                    break;
+                case "CL":
                     ontology_id = ontologies[0][2];
                     break;
                 case "DO":
-                    ontology_id = ontologies[2][2];
+                    ontology_id = ontologies[1][2];
                     break;
             }
+        
             return ontology_id;
 }
 
@@ -322,7 +336,7 @@ function display_tags(){
             output += "<b>" + ontologies[j][0] + "</b> : " + out[j] + "<br>";
         }
             div.innerHTML =  output;
-           // enable_save(25);
+            enable_save(25);
         
 //addOnloadHook(
 //    function () {
@@ -348,11 +362,13 @@ function add_tag(concept,concept_id)
 }
 
 function display_tag(concept,concept_id,id,check){
-// div.innerHTML=tags + "blah";
+
+
 if(opentag_id != concept_id)
     {
+        ontology_version_id = get_ontology_id("version",concept_id);
         var output = " ";
-        var url = "http://bioportal.bioontology.org/visualize/39997/" + concept_id;
+        var url = "http://bioportal.bioontology.org/visualize/" + ontology_version_id + "/" + concept_id;
         output="<div class='otag'><b>Term</b> : " + concept + "<br/><b>ID</b> : " + concept_id + "<br/>"
             + "<a href='" + url + "' target='_blank'><img src='" + opath + "/info.png'></a>&nbsp;"
        // "<input type='hidden' id='concept' value='" + concept + "'> <br/>";
@@ -418,50 +434,50 @@ function enable_save(opacity)
     if(opacity == null)
         opacity = 20;
     document.getElementById('otagprogress').style.display = "none";
-    if(timeout != null)
-        {
-            clearTimeout(timeout);
-        }
-
-    if(opacity != 100)
-        {
-            
-            if(otagroot.style.MozOpacity == null)
-                {
-                    opacity += 5;
-                    otagroot.style.filter = 'alpha(opacity=' + opacity + ')';
-
-
-                }
-            else
-                {
-                    opacity += 5;
-                    otagroot.style.MozOpacity = opacity/100 ;
-                    // document.getElementById('test1').innerHTML = opacity/100;
-                }
-            timeout = setTimeout(function(){enable_save(opacity); opacity = null},200);
-        }
+//    if(timeout != null)
+//        {
+//            clearTimeout(timeout);
+//        }
+//
+//    if(opacity != 100)
+//        {
+//
+//            if(otagroot.style.MozOpacity == null)
+//                {
+//                    opacity += 5;
+//                    otagroot.style.filter = 'alpha(opacity=' + opacity + ')';
+//
+//
+//                }
+//            else
+//                {
+//                    opacity += 5;
+//                    otagroot.style.MozOpacity = opacity/100 ;
+//                    // document.getElementById('test1').innerHTML = opacity/100;
+//                }
+//            timeout = setTimeout(function(){enable_save(opacity); opacity = null},200);
+//        }
 }
 
 function disable_save(opacity)
 {
     document.getElementById('otagprogress').style.display = "block";
-    if(timeout != null)
-        {
-            clearTimeout(timeout);
-        }
-
-    if(opacity != 25)
-        {
-            if(otagroot.style.MozOpacity == null)
-                {
-                    opacity -= 5;
-                }
-            else
-                {
-                    opacity -= 5;
-                    otagroot.style.MozOpacity = opacity/100 ;
-                }
-            timeout = setTimeout(function(){disable_save(opacity); opacity = null},150);
-        }
+//    if(timeout != null)
+//        {
+//            clearTimeout(timeout);
+//        }
+//
+//    if(opacity != 25)
+//        {
+//            if(otagroot.style.MozOpacity == null)
+//                {
+//                    opacity -= 5;
+//                }
+//            else
+//                {
+//                    opacity -= 5;
+//                    otagroot.style.MozOpacity = opacity/100 ;
+//                }
+//            timeout = setTimeout(function(){disable_save(opacity); opacity = null},150);
+//        }
 }
