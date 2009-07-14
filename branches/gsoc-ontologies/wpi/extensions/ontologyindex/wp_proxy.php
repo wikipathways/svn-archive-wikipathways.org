@@ -48,7 +48,12 @@ foreach($xml->data->classBean->relations->entry as $entry )
         {
    			$exact_match = no_paths("exact",$ontology_id,$sub_concepts->id);
             $path_match = no_paths("any",$ontology_id,$sub_concepts->id);
+
+            if($_GET['mode'] == "tree")
             $total_match = $exact_match . "/" . ( $path_match + $exact_match );
+            else
+            $total_match = ( $path_match + $exact_match );
+
             $temp_var = $sub_concepts->label ." (" . $total_match .") - " . $sub_concepts->id;
             if($sub_concepts->relations->entry->int == "0")
             $temp_var .="||";
@@ -87,16 +92,15 @@ while($row=mysql_fetch_array($sql))
 		{
             $count++;
         }
-       //$path = $entry->string[1];   
+ 
 return $count;
 }
 
 function url($ontology_id ,$concept_id)
     {
-   $mail = "chetan1@gmail.com";
-   $uri = "http://rest.bioontology.org/bioportal/virtual";
-   return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?" . $mail ;
-
+        $mail = "chetan1@gmail.com";
+        $uri = "http://rest.bioontology.org/bioportal/virtual";
+        return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?" . $mail ;
     }
 
 ?> 
