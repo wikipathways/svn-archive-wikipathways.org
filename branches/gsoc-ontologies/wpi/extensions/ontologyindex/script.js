@@ -2,8 +2,9 @@ var server_url = wgServer + wgScript + "/Special:Ontology_Index?mode=";
 
 var ontologies = new Array(3);
 ontologies[0] = ["Pathway Ontology",1035,"PW:0000001"];
-ontologies[1] = ["Cell Type",1006,"CL:0000000"];
-ontologies[2] = ["Disease",1009,"DOID:4"];
+ontologies[1] = ["Disease",1009,"DOID:4"];
+ontologies[2] = ["Cell Type",1006,"CL:0000000"];
+
 var last_select = null;
 
 var top_level_terms = new Array(3);
