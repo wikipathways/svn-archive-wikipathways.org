@@ -183,7 +183,9 @@ class ontologyindex extends SpecialPage {
                          <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
                          <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js"></script>
                          <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/treeview/treeview-min.js"></script>
-                         <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>');
+                         <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>
+                         <script src="http://yui.yahooapis.com/2.7.0/build/yahoo/yahoo-min.js"></script>
+                         <script src="http://yui.yahooapis.com/2.7.0/build/event/event-min.js"></script>');
         $wgOut->addHTML("<div id='index_container'></div>");
         $wgOut->addScript(
             "<script type='text/javascript'>var opath=\"$opath\";</script>"
