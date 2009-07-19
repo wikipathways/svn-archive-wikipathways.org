@@ -6,7 +6,7 @@
     margin-bottom: 10px;
     border:1px solid black;
 }
-#ontology_list {
+#container_left {
    float: left;
    border:1px solid black;
    padding : 5px 15px 0 15px;
@@ -14,7 +14,10 @@
 #ontology_list li {
     cursor:pointer;
 }
-#treeDiv {
+#species_list li {
+    cursor:pointer;
+}
+#container_right {
     width: 600px; margin-left: auto; margin-right: auto;
     border:1px solid black;
     padding: 10px 0 10px 25px;
