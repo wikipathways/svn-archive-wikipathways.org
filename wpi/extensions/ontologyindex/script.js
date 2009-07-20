@@ -34,7 +34,6 @@ addOnloadHook(
 function init_ontology_list()
 {
    document.getElementById("ontology_list").innerHTML = "<font size='4'><b>Ontologies :</b></font><br>" ;
-   fetch_ontology_list(0);
    get_species();
 }
 
@@ -157,6 +156,10 @@ function set_species(specie)
            document.getElementById(specie).style.color = "#FF0000";
            document.getElementById(specie).style.fontWeight = "bold";
            last_select_species = specie;
+           document.getElementById("ontology_list").innerHTML = "<font size='4'><b>Ontologies :</b></font><br>" ;
+           document.getElementById("treeDiv").innerHTML = "Please select a top level Ontology term !";
+           document.getElementById("pathway_list").innerHTML = "";
+           fetch_ontology_list(0);
 }
 
 
@@ -178,18 +181,23 @@ function create_tree(root_id,id)
            last_select = id;
            document.getElementById(id).style.color = "#FF0000";
            document.getElementById(id).style.fontWeight = "bold";
-           var tempNode = new YAHOO.widget.TextNode(aConcepts, root, false);
+           var tempNode = new YAHOO.widget.TextNode(aConcepts, root, tree);
            tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
            tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
            tree.draw();
 
            tree.subscribe("labelClick", function(node) {
             get_pathways(node.label,node.c_id);
-            
+
 //            tree.destroy();
 //            tree = null;
 //            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
 	       })
+
+            tree.subscribe("expand", function(node) {
+                get_pathways(node.label,node.c_id);
+                // return false; // return false to cancel the expand
+            });
 
     return {
         init: function() {
@@ -206,7 +214,6 @@ function create_tree(root_id,id)
 
             var ontology_id = get_ontology_id(node.c_id);
             var sUrl = opath + "/wp_proxy.php?action=tree&mode=tree&ontology_id=" + ontology_id + "&concept_id=" + encodeURI(node.c_id) + "&species=" + species;
-            document.getElementById("pathway_list").innerHTML = "";
             var callback = {
                 success: function(oResponse) {
                     var oResults = YAHOO.lang.JSON.parse(oResponse.responseText);
