@@ -137,6 +137,8 @@ function fetch_pathways()
     $xml = simplexml_load_file(url($ontology_id ,$concept_id));
     fetch_terms();
     $res_arr["ResultSet"]["Result"]=$res_array;
+    if($res_array != null)
+    {
     foreach($res_array as $term)
     {
     $id = str_replace("||", "", substr($term, strpos($term," - ")+3));
@@ -154,6 +156,7 @@ function fetch_pathways()
             echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . fetch_pathway_name($row->pw_id) . "<br>";
         }
     }
+    }
     //sort($res_array);
 }
 
@@ -167,7 +170,7 @@ function url($ontology_id ,$concept_id)
 function fetch_pathway_name($title)
 {
     $p = Pathway::newFromTitle($title);
-    return "<b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b>";
+    return "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
 }
 function fetch_pathway_species($title)
 {
