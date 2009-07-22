@@ -167,6 +167,7 @@ function create_tree(root_id,id)
 {
 
            var tree;
+
            tree = new YAHOO.widget.TreeView("treeDiv");
            tree.setDynamicLoad(loadNodeData);
            var root = tree.getRoot();
@@ -184,6 +185,10 @@ function create_tree(root_id,id)
            var tempNode = new YAHOO.widget.TextNode(aConcepts, root, tree);
            tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
            tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
+
+           // display the pathways
+           get_pathways(tempNode.label, tempNode.c_id);
+
            tree.draw();
 
            tree.subscribe("labelClick", function(node) {
