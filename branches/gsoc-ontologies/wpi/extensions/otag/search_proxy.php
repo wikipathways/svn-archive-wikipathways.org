@@ -60,6 +60,7 @@ switch($req)
 {
 case 'childs':
 {
+if(isset($xml->data->page->contents->searchResultList->searchBean))
 foreach($xml->data->page->contents->searchResultList->searchBean as $search_result )
 {
             //print_r((string)$search_result->contents);

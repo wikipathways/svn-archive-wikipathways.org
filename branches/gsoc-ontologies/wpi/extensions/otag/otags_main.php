@@ -59,8 +59,17 @@ $output = <<<HTML
 <input id="myInput" type="text" value="..." onfocus="clear_box(this.id);" >
 <div id="myContainer"></div>
 </div>
-<hr width="10%">
-<div id="treeDiv1"></div>
+<table>
+<tr valign="top">
+<td>
+<div id="treeDiv1" class="treeDiv"></div>
+</td>
+<td>
+<div id="treeDiv2" class="treeDiv"></div>
+</td>
+<td>
+<div id="treeDiv3" class="treeDiv"></div>
+</td></tr></table></
 </div>
 <link rel="stylesheet" type="text/css" href="$opath/otag.css" />
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/autocomplete/assets/skins/sam/autocomplete.css" />

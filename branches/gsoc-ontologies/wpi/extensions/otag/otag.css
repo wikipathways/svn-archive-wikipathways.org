@@ -1,4 +1,4 @@
-#treeDiv1 {background: #fff; margin-top:0.3em; padding:1em; min-height:7em; font-size: 12px;}
+.treeDiv {background: #fff; margin-top:0.15em; padding-right:100px; min-height:7em; font-size: 13px;}
 #myAutoComplete {
     width:15em; /* set width here or else widget will expand to fit its container */
     padding-bottom:2em;

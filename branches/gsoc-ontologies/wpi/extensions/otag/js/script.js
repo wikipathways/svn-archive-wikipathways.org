@@ -17,31 +17,30 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 ontologytree = function() {
 
         function buildTree() {
-
-           var tree;
-           tree = new YAHOO.widget.TreeView("treeDiv1");
-           tree.setDynamicLoad(loadNodeData);
-           var root = tree.getRoot();
-           var aConcepts = [ontologies[0][0] + " - " + ontologies[0][1],ontologies[1][0] + " - " + ontologies[1][1],ontologies[2][0] + " - " + ontologies[2][1]] ;
+        var tree = new Array();
+        for (var tree_no=0; tree_no<3; tree_no++) {
+          tree[tree_no] = new YAHOO.widget.TreeView(ontologies[tree_no][4]);
+          tree[tree_no].setDynamicLoad(loadNodeData);
+           var root = tree[tree_no].getRoot();
+           var aConcepts = [ontologies[tree_no][0] + " - " + ontologies[tree_no][1]] ;
 
            for (var i=0, j=aConcepts.length; i<j; i++) {
-
-              var tempNode = new YAHOO.widget.TextNode(aConcepts[i], root, false);
+                var tempNode = new YAHOO.widget.TextNode(aConcepts[i], root, false);
 				tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
                 tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
                 }
-
-           // var tempNode = new YAHOO.widget.TextNode('This is a leaf node', root, false);
-           // tempNode.isLeaf = true;
-
-            tree.subscribe("labelClick", function(node) {
+            tree[tree_no].subscribe("labelClick", function(node) {
             display_tag(node.label,node.c_id,0);
-            tree.destroy();
+            tree[0].destroy();
+            tree[1].destroy();
+            tree[2].destroy();
             tree = null;
-            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
-	       })
-           tree.draw();
+            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
+	       });
+           tree[tree_no].draw();
         }
+        }
+
     return {
         init: function() {
             buildTree();
@@ -99,6 +98,7 @@ function loadNodeData(node, fnLoadComplete)  {
         }
 
 
+
 function auto_complete (){
    var oDS = new YAHOO.util.XHRDataSource( opath + "/search_proxy.php");
     // Set the responseType
@@ -126,7 +126,10 @@ function auto_complete (){
     // Customize formatter to show thumbnail images
     oAC.formatResult = function(oResultData, sQuery, sResultMatch) {
 
-         return  "<em>" + oResultData.label + "</em><br />" + oResultData.ontology ;
+        if(oResultData.label == "No results !")
+            return  "<em>" + oResultData.label + "</em>";
+        else
+            return  "<em>" + oResultData.label + "</em><br />" + oResultData.ontology ;
     };
 
 var itemSelectHandler = function(sType, aArgs) {
@@ -161,9 +164,9 @@ var tags = new Array();
 var old_tags = new Array();
 var timeout = null;
 var ontologies = new Array(3);
-ontologies[0] = ["Pathway Ontology","PW:0000001",1035,39997];
-ontologies[1] = ["Disease","DOID:4",1009,40256];
-ontologies[2] = ["Cell Type","CL:0000000",1006,40177];
+ontologies[0] = ["Pathway Ontology","PW:0000001",1035,39997,"treeDiv1"];
+ontologies[1] = ["Disease","DOID:4",1009,40256,"treeDiv2"];
+ontologies[2] = ["Cell Type","CL:0000000",1006,40177,"treeDiv3"];
 
 var handleSuccess = function(o){
 

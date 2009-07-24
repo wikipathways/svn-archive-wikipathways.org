@@ -79,10 +79,7 @@ function fetch()
 {
     global $title;
     $dbr =& wfGetDB(DB_SLAVE);
-    $pathway = get_pw();
-    $gpml = $pathway->getGpml();
-    $xml = simplexml_load_string($gpml);
-    $entry = $xml->Biopax ;
+
 
 $query = "SELECT * FROM `ontology` " . "WHERE `pw_id` = '$title' ORDER BY `ontology`";
 $res = $dbr->query($query);
