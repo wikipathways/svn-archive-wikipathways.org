@@ -41,10 +41,36 @@ function fetch_tree()
 function fetch_terms()
 {
     global $ontology_id ;
+    global $concept_id ;
     global $xml;
 	global $res_array;
 
+    if($_GET['tree_pw'] == "yes")
+    {
+    $dbr =& wfGetDB(DB_SLAVE);
+    $sql = "SELECT * FROM ontology where `term_id` = '$concept_id'";
+    $res = $dbr->query($sql);
+    while($row = $dbr->fetchObject($res))
+        {
+            if($_GET['species'] != "All Species")
+            {
+            if(fetch_pathway_species($row->pw_id) == $_GET['species'])
+            {
+                $p = Pathway::newFromTitle($row->pw_id);
+                $pw[] = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
+                //$pw .=  $row->pw_id . ", ";
+            }
+            }
+            else
+            {
+                $p = Pathway::newFromTitle($row->pw_id);
+                $pw[] = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
+            }
+        }
 
+    if( count($pw) > 0)
+    $res_array[] = ">>" . implode(", ",$pw) . " - 0000||";
+    }
 $arr = $xml->data;
 //print_r($xml->data->classBean->id->relations);
 

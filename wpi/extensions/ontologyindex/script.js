@@ -218,7 +218,7 @@ function create_tree(root_id,id)
      		// encodeURI(node.label);
 
             var ontology_id = get_ontology_id(node.c_id);
-            var sUrl = opath + "/wp_proxy.php?action=tree&mode=tree&ontology_id=" + ontology_id + "&concept_id=" + encodeURI(node.c_id) + "&species=" + species;
+            var sUrl = opath + "/wp_proxy.php?tree_pw=yes&action=tree&mode=tree&ontology_id=" + ontology_id + "&concept_id=" + encodeURI(node.c_id) + "&species=" + species;
             var callback = {
                 success: function(oResponse) {
                     var oResults = YAHOO.lang.JSON.parse(oResponse.responseText);
@@ -228,11 +228,11 @@ function create_tree(root_id,id)
 
                             var tempNode = new YAHOO.widget.MenuNode(oResults.ResultSet.Result[i], node, false);
                             tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
-                            if(tempNode.label.lastIndexOf("||")>0)
+                            if(tempNode.label.lastIndexOf("0000||")>0)
                                 {
                                        tempNode.isLeaf = true;
-                                       tempNode.c_id = tempNode.c_id.replace("||","");
                                 }
+                            tempNode.c_id = tempNode.c_id.replace("||","");
                             tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
 
                             }
