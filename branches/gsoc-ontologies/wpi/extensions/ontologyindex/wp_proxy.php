@@ -28,7 +28,19 @@ case 'species':
 function fetch_tree()
 {
     global $xml, $res_array, $ontology_id, $concept_id;
+
     $xml = simplexml_load_file(url($ontology_id ,$concept_id));
+//    $ch = curl_init(url($ontology_id ,$concept_id));
+//    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//    curl_setopt($ch, CURLOPT_HEADER, 0);
+//    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
+//    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
+//
+//    $xml = curl_exec($ch);
+//    curl_close($ch);
+//
+//    $xml = simplexml_load_string($xml);
+
     fetch_terms();
     //sort($res_array);
     $res_arr["ResultSet"]["Result"]=$res_array;
@@ -57,19 +69,47 @@ function fetch_terms()
             if(fetch_pathway_species($row->pw_id) == $_GET['species'])
             {
                 $p = Pathway::newFromTitle($row->pw_id);
-                $pw[] = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
+                $p_id = $row->pw_id;
+//              $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
+                $pw = $p->name();
+                $res_array[] =  ">> " . $pw . " - " . $p_id . "0000a||";
                 //$pw .=  $row->pw_id . ", ";
             }
             }
             else
             {
                 $p = Pathway::newFromTitle($row->pw_id);
-                $pw[] = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
-            }
+//              $pw = "<font face='Verdana'><i><b>{$p->name()}</b></i></font>";
+                $p_id = $row->pw_id;
+//              $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
+                $pw = $p->name();
+                $res_array[] =  ">> <b><font face='Verdana' color='blue'>" . $pw . "</font></b> - " . $p_id . "0000a||";
+                
+                }
         }
+//    for($i=0;$i<100;$i++)
+//        {
+            $n1 = mt_rand(0,8);
+            $n2 = mt_rand(0,4);
+//            $n3 = mt_rand(1,5);
+//            $n4 = mt_rand(1,100);
+//            //echo "$n1 $n2 $n3  ";
+//            if($n1==$n2 || $n1==$n3){ //echo "<b>EQUAL</b>";
+//            if($n4%2==0 && $n4<50) { //echo "Yes";
+//            $count++;
+         if($n1%2==0 && $n2%2==0)
+            for($j=0;$j<$n1;$j++)
+            {
+                            $pw_id = "WP" . mt_rand(1,45);
+                $p = Pathway::newFromTitle($pw_id);
+//              $pw = "<font face='Verdana'><i><b>{$p->name()}</b></i></font>";
+                $p_id = $row->pw_id;
+//              $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
+                $pw = $p->name();
+                $res_array[] =  ">> <b><font face='Verdana' color='blue'>" . $pw . "</font></b> - " . $pw_id . "0000a||";
+            }
 
-    if( count($pw) > 0)
-    $res_array[] = ">>" . implode(", ",$pw) . " - 0000||";
+
     }
 $arr = $xml->data;
 //print_r($xml->data->classBean->id->relations);
