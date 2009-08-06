@@ -187,22 +187,27 @@ function create_tree(root_id,id)
            tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
 
            // display the pathways
-           get_pathways(tempNode.label, tempNode.c_id);
-
+//           get_pathways(tempNode.label, tempNode.c_id);
+//
            tree.draw();
-
+//
            tree.subscribe("labelClick", function(node) {
-            get_pathways(node.label,node.c_id);
-
-//            tree.destroy();
-//            tree = null;
-//            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
-	       })
-
-            tree.subscribe("expand", function(node) {
-                get_pathways(node.label,node.c_id);
-                // return false; // return false to cancel the expand
-            });
+               if(node.c_id.lastIndexOf("0000a")>0)
+                   {
+                        var pw_url = node.c_id.replace("0000a","");
+                        winRef = window.open( wgServer + wgScript + "/Pathway:" + pw_url ,node.label);
+                   }
+//            get_pathways(node.label,node.c_id);
+//
+////            tree.destroy();
+////            tree = null;
+////            YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
+//	       })
+//
+//            tree.subscribe("expand", function(node) {
+//                get_pathways(node.label,node.c_id);
+//                // return false; // return false to cancel the expand
+         })
 
     return {
         init: function() {
@@ -228,13 +233,13 @@ function create_tree(root_id,id)
 
                             var tempNode = new YAHOO.widget.MenuNode(oResults.ResultSet.Result[i], node, false);
                             tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
-                            if(tempNode.label.lastIndexOf("0000||")>0)
+                            tempNode.c_id = tempNode.c_id.replace("||","");
+                            if(tempNode.c_id.lastIndexOf("0000a")>0)
                                 {
                                        tempNode.isLeaf = true;
-                                }
-                            tempNode.c_id = tempNode.c_id.replace("||","");
-                            tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
 
+                                }
+                            tempNode.label =    tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
                             }
                         }
                     }
