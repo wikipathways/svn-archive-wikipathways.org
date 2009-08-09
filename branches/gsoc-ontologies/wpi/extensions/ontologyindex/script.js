@@ -233,12 +233,13 @@ function create_tree(root_id,id)
 
                             var tempNode = new YAHOO.widget.MenuNode(oResults.ResultSet.Result[i], node, false);
                             tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
-                            tempNode.c_id = tempNode.c_id.replace("||","");
-                            if(tempNode.c_id.lastIndexOf("0000a")>0)
+
+                            if(tempNode.c_id.lastIndexOf("0000a")>0 || tempNode.c_id.lastIndexOf("||")>0)
                                 {
                                        tempNode.isLeaf = true;
 
                                 }
+                            tempNode.c_id = tempNode.c_id.replace("||","");
                             tempNode.label =    tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
                             }
                         }
