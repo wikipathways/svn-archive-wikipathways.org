@@ -89,7 +89,7 @@ function fetch_terms()
         }
 //    for($i=0;$i<100;$i++)
 //        {
-            $n1 = mt_rand(0,8);
+            $n1 = mt_rand(0,5);
             $n2 = mt_rand(0,4);
 //            $n3 = mt_rand(1,5);
 //            $n4 = mt_rand(1,100);
@@ -133,7 +133,7 @@ foreach($xml->data->classBean->relations->entry as $entry )
             }
             
             $temp_var = $sub_concepts->label . $total_match ." - " . $sub_concepts->id;
-            if($sub_concepts->relations->entry->int == "0")
+            if($sub_concepts->relations->entry->int == "0" && $exact_match ==0 )
             $temp_var .="||";
             $res_array[] = $temp_var;
 
