@@ -1,0 +1,463 @@
+= Release Management =
+
+This document intends to formalize the following things:
+* How to keep the test site and the stable site in sync
+* How to do releases, and when to do them.
+
+The proposal in this text is not set in stone, neither is it the only right way to do things. 
+Adjustments may be necessary in the future.
+But the most important thing here is that the procedure is documented and adhered to by all developers.
+
+We have two sites:
+* test    -> this is where development and most testing takes place
+* stable  -> this is what the regular user sees
+
+There are 6 types of data to take into account
+* Pathway content
+* other content data (pages, layout, Help, FAQ)
+* user account data
+* applet code
+* mediawiki code
+* wpi plugin code
+
+Both sites are completely independent: they each have their own copy of all 6 types.
+
+== Release schedule ==
+
+All developement should take place on the test site *first*. 
+Periodically, we want to sync the test site with the stable site. We want to keep the period between 
+syncs short, around 4-6 weeks is ideal.
+
+I propose that we define simple milestones for each period, and that we sync afterwards. 
+We can keep to a schedule like this one:
+
+* 3-4 weeks of development
+* feature freeze
+* 1-2 weeks of testing
+* milestone release & sync
+
+Each milestone should be preceded by a feature freeze, a period of 1-2 weeks where only bugfixes are allowed.
+Work on major features should be started just after the milestone, so there is enough time to 
+finish it before the feature freeze.
+
+Features and bugs can be assigned to specific milestones, so we can plan a bit ahead to see which
+features and bugs are going to be fixed when. 
+For example:
+
+Our development plan for the coming weeks: 
+
+See
+
+http://conklinwolf.ucsf.edu/genmappwiki/WikiPathways_Plan
+
+for all the dates
+
+The goal is to have a web meeting just before the Milestone, so we can 
+go through the list of outstanding bugs together and see if there is any important
+work remaining before the release.
+
+To keep track of which features / bugs are going to be implemented / fixed for each milestone,
+we use our bug tracker. The bug tracker will be used for bugs as well as features, so
+it's probably best to speak of "issues" and "issue tracker".
+
+A subproject will be created for each milestone. For example, right now we have
+
+subprojects of project "wikipathways"
+
+- wikipathways_milestone_1
+- wikipathways_milestone_2
+- wikipathawys_milestone_3
+
+If you think you can fix an issue for a certain date, move the issue to that particular
+subproject and assign it to yourself. Issues that are unassigned should go in the main project. 
+
+If you are unsure when something should be fixed, or if it is too unimportant to fix right
+now, just leave it in the main project wikipathways and we'll put it in a milestone
+when we get around to it.
+
+I still think that mantis doesn't support this workflow terribly well. However, it works
+so we'll make do.
+
+Since PathVisio and the WikiPathways applet share the same code base, this means that PathVisio 
+will have to follow this schedule as well and will have to adhere to the Feature Freeze period. 
+Likewise, there are milestone subprojects for pathvisio as well.
+
+=== Pathway content ===
+
+* Should be backed up daily on the stable site.
+* the complete test site is considered a sandbox with regards to the Pathways. 
+  The pathways on the test site may be deleted, changes may be reverted, nonsensical pathways may be added. 
+  Never make any changes to Pathway content on the test site if you want to keep it.
+* Periodically, the pathways from the test site may be reset, i.e. overwritten with the pathways from the stable site.
+
+=== Page & layout data ===
+
+We've experienced that copying over releasing page & layout data together with the release is cumbersome. 
+So instead we will make changes directly to the stable site, possibly using the test site as a staging ground.
+
+* Make the change directly on the stable site
+** for most changes
+
+* Make the change on the test site first, then copy over to the main site
+** for changes that require review & discussion before going live
+** for changes that depend on features that are not yet available on the main site
+
+In either case this is independent of the release cycle. If you make a change to the test site with
+the intention of copying over to the main site later, it is your responsibility to keep track of this.
+
+=== User account data ===
+
+User accounts on both sites are separate and never synced. If you want to have an account on both sites, you
+should make two accounts. If you want to block a user on both sites, you have to block twice. The list of
+users on the stable site is most important, of course. 
+The test site should have accounts for developers and beta testers only.
+
+If there are a lot of blocked users, they might bias the site statistics. Once in a while, blocked users can be deleted.
+You can use e.g. this SQL statement
+	
+	DELETE user, ipblocks FROM user, ipblocks WHERE ipblocks.ipb_user =
+user.user_id;
+
+=== applet code ===
+
+* on the test site: running trunk (or very close to it)
+* may be updated on test site anytime
+
+  Tip: to update the applets on the test site, run these commands (on the server)
+  
+  # ~/code/pathvisio is the staging ground, where everything will be compiled
+  cd ~/code/pathvisio
+  svn update
+  cd trunk
+  # compile & copy to site
+  ant diffapplet -Dwikipathways.dest=/var/www/wikipathways-test
+  ant wikipathways-dest -Dwikipathways.dest=/var/www/wikipathways-test
+
+* on the stable site: always running a release tag
+
+  Tip: to update the applet on the stable site to the latest tag, run this:
+
+  # keep staging ground up-to-date
+  cd ~/code/pathvisio
+  svn update
+  cd tags/milestone_n.n
+  # compile & copy to site
+  ant diffapplet -Dwikipathways.dest=/var/www/wikipathways
+  ant wikipathways-dest -Dwikipathways.dest=/var/www/wikipathways
+
+* make point releases when serious bugs occur in the middle of the release cycle.
+
+
+whenever time for a release comes:
+* start by making a release branch from the (tested) trunk. 
+  The release branch is considered stable and should not be developed further except for important bugfixes.
+  The release branch is named e.g. milestone_12.x. The letter x denotes that this branch is the offspring for all minor releases milestone_12.0, milestone_12.1, etc.
+* then make a release tag from the release branch. Start with milestone_12.0
+* if necessary, fix bugs in the branch. 
+  Only do this for major bugs! 
+  Since our release cycle is short, people should never have to wait for more than 6 weeks for the next release anyway, 
+  so any bug that can wait that long should be fixed in the trunk and in the trunk only.
+  If there is a bug that can't wait, fix it in the trunk, test it, and then cherry-pick that fix into the release branch.
+  Then make a new tag, where you increase the minor version number.
+ 
+  So in short:
+  
+  create branch 	trunk -> milestone_12.x
+  create tag 		milestone_12.x -> milestone_12.0
+  switch main site to milestone_12.0
+  ...
+  fix major bug in trunk
+  apply bugfix to milestone_12.x branch as well
+  create new tag milestone_12.x -> milestone_12.1
+  switch main site to milestone_12.1
+
+Q: why create a branch and a tag?
+The tag is simply a marker for which revision is tested and considered stable.
+The branch is there for allowing bugfixes to be added to the stable release, without having to copy any new features over as well.
+i.e. a release that is nothing more than the latest tag plus a small bugfix. 
+Continued development can go on in the trunk, and bug-fixes can be cherry-picked from the trunk to the release branch.
+
+=== php code ===
+
+The procedure for dealing with the php code is exactly the same as the applet code.
+branches/tags for the php code should be made exactly at the same time, and should get exactly the same name.
+
+The reason for doing both together is that it makes the release cycle simpler and more understandable. 
+If there isn't confusion about when to test, 
+when to develop new features etc. it is more likely that people will actually do these things at the right time.
+
+=== mediawiki code ===
+
+Updates to mediawiki are potentially disruptive. Therefore I propose to these kinds of updates 
+on the test site first as well, and always do it before the feature freeze 
+so we still have some time for testing.
+
+Mediawiki does major updates quarterly, with a few point releases in between.
+
+This is an overview of the steps needed to update mediawiki:
+
+**************************************
+
+	Perform the update on a local copy. In this example, the following
+	directories are used:
+
+	wikipathways/trunk -> the wikipathways working copy
+	mediawiki-1.11.2 -> the mediawiki code of the version used in the
+	working copy
+	mediawiki-1.12.0 -> the new mediawiki code
+
+	The following steps were taken:
+	1. Create a diff of the changes between our code and the current
+	mediawiki version code
+
+		diff -c -r mediawiki-1.11.2/ wikipathways/trunk > 1.11_wp_changes.txt
+
+	2. Remove all files in the working copy, except for the svn files and
+	pass.php.
+
+		find -! -iwholename "*.svn*" -exec rm -I {} \;
+
+	3. Copy the new mediawiki version to the working copy
+
+		cp -R ../../mediawiki-1.12.0/* .
+
+	4. Restore the wikipathways files in the working copy
+	
+		svn update
+
+	There might be mediawiki files restored that are removed in the updated
+	mediawiki code. To identify these, look at the output from svn update
+	and remove any files that belong to mediawiki, using 'svn remove' (e.g.
+	files in includes/, language/)
+
+	5. Add all mediawiki files that are included in the update (using 'svn
+	add'), use:
+	
+		svn status
+
+	To check for files that are not in the repository (marked with ?).
+	Exceptions are the skins files common and wikipathways.
+
+	5. Apply our changes to the MediaWiki code
+	
+		patch -c -p1 < ../../1.11_wp_changes.txt
+
+	The output of patch will show if there were any conflicts. Manually
+	resolve conflicted files. You can use
+
+		find -iname "*.rej"
+
+	To find the conflicts
+
+	6. Update the MediaWiki database
+	
+	* Comment out extensions in LocalSettings.php:
+	
+	these two commands will be helpful:
+		sed -i "s/^.*require_once.*wpi.*\$/\#&/" LocalSettings.php
+		sed -i "s/^.*require_once.*extensions.*\$/\#&/" LocalSettings.php
+	  
+	* create AdminSettings.php. You need to fill out username and password for the wikipathways admin user.
+	
+	* run php maintenance/update.php
+	* remove AdminSettings.php
+	* restore LocalSettings.php (just revert back to the svn version)
+
+	7. Recompile applets (wikipathways-dest, diffapplet)
+
+**************************************
+
+=== summary ===
+
+So, in short:
+
+						on test site                    on stable site
+---------------------------------------------------------------------------------
+Pathway content     | may be reset at any time     | important, backed up daily
+other content data  | copy to stable any time      | may edit directly
+user account data   | developers and testers,      | anybody, never sync
+				    | never sync                   | 
+applet code         | pathvisio/trunk              | sync after milestone, tags/milestone_x.0
+mediawiki code      | update before feature freeze | sync after milestone, tags/milestone_x.0
+wpi plugin code     | wikipathways/trunk           | sync after milestone, tags/milestone_x.0
+---------------------------------------------------------------------------------
+
+
+== tagging a release ==
+
+Check if there are any remaining changes on the test site that haven't been checked in.
+Check if somebody accicentally changed the stable site
+
+create a milestone branch named milestone_n.x (where n is one higher than the previous branch). 
+The milestone branch is useful for cherry-picking, see below.
+
+svn cp http://svn.bigcat.unimaas.nl/wikipathways/trunk 
+ http://svn.bigcat.unimaas.nl/wikipathways/branches/milestone_n.x
+
+Next, create a milestone tag named milestone_n.0
+
+svn cp http://svn.bigcat.unimaas.nl/wikipathways/branches/milestone_n.x
+ http://svn.bigcat.unimaas.nl/wikipathways/branches/milestone_n.0
+ 
+Now switch the stable site to the tag you just created.
+
+== what to do during feature freeze ==
+
+The test plan is described at: http://conklinwolf.ucsf.edu/genmappwiki/WikiPathways_Test_Plan
+Accurately testing the plan requires modifying PathWays, so it should be done on the test site.
+This test plan should be performed at least once during feature freeze, but preferably several times on different computers.
+Any bugs found during testing should be immediately entered in our bug tracker.
+
+We should pick a list of bugs from mantis, and do nothing but fix those 
+(plus newly found ones if they are major)
+
+The advantage of having brief but frequent feature freezes is two fold:
+* You are forced once in a while to stop and fix some bugs
+* If you only fix bugs, the chance of introducing new bugs at the same time is lower. 
+  Otherwise, developers and testers run in eachothers tracks, 
+  and a new feature may cause a bug in a part that was just tested.
+
+== cherry-picking ==
+
+It may occur, hopefully not often, that just after a milestone we find a major problem in the stable site.
+Instead of syncing early (without going through a round of testing first), we should go through the process
+of cherry-picking:
+
+1. A developer confirms the bug on the stable site.
+2. A developer confirms the bug on the test site
+3. The developer checks in any outstanding changes on the current feature he was working on.
+4. The developer fixes the bug. Make sure to create a clean patch. 
+   The patch should contain just the changes necessary to fix the problem, no more.
+   To save the patch from the command line, run "svn diff > patchfile.txt"
+   To save the patch from eclipse, right-click on the project and follow team->create patch
+5. confirm that the problem is indeed fixed on the test site
+6. Apply the patch to the latest milestone branch (not the tag, a tag should never be changed)
+7. create a new tag from the milestone branch, where you increase the last digit. So if the
+   last tag was milestone_7.0, the new one should be milestone_7.1
+8. the stable site is switched to the newly created tag.
+
+=== Tips: How to keep your diffs clean ===
+
+It is good practice that each time you check in, you only change one aspect at the time.
+i.e. try not to mix documentation, general cleanup, bugfixes and features together.
+This makes it easier for other to review your changes, and makes it easier to pick up a single set of changes from one line of 
+development (.e.g trunk) and apply it to a different line of development (.e.g. a branch)
+
+To see the commits as they are generated, sign up for the commit mailinglist at 
+http://groups.google.com/group/wikipathways-commit/
+
+the "diff" that you check in, e.g. the difference between your working copy and the repository 
+on the server is as clean as possible. 
+That means that the diff should change only one aspect of the program, e.g. clean up, add 
+
+You can always check the current status of your changes with the command "svn diff", or in 
+eclipse in team->create patch. Before you commit them.
+
+Here is some background information about diffs, patching, to help you with the process of cherry-picking:
+
+See also: http://producingoss.com/en/vc.html#vc-using
+and: http://svnbook.red-bean.com/en/1.4/svn.branchmerge.copychanges.html
+
+=== Other tasks for release time ===
+
+* Update the release notes on http://www.pathvisio.org/Release_Notes
+
+* add a news item on the pathvisio.org main page
+
+* Update the pathvisio webstart
+	Make sure webstart/autoftp.conf.template has been filled in and saved as webstart/autoftp.conf 
+	(you need to know username / password of the ftp account)
+	
+	run "ant webstart"
+
+* Update the news item on wikipathways.org
+
+* If there are major new features, do an announcement on wp-announce. If this is a small release, do an announcement on wp-dev=======
+
+=== Step-by-step instructions for WikiPathways release ===
+This section lists the steps to take for a typical milestone release. Note that you have to replace some milestone and revision numbers.
+
+# Tag for WikiPathways code
+svn cp http://svn.bigcat.unimaas.nl/wikipathways/trunk http://svn.bigcat.unimaas.nl/wikipathways/branches/milestone_10.x
+svn cp http://svn.bigcat.unimaas.nl/wikipathways/branches/milestone_10.x http://svn.bigcat.unimaas.nl/wikipathways/tags/milestone_10.0
+
+# Tag for PathVisio code
+svn cp http://svn.bigcat.unimaas.nl/pathvisio/trunk http://svn.bigcat.unimaas.nl/pathvisio/branches/milestone_10.x
+svn cp http://svn.bigcat.unimaas.nl/pathvisio/branches/milestone_10.x http://svn.bigcat.unimaas.nl/pathvisio/tags/milestone_10.0
+
+# Ssh to WikiPathways server
+# Update site code
+cd /var/www/wikipathways
+svn switch http://svn.bigcat.unimaas.nl/wikipathways/tags/milestone_10.0
+
+# (If needed): run the update script
+cd wpi/maintenance
+php updateM10.php 
+
+# Update applet code
+cd ~/code/pathvisio/
+svn update
+
+# Build applets
+cd tags/milestone_10.0
+ant wikipathways-dest -Dwikipathways.dest=/var/www/wikipathways
+ant diffapplet -Dwikipathways.dest=/var/www/wikipathways
+
+# Now test the editor on sandbox pathway
+
+# (If needed): update bots
+ant tarbin-wpclient -Dwsdl.url=http://www.wikipathways.org/wpi/webservice/webservice.php?wsdl
+cp wikipathways_client_bin-1.1-r2438.tar.gz /home/wikipathways/bots/wikipathways/
+cd ~/bots/wikipathways
+tar -xf wikipathways_client_bin-1.1-r2438.tar.gz --strip=1
+
+# (If needed): update and restart indexer
+cd ~/code/pathvisio/tags/milestone_10.0/tools/lucene-indexer
+ant dist
+cp -R dist/* /home/wikipathways/index/bin
+	# Resume an exising screen session that runs the indexer (or start a new one)
+screen -R 5353.pts-0.bigcat0025uns40mw 
+	# Kill running indexer
+	# Restart (and optionally rebuild)
+java -jar ../bin/wikipathways-indexer.jar indexer.config gdb.config --rebuild
+	# Detach the screen with CTRL-A d
+
+# Update the site content
+	# Copy new / updated pages and messages
+	# Update news section (also add items to news archive page)
+	
+# Update the pathvisio webstart & tar
+	# Webstart must be compiled with Java 5. First make sure that you're on java 5
+	javac -version
+	java -version
+
+	# switch to the current release tag
+	# note that you must use a pure svn repository, not git-svn
+	
+	cd ~/prg/pv_release
+	svn-clean
+	svn switch http://svn.bigcat.unimaas.nl/pathvisio/tags/milestone_12.0
+	
+	# compile webstart and publish
+	ant prepare-webstart
+	scp -r webstart/www/* pathvisio@www.pathvisio.org:/home/pathvisio/webstart
+	
+	# test webstart: 
+	go to http://pathvisio.org/Download
+	Click on download link
+	Check revision no in about box
+	
+	# create tar.gz and publish
+	ant tar
+	scp pathvisio_[bs]* pathvisio@www.pathvisio.org:/home/pathvisio/data/releases
+	
+	# create tar.gz of webservice client library and publish
+	ant tarbin-wpclient
+	scp wikipathways-client_* pathvisio@www.pathvisio.org:/home/pathvisio/data
+
+	# update front page and release notes
+	http://pathvisio.org/Release_Notes
+	http://pathvisio.org/PathVisio
+	
+	
+
