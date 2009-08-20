@@ -1,6 +1,7 @@
 <?php
 
 include('../../wpi.php');
+
 $ontology_id = $_GET['ontology_id'];
 $concept_id = $_GET['concept_id'];
 
@@ -98,6 +99,7 @@ function fetch_pw_list()
 
 
                     }
+                    break;
                }
             case 'Popular':
                {
@@ -140,6 +142,7 @@ function fetch_pw_list()
                     
                             
                 }
+                break;
          }
 }
 
@@ -235,6 +238,7 @@ foreach($xml->data->classBean->relations->entry as $entry )
             $res_array[] = $temp_var;
 
         }
+
     }
 }
 
