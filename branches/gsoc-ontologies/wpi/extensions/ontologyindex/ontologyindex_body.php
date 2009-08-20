@@ -174,9 +174,9 @@ class ontologyindex extends SpecialPage {
 
     function tree()
     {
-        global $wgOut;
+        global $wgOut,$wgRequest;
         $opath = WPI_URL . "/extensions/ontologyindex" ;
-
+        $mode = $wgRequest->getVal('mode');
 
         $wgOut->addHTML('<link rel="stylesheet" type="text/css" href="' . $opath . '/otagindex.css" />
                          <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
@@ -188,10 +188,14 @@ class ontologyindex extends SpecialPage {
                          <script src="http://yui.yahooapis.com/2.7.0/build/event/event-min.js"></script>');
         $wgOut->addHTML("<div id='index_container'></div>");
         $wgOut->addScript(
-            "<script type='text/javascript'>var opath=\"$opath\";</script>"
+            "<script type='text/javascript'>var opath=\"$opath\";
+            var page_mode = \"$mode\";
+            </script>"
     	);
+        if($mode == "tree")
         $wgOut->addScript("<script type='text/javascript' src='$opath/script.js'></script>");
-
+        else
+        $wgOut->addScript("<script type='text/javascript' src='$opath/script_list.js'></script>");
     }
 
 

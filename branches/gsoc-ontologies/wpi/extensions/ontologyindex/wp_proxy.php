@@ -1,6 +1,7 @@
 <?php
 
-require_once('../../wpi.php');
+include('../../wpi.php');
+//  include('../../Pathway.php');
 $ontology_id = $_GET['ontology_id'];
 $concept_id = $_GET['concept_id'];
 
@@ -9,37 +10,155 @@ $res_array;
 
 switch($_GET['action'])
 {
-case 'tree':
-    fetch_tree();
-    break;
-case 'pathways':
-    fetch_pathways();
-    break;
-case 'species':
-    fetch_species();
-    break;
+    case 'tree':
+        fetch_tree();
+        break;
+    case 'pathways':
+        fetch_pathways();
+        break;
+    case 'species':
+        fetch_species();
+        break;
+    case 'list':
+        fetch_pw_list();
+        break;
 }
 
 
+function fetch_pw_list()
+{
+    $term = $_GET['term'];
+    switch($_GET['filter'])
+        {
+            case 'All' :
+                {
+                    $pathways = Pathway::getAllPathways();
+
+                    foreach($pathways as $p) {
+                        if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
+                        continue;
+                        if($term!="")
+                        {
+                            $title = $p->getTitleObject()->getDbKey();
+                            $count = 0;
+                            $dbr =& wfGetDB(DB_SLAVE);
+                            $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
+                            $res = $dbr->query($sql);
+                            while($row = $dbr->fetchObject($res))
+                            {
+                                $count++;
+                            }
+                            if($count == 0)
+                            continue;
+                        }
+                        echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a></li>";
+                    }
+                    break;
+                }
+            case 'Edited' :
+                {
+                    $dbr =& wfGetDB( DB_SLAVE );
+                    $sql = "SELECT
+                                    'Mostrevisions' as type,
+                                    page_namespace as namespace,
+                                    page_id as id,
+                                    page_title as title,
+                                    COUNT(*) as value
+                                FROM `revision`
+                                JOIN `page` ON page_id = rev_page
+                                WHERE page_namespace = 102" . "
+                                AND page_is_redirect = 0
+                                GROUP BY 1,2,3
+                                HAVING COUNT(*) > 1
+                                ";
+                    $res = $dbr->query($sql);
+                    while($row = $dbr->fetchObject($res))
+                    {
+                        $pathwayArray[$row->title] = $row->value;
+                    }
+                    arsort($pathwayArray);
+                    foreach($pathwayArray as $title=>$value )
+                    {
+                        $p = Pathway::newFromTitle($title);
+                        if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
+                        continue;
+                        if($term!="")
+                        {
+                            $title = $p->getTitleObject()->getDbKey();
+                            $count = 0;
+                            $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
+                            $res = $dbr->query($sql);
+                            while($result = $dbr->fetchObject($res))
+                            {
+                                $count++;
+                            }
+                            if($count == 0)
+                            continue;
+                        }
+                        echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Revisions) </li>";
 
 
-
+                    }
+               }
+            case 'Popular':
+               {
+                    $dbr =& wfGetDB( DB_SLAVE );
+            		$page = $dbr->tableName( 'page' );
+                    $sql =  "SELECT 'Popularpages' as type,
+                            page_namespace as namespace,
+                            page_title as title,
+                            page_id as id,
+                            page_counter as value
+                            FROM $page
+                            WHERE page_namespace=".NS_PATHWAY."
+                            AND page_is_redirect=0";
+                            $res = $dbr->query($sql);
+                            while($row = $dbr->fetchObject($res))
+                            {
+                                $pathwayArray[$row->title] = $row->value;
+                                arsort($pathwayArray);
+                            }
+                            foreach($pathwayArray as $title=>$value )
+                            {
+                                $p = Pathway::newFromTitle($title);
+                                if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
+                                continue;
+                                if($term!="")
+                                {
+                                    $title = $p->getTitleObject()->getDbKey();
+                                    $count = 0;
+                                    $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
+                                    $res = $dbr->query($sql);
+                                    while($result = $dbr->fetchObject($res))
+                                    {
+                                        $count++;
+                                    }
+                                    if($count == 0)
+                                    continue;
+                                }
+                                echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Views) </li>";
+                            }
+                    
+                            
+                }
+         }
+}
 
 function fetch_tree()
 {
     global $xml, $res_array, $ontology_id, $concept_id;
 
-    $xml = simplexml_load_file(url($ontology_id ,$concept_id));
-//    $ch = curl_init(url($ontology_id ,$concept_id));
-//    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//    curl_setopt($ch, CURLOPT_HEADER, 0);
-//    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
-//    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
-//
-//    $xml = curl_exec($ch);
-//    curl_close($ch);
-//
-//    $xml = simplexml_load_string($xml);
+    //$xml = simplexml_load_file(url($ontology_id ,$concept_id));
+    $ch = curl_init(url($ontology_id ,$concept_id));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
+    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
+
+    $xml = curl_exec($ch);
+    curl_close($ch);
+
+    $xml = simplexml_load_string($xml);
 
     fetch_terms();
     //sort($res_array);
@@ -87,28 +206,6 @@ function fetch_terms()
                 
                 }
         }
-//    for($i=0;$i<100;$i++)
-//        {
-            $n1 = mt_rand(0,5);
-            $n2 = mt_rand(0,4);
-//            $n3 = mt_rand(1,5);
-//            $n4 = mt_rand(1,100);
-//            //echo "$n1 $n2 $n3  ";
-//            if($n1==$n2 || $n1==$n3){ //echo "<b>EQUAL</b>";
-//            if($n4%2==0 && $n4<50) { //echo "Yes";
-//            $count++;
-         if($n1%2==0 && $n2%2==0)
-            for($j=0;$j<$n1;$j++)
-            {
-                            $pw_id = "WP" . mt_rand(1,45);
-                $p = Pathway::newFromTitle($pw_id);
-//              $pw = "<font face='Verdana'><i><b>{$p->name()}</b></i></font>";
-                $p_id = $row->pw_id;
-//              $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
-                $pw = $p->name();
-                $res_array[] =  ">> <b><font face='Verdana' color='blue'>" . $pw . "</font></b> - " . $pw_id . "0000a||";
-            }
-
 
     }
 $arr = $xml->data;
@@ -129,6 +226,7 @@ foreach($xml->data->classBean->relations->entry as $entry )
             if($_GET['mode'] == "tree")
             $total_match = " (" . $exact_match . "/" . ( $path_match + $exact_match ) . ")";
             else
+            if($_GET['mode'] == "sidebar")
             $total_match = " (" . ( $path_match + $exact_match ) . ")";
             }
             
@@ -158,27 +256,27 @@ foreach($xml->data->classBean->relations->entry as $entry )
 }
 function no_paths($match,$ontology_id,$concept_id)
 {
-$count = 0;
-$dbr =& wfGetDB(DB_SLAVE);
-if($match == "exact")
-$sql = "SELECT * FROM ontology where `term_id` = '$concept_id'";
-else
-$sql = "SELECT * FROM ontology where `term_path` LIKE '%$concept_id.%' OR `term_path` LIKE '%$concept_id'";
+    $count = 0;
+    $dbr =& wfGetDB(DB_SLAVE);
+    if($match == "exact")
+    $sql = "SELECT * FROM ontology where `term_id` = '$concept_id'";
+    else
+    $sql = "SELECT * FROM ontology where `term_path` LIKE '%$concept_id.%' OR `term_path` LIKE '%$concept_id'";
 
-$res = $dbr->query($sql);
-while($row = $dbr->fetchObject($res))
-{
-    if($_GET['species'] != "All Species")
+    $res = $dbr->query($sql);
+    while($row = $dbr->fetchObject($res))
     {
-        if(fetch_pathway_species($row->pw_id) == $_GET['species'])
+        if($_GET['species'] != "All Species")
+        {
+            if(fetch_pathway_species($row->pw_id) == $_GET['species'])
+            $count++;
+        }
+        else
         $count++;
     }
-    else
-    $count++;
-}
-   $dbr->freeResult( $res );
- 
-return $count;
+       $dbr->freeResult( $res );
+
+    return $count;
 }
 
 function fetch_pathways()
