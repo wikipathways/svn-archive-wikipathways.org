@@ -1,7 +1,6 @@
 <?php
 
 include('../../wpi.php');
-//  include('../../Pathway.php');
 $ontology_id = $_GET['ontology_id'];
 $concept_id = $_GET['concept_id'];
 
@@ -148,17 +147,17 @@ function fetch_tree()
 {
     global $xml, $res_array, $ontology_id, $concept_id;
 
-    //$xml = simplexml_load_file(url($ontology_id ,$concept_id));
-    $ch = curl_init(url($ontology_id ,$concept_id));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HEADER, 0);
-    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
-    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
-
-    $xml = curl_exec($ch);
-    curl_close($ch);
-
-    $xml = simplexml_load_string($xml);
+    $xml = simplexml_load_file(url($ontology_id ,$concept_id));
+//    $ch = curl_init(url($ontology_id ,$concept_id));
+//    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//    curl_setopt($ch, CURLOPT_HEADER, 0);
+//    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
+//    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
+//
+//    $xml = curl_exec($ch);
+//    curl_close($ch);
+//
+//    $xml = simplexml_load_string($xml);
 
     fetch_terms();
     //sort($res_array);
@@ -236,20 +235,6 @@ foreach($xml->data->classBean->relations->entry as $entry )
             $res_array[] = $temp_var;
 
         }
-
-//case 'no_childs':
-//    {
-//foreach($xml->data->classBean->relations->entry as $entry )
-//{
-//    if($entry->string == "ChildCount")
-//    {
-//         echo $entry->int . "<br/>";
-//    }
-//
-//}
-//break;
-//}
-
     }
 }
 
