@@ -202,11 +202,11 @@ function fetch_tree()
 //    curl_setopt($ch, CURLOPT_HEADER, 0);
 //    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
 //    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
-
-    $xml = curl_exec($ch);
-    curl_close($ch);
-
-    $xml = simplexml_load_string($xml);
+//
+//    $xml = curl_exec($ch);
+//    curl_close($ch);
+//
+//    $xml = simplexml_load_string($xml);
 
     fetch_terms();
     //sort($res_array);
