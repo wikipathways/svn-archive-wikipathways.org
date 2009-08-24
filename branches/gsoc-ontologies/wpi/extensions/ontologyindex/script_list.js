@@ -5,9 +5,9 @@ ontologies[0] = ["Pathway Ontology",1035,"PW:0000001"];
 ontologies[1] = ["Disease",1009,"DOID:4"];
 ontologies[2] = ["Cell Type",1006,"CL:0000000"];
 var filter = "All";
-var last_select = null;
-var last_select_species = "All Species";
-var species = "All Species";
+var last_select = "None";
+var last_select_species = "Homo sapiens";
+var species = "Homo sapiens";
 var top_level_terms = new Array(3);
 //top_level_terms['0'] = ["classic metabolic pathway - PW:0000002","disease pathway - PW:0000013","regulatory pathway - PW:0000004","signaling pathway - PW:0000003"];
 //top_level_terms['1'] = ["cell in vivo - CL:0000003","experimentally modified cell - CL:0000578","hematopoietic cell - CL:0000988","oenocyte - CL:0000487"];
@@ -17,7 +17,7 @@ addOnloadHook(
     function () {
     document.getElementById("index_container").innerHTML = "<div id='index_mode'>" +
         "<a href='" + server_url +"list'>List</a> | <a href='" + server_url +"tree'>Tree</a>" +
-        "<br> Sort by : " + "<a onClick='set_filter(\"All\");'> None </a> " + "| " + "<a onClick='set_filter(\"Edited\");'> Most Edited </a> | <a onClick='set_filter(\"Popular\");'>Popularity</a>" +
+        "<br> Sort by : " + "<a onClick='set_filter(\"All\");'> None </a> " + "| " + "<a onClick='set_filter(\"Edited\");'> Most Edited </a> | <a onClick='set_filter(\"Popular\");'>Popularity</a> | <a onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
         "</div>" +
         "<div id='container_left'>" +
         "<div id='species_list'>Loading...</div>" + 
@@ -36,7 +36,6 @@ function init_ontology_list()
 {
    document.getElementById("ontology_list").innerHTML = "<font size='4'><b>Ontologies :</b></font><br>" ;
    get_species();
-   fetch_ontology_list(0);
 }
 
 function fetch_ontology_list(no)
@@ -53,7 +52,7 @@ function fetch_ontology_list(no)
                                         id = term.substring(term.lastIndexOf(" - ")+3,term.length);
                                         id = id.replace("||","");
                                         term = term.substring(0,term.lastIndexOf(" - "));
-                                        document.getElementById("ontology_list").innerHTML += "<li><a  id=" + id + " onClick='set_ontology(\"" + term + " - " + id + "\",\"" + id + "\");'>" + term + '</a></li>';
+                                        document.getElementById("ontology_list").innerHTML += "<ul><li><a  id=" + id + " onClick='set_ontology(\"" + term + " - " + id + "\",\"" + id + "\" ,\"Yes\");'>" + term + '</a></li></ul>';
                                         }
                                 document.getElementById("ontology_list").innerHTML += "<br>";
                                 if(no < (ontologies.length-1))
@@ -61,6 +60,8 @@ function fetch_ontology_list(no)
                                         no++;
                                         fetch_ontology_list(no);
                                     }
+                                else
+                                    set_ontology(" ",last_select,"No");
                         }
 
 	}
@@ -124,7 +125,7 @@ function get_species()
             output += "<li>" + "<a id='" + result[j] + "' onClick='set_species(\"" + result[j] + "\");'>" + result[j] + '</a>' + "</li>";
         }
     document.getElementById("species_list").innerHTML = "<font size='4'><b>Species :</b></font><ul>" + output + "</ul>";
-    set_species("All Species");
+    set_species("Homo sapiens");
 }
 
 var handleFailure = function(o){
@@ -159,16 +160,21 @@ function set_species(specie)
            document.getElementById(specie).style.fontWeight = "bold";
            last_select_species = specie;
            document.getElementById("ontology_list").innerHTML = "<font size='4'><b>Ontologies :</b></font><br>" ;
+           document.getElementById("ontology_list").innerHTML += "<a style=color: #FF0000;' id='None' onClick='set_ontology(\"\",\"None\",\"Yes\");'>None</a><br />";
            document.getElementById("pathway_list").innerHTML = "";
 //           fetch_ontology_list(0);
            get_pathways_list();
+           fetch_ontology_list(0);
+           set_ontology(" ",last_select,"No");
 }
 function get_pathways_list()
 {
 
     var handleSuccess = function(o){
-
-    document.getElementById("treeDiv").innerHTML = "<ul>" + o.responseText + "</ul>";
+    if(o.responseText != " ")
+        document.getElementById("treeDiv").innerHTML = "<ul>" + o.responseText + "</ul>";
+    else
+        document.getElementById("treeDiv").innerHTML = "No pathways found !";
 }
 
 var handleFailure = function(o){
@@ -185,7 +191,7 @@ var callback =
   failure:handleFailure,
   argument: { foo:"foo", bar:"bar" }
 };
-    if(last_select != null)
+    if(last_select != "None")
         var sUrl = opath + "/wp_proxy.php?filter=" + filter + "&action=list&species="+ species + "&term=" + last_select;
     else
         var sUrl = opath + "/wp_proxy.php?filter=" + filter + "&action=list&species="+ species + "&term=";
@@ -194,7 +200,7 @@ var callback =
 
 }
     
-function set_ontology(root_id,id)
+function set_ontology(root_id,id,get_pathways)
 {
 
            document.getElementById("pathway_list").innerHTML = "";
@@ -207,6 +213,7 @@ function set_ontology(root_id,id)
            last_select = id;
            document.getElementById(id).style.color = "#FF0000";
            document.getElementById(id).style.fontWeight = "bold";
+           if(get_pathways == "Yes")
            get_pathways_list();
 
 }
