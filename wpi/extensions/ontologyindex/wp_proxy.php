@@ -139,10 +139,56 @@ function fetch_pw_list()
                                 }
                                 echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Views) </li>";
                             }
-                    
-                            
+                            break;
                 }
-                break;
+            case 'last_edited':
+               {
+                    $dbr =& wfGetDB( DB_SLAVE );
+            		$page = $dbr->tableName( 'page' );
+                    $sql1 = "SELECT page_title as title, page_touched as timestamp  FROM $page WHERE page_namespace=".NS_PATHWAY." AND page_is_redirect=0 ORDER BY `page_touched` DESC";
+
+                    $sql =  "SELECT 'Popularpages' as type,
+                            page_namespace as namespace,
+                            page_title as title,
+                            page_id as id,
+                            page_counter as value
+                            FROM $page
+                            WHERE page_namespace=".NS_PATHWAY."
+                            AND page_is_redirect=0 ORDER BY `page_touched` DESC";
+                            $res = $dbr->query($sql1);
+
+                            while($row = $dbr->fetchObject($res))
+                            {
+                                $timestamp = $row->timestamp;
+                                $year = substr($timestamp, 0, 4);
+                                $month = substr($timestamp, 4, 2);
+                                $day = substr($timestamp, 6, 2);
+                                $date = date('M d, Y', mktime(0,0,0,$month, $day, $year));
+                                $pathwayArray[$row->title] = $date;
+                            }
+                            foreach($pathwayArray as $title=>$value )
+                            {
+                                $p = Pathway::newFromTitle($title);
+                                if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
+                                continue;
+                                if($term!="")
+                                {
+                                    $title = $p->getTitleObject()->getDbKey();
+                                    $count = 0;
+                                    $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
+                                    $res = $dbr->query($sql);
+                                    while($result = $dbr->fetchObject($res))
+                                    {
+                                        $count++;
+                                    }
+                                    if($count == 0)
+                                    continue;
+                                } 
+                                echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a> (Edited on <b>" . $pathwayArray[$title] . "</b>) </li>";
+                            }
+                            break;
+                }
+
          }
 }
 
@@ -156,11 +202,11 @@ function fetch_tree()
 //    curl_setopt($ch, CURLOPT_HEADER, 0);
 //    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
 //    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
-//
-//    $xml = curl_exec($ch);
-//    curl_close($ch);
-//
-//    $xml = simplexml_load_string($xml);
+
+    $xml = curl_exec($ch);
+    curl_close($ch);
+
+    $xml = simplexml_load_string($xml);
 
     fetch_terms();
     //sort($res_array);
