@@ -1,7 +1,6 @@
 <?php
 
 include('../../wpi.php');
-
 $ontology_id = $_GET['ontology_id'];
 $concept_id = $_GET['concept_id'];
 
@@ -229,11 +228,11 @@ function fetch_tree()
 //    $xml = simplexml_load_string($xml);
 
     fetch_terms();
-    //sort($res_array);
+
     $res_arr["ResultSet"]["Result"]=$res_array;
     $res_json = json_encode($res_arr);
     echo $res_json ;
-    //print_r($res_array);
+
 }
 
 
@@ -381,7 +380,7 @@ function fetch_pathways()
 
 function url($ontology_id ,$concept_id)
     {
-        $mail = "chetan1@gmail.com";
+        $mail = BIOPORTAL_ADMIN_MAIL;
         $uri = "http://rest.bioontology.org/bioportal/virtual";
         return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?" . $mail ;
     }
