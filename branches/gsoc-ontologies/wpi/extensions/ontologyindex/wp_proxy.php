@@ -51,7 +51,23 @@ function fetch_pw_list()
                             if($count == 0)
                             continue;
                         }
-                        echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a></li>";
+                        $pwName = $p->name();
+                        $pwArray[$p->getFullUrl()] = strtoupper(substr($pwName,0,1)) . substr($pwName,1) ;
+                    }
+                    if(count($pwArray)>0)
+                    {
+                        asort($pwArray,SORT_STRING);
+                        echo '<table><tbody>';
+                        foreach($pwArray as $url=>$pwTitle)
+                        {
+
+                            if($count%2 == 0)
+                                echo "<tr><td><ul><li><a href='$url'>$pwTitle</a></li></ul></td>";
+                            else
+                                echo "<td><ul><li><a href='$url'>$pwTitle</a></li></ul></td></tr>";
+                            $count++;
+                        }
+                        echo "</tbody></table>";
                     }
                     break;
                 }
@@ -77,6 +93,7 @@ function fetch_pw_list()
                         $pathwayArray[$row->title] = $row->value;
                     }
                     arsort($pathwayArray);
+                    echo '<table><tbody>';
                     foreach($pathwayArray as $title=>$value )
                     {
                         $p = Pathway::newFromTitle($title);
@@ -95,10 +112,13 @@ function fetch_pw_list()
                             if($count == 0)
                             continue;
                         }
-                        echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Revisions) </li>";
-
-
+                        if($count%2 == 0)
+                            echo "<tr><td><li align='left'><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Revisions) </li></td>";
+                        else
+                            echo "<td><li align='right'><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Revisions) </li></td></tr>";
+                        $count++;
                     }
+                    echo "</tbody></table>";
                     break;
                }
             case 'Popular':
