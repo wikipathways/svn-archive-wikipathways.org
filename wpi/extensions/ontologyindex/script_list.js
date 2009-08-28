@@ -7,6 +7,7 @@ ontologies[2] = ["Cell Type",1006,"CL:0000000"];
 var filter = "All";
 var last_select = "None";
 var last_select_species = "Homo sapiens";
+var last_select_filter = "All";
 var species = "Homo sapiens";
 var top_level_terms = new Array(3);
 //top_level_terms['0'] = ["classic metabolic pathway - PW:0000002","disease pathway - PW:0000013","regulatory pathway - PW:0000004","signaling pathway - PW:0000003"];
@@ -17,7 +18,7 @@ addOnloadHook(
     function () {
     document.getElementById("index_container").innerHTML = "<div id='index_mode'>" +
         "<a href='" + server_url +"list'>List</a> | <a href='" + server_url +"tree'>Tree</a>" +
-        "<br> Sort by : " + "<a onClick='set_filter(\"All\");'> None </a> " + "| " + "<a onClick='set_filter(\"Edited\");'> Most Edited </a> | <a onClick='set_filter(\"Popular\");'>Popularity</a> | <a onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
+        "<br> Sort by : " + "<a id='All' style='color: #FF0000;' onClick='set_filter(\"All\");'> Alphabetical</a> " + " | " + "<a id='Edited' onClick='set_filter(\"Edited\");'>Most Edited</a> | <a id='Popular' onClick='set_filter(\"Popular\");'>Most Viewed</a> | <a id='last_edited' onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
         "</div>" +
         "<div id='container_left'>" +
         "<div id='species_list'>Loading...</div>" + 
@@ -160,7 +161,7 @@ function set_species(specie)
            document.getElementById(specie).style.fontWeight = "bold";
            last_select_species = specie;
            document.getElementById("ontology_list").innerHTML = "<font size='4'><b>Ontologies :</b></font><br>" ;
-           document.getElementById("ontology_list").innerHTML += "<a style=color: #FF0000;' id='None' onClick='set_ontology(\"\",\"None\",\"Yes\");'>None</a><br />";
+           document.getElementById("ontology_list").innerHTML += "<a style='color: #FF0000;' id='None' onClick='set_ontology(\"\",\"None\",\"Yes\");'>None</a><br />";
            document.getElementById("pathway_list").innerHTML = "";
 //           fetch_ontology_list(0);
            get_pathways_list();
@@ -220,6 +221,11 @@ function set_ontology(root_id,id,get_pathways)
 
 function set_filter(filterName)
 {
+    document.getElementById(last_select_filter).style.color = "#002BB8";
+    document.getElementById(last_select_filter).style.fontWeight = "normal";
+    document.getElementById(filterName).style.color = "#FF0000";
+    document.getElementById(filterName).style.fontWeight = "bold";
+    last_select_filter = filterName;
     filter = filterName;
     get_pathways_list();
 }
