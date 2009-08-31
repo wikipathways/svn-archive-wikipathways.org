@@ -17,7 +17,7 @@ var species = "Homo sapiens";
 addOnloadHook(
     function () {
     document.getElementById("index_container").innerHTML = "<div id='index_mode'>" +
-        "<a href='" + server_url +"list'>List</a> | <a href='" + server_url +"tree'>Tree</a>" +
+        "<a href='" + server_url +"image'>Image</a> | <a href='" + server_url +"list'>List</a> | <a href='" + server_url +"tree'>Tree</a>" +
         "</div>" +
         "<div id='container_left'>" +
         "<div id='species_list'>Loading...</div>" + 
