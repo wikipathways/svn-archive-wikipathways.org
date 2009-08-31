@@ -17,7 +17,7 @@ var top_level_terms = new Array(3);
 addOnloadHook(
     function () {
     document.getElementById("index_container").innerHTML = "<div id='index_mode'>" +
-        "<a href='" + server_url +"list'>List</a> | <a href='" + server_url +"tree'>Tree</a>" +
+        "<a href='" + server_url +"image'>Image</a> | <a href='" + server_url +"list'>List</a> | <a href='" + server_url +"tree'>Tree</a>" +
         "<br> Sort by : " + "<a id='All' style='color: #FF0000;' onClick='set_filter(\"All\");'> Alphabetical</a> " + " | " + "<a id='Edited' onClick='set_filter(\"Edited\");'>Most Edited</a> | <a id='Popular' onClick='set_filter(\"Popular\");'>Most Viewed</a> | <a id='last_edited' onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
         "</div>" +
         "<div id='container_left'>" +
@@ -192,10 +192,11 @@ var callback =
   failure:handleFailure,
   argument: { foo:"foo", bar:"bar" }
 };
+
     if(last_select != "None")
-        var sUrl = opath + "/wp_proxy.php?filter=" + filter + "&action=list&species="+ species + "&term=" + last_select;
+        var sUrl = opath + "/wp_proxy.php?filter=" + filter + "&action=" + page_mode + "&species="+ species + "&term=" + last_select;
     else
-        var sUrl = opath + "/wp_proxy.php?filter=" + filter + "&action=list&species="+ species + "&term=";
+        var sUrl = opath + "/wp_proxy.php?filter=" + filter + "&action=" + page_mode + "&species="+ species + "&term=";
     document.getElementById("treeDiv").innerHTML = "Loading...";
     var request = YAHOO.util.Connect.asyncRequest('GET', sUrl, callback);
 

@@ -19,12 +19,15 @@ switch($_GET['action'])
         fetch_species();
         break;
     case 'list':
-        fetch_pw_list();
+        fetch_pw_list(false);
+        break;
+    case 'image':
+        fetch_pw_list(true);
         break;
 }
 
 
-function fetch_pw_list()
+function fetch_pw_list($imageMode)
 {
     $term = $_GET['term'];
     switch($_GET['filter'])
@@ -51,7 +54,9 @@ function fetch_pw_list()
                             continue;
                         }
                         $pwName = $p->name();
-                        $pwArray[$p->getFullUrl()] = strtoupper(substr($pwName,0,1)) . substr($pwName,1) ;
+                        $pwUrl = "<a href='" . $p->getFullUrl() . "' >" . $pwName . "</a>";
+                        $display = ($imageMode)?process($p->getTitleObject()->getDbKey(), $pwUrl):$pwUrl;
+                        $pwArray[$p->getFullUrl()] = strtoupper(substr($pwName,0,1)) . substr($pwName,1) . " |-| " . $display;
                     }
                     if(count($pwArray)>0)
                     {
@@ -59,11 +64,11 @@ function fetch_pw_list()
                         echo '<table><tbody>';
                         foreach($pwArray as $url=>$pwTitle)
                         {
-
+                            $pwTitle = substr($pwTitle, strpos($pwTitle,"|-|")+ 3);
                             if($count%2 == 0)
-                                echo "<tr><td><ul><li><a href='$url'>$pwTitle</a></li></ul></td>";
+                                echo "<tr><td><span id='pathway_list_left'><ul><li>$pwTitle</li></ul></span></td>";
                             else
-                                echo "<td><ul><li><a href='$url'>$pwTitle</a></li></ul></td></tr>";
+                                echo "<td align='left'><span id='pathway_list_right'><ul><li>$pwTitle</li></ul></span></td></tr>";
                             $count++;
                         }
                         echo "</tbody></table>";
@@ -111,10 +116,16 @@ function fetch_pw_list()
                             if($count == 0)
                             continue;
                         }
+                        $pwUrl = "<a href='{$p->getFullUrl()}'>{$p->name()}</a><br /> (" . $value ." Revisions)";
+                        $display = ($imageMode)?process($title, $pwUrl):$pwUrl;
                         if($count%2 == 0)
-                            echo "<tr><td><li align='left'><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Revisions) </li></td>";
+                        {
+                            echo "<tr><td><span id='pathway_list_left'><ul><li>$display</li></ul></span></td>";;
+                        }
                         else
-                            echo "<td><li align='right'><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Revisions) </li></td></tr>";
+                        {
+                            echo "<td><span id='pathway_list_right'><ul><li>$display</li></ul></span></td></tr>";;
+                        }
                         $count++;
                     }
                     echo "</tbody></table>";
@@ -138,6 +149,7 @@ function fetch_pw_list()
                                 $pathwayArray[$row->title] = $row->value;
                                 arsort($pathwayArray);
                             }
+                            echo "<table><tbody>";
                             foreach($pathwayArray as $title=>$value )
                             {
                                 $p = Pathway::newFromTitle($title);
@@ -156,8 +168,20 @@ function fetch_pw_list()
                                     if($count == 0)
                                     continue;
                                 }
-                                echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a> (" . $value ." Views) </li>";
+                                $pwUrl = "<a href='{$p->getFullUrl()}'>{$p->name()}</a><br /> (" . $value ." Views)";
+                                $display = ($imageMode)?process($title, $pwUrl):$pwUrl;
+                                if($count%2 == 0)
+                                {
+                                    echo "<tr><td><span id='pathway_list_left'><ul><li>$display</li></ul></span></td>";;
+                                }
+                                else
+                                {
+                                    echo "<td><span id='pathway_list_right'><ul><li>$display</li></ul></span></td></tr>";;
+                                }
+                                $count++;
+
                             }
+                            echo "</tbody></table>";
                             break;
                 }
             case 'last_edited':
@@ -185,6 +209,7 @@ function fetch_pw_list()
                                 $date = date('M d, Y', mktime(0,0,0,$month, $day, $year));
                                 $pathwayArray[$row->title] = $date;
                             }
+                            echo "<table><tbody>";                            
                             foreach($pathwayArray as $title=>$value )
                             {
                                 $p = Pathway::newFromTitle($title);
@@ -202,9 +227,21 @@ function fetch_pw_list()
                                     }
                                     if($count == 0)
                                     continue;
-                                } 
-                                echo "<li><a href='{$p->getFullUrl()}'>{$p->name()}</a> (Edited on <b>" . $pathwayArray[$title] . "</b>) </li>";
+                                }
+                                $pwUrl = "<a href='{$p->getFullUrl()}'>{$p->name()}</a><br /> (Edited on <b>" . $pathwayArray[$title] . "</b>) </li>";
+                                $display = ($imageMode)?process($title, $pwUrl):$pwUrl;
+                                if($count%2 == 0)
+                                {
+                                    echo "<tr><td><span id='pathway_list_left'><ul><li>$display</li></ul></span></td>";;
+                                }
+                                else
+                                {
+                                    echo "<td><span id='pathway_list_right'><ul><li>$display</li></ul></span></td></tr>";;
+                                }
+                                $count++;
+
                             }
+                            echo "</tbody></table>";
                             break;
                 }
 
@@ -403,4 +440,88 @@ function fetch_species()
     $result = json_encode($result);
     echo($result);
 }
+function makeThumbLinkObj1( $pathway, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 180, $boxheight=false, $framed=false ) {
+            global $wgStylePath, $wgContLang;
+
+			$pathway->updateCache(FILETYPE_IMG);
+            $img = new Image($pathway->getFileTitle(FILETYPE_IMG));
+
+            $img->loadFromFile();
+
+            $imgURL = $img->getURL();
+
+            $thumbUrl = '';
+            $error = '';
+
+            $width = $height = 0;
+            if ( $img->exists() ) {
+                    $width  = $img->getWidth();
+                    $height = $img->getHeight();
+            }
+            if ( 0 == $width || 0 == $height ) {
+                    $width = $height = 180;
+            }
+            if ( $boxwidth == 0 ) {
+                    $boxwidth = 180;
+            }
+            if ( $framed ) {
+                    // Use image dimensions, don't scale
+                    $boxwidth  = $width;
+                    $boxheight = $height;
+                    $thumbUrl  = $img->getViewURL();
+            } else {
+                    if ( $boxheight === false ) $boxheight = -1;
+                    $thumb = $img->getThumbnail( $boxwidth, $boxheight );
+                    if ( $thumb ) {
+                            $thumbUrl = $thumb->getUrl();
+                            $boxwidth = $thumb->width;
+                            $boxheight = $thumb->height;
+                    } else {
+                            $error = $img->getLastError();
+                    }
+            }
+            $oboxwidth = $boxwidth + 2;
+
+            $more = htmlspecialchars( wfMsg( 'thumbnail-more' ) );
+            $magnifyalign = $wgContLang->isRTL() ? 'left' : 'right';
+            $textalign = $wgContLang->isRTL() ? ' style="text-align:right"' : '';
+
+            $s = "<div id=\"{$id}\" class=\"thumb t{$align}\"><div class=\"thumbinner\" style=\"width:{$oboxwidth}px;\">";
+            if( $thumbUrl == '' ) {
+                    // Couldn't generate thumbnail? Scale the image client-side.
+                    $thumbUrl = $img->getViewURL();
+                    if( $boxheight == -1 ) {
+                            // Approximate...
+                            $boxheight = intval( $height * $boxwidth / $width );
+                    }
+            }
+            if ( $error ) {
+                    $s .= htmlspecialchars( $error );
+            } elseif( !$img->exists() ) {
+                    $s .= "Image does not exist";
+            } else {
+                    $s .= '<a href="'.$href.'" class="internal" title="'.$alt.'">'.
+                            '<img src="'.$thumbUrl.'" alt="'.$alt.'" ' .
+                            'width="'.$boxwidth.'" height="'.$boxheight.'" ' .
+                            'longdesc="'.$href.'" class="thumbimage" /></a>';
+            }
+            $s .= '  <div class="thumbcaption"'.$textalign.'>'.$label."</div></div></div>";
+            return str_replace("\n", ' ', $s);
+            //return $s;
+    }
+function process($title,$caption)
+    {
+    $pathway = Pathway::newFromTitle($title);
+    $img = new Image($pathway->getFileTitle(FILETYPE_IMG));
+    $href = $pathway->getFullUrl();
+    if($caption == "")
+    {
+        $caption = "<a href=\"$href\">" . $pathway->name() . "</a>";
+        $caption = html_entity_decode($caption);         //This can be quite dangerous (injection),
+                                                            //we would rather parse wikitext, let me know if
+                                                            //you know a way to do that (TK)
+    }
+    $output = makeThumbLinkObj1($pathway, $caption, $href, $tooltip, $align, $id, 100);
+    return $output;
+    }
 ?> 
