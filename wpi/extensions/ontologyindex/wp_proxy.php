@@ -418,7 +418,7 @@ function fetch_pathways()
 function url($ontology_id ,$concept_id)
     {
         $mail = BIOPORTAL_ADMIN_MAIL;
-        $uri = "http://rest.bioontology.org/bioportal/virtual";
+        $uri = "http://rest.bioontology.org/bioportal/virtual/ontology";
         return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?" . $mail ;
     }
 
