@@ -1,5 +1,8 @@
 <?php
 
+include('../../wpi.php');
+include('../ontologyindex/ontologycache.php');
+
 if(isset($_GET['ontology_id']))
 $ontology_id = $_GET['ontology_id'];
 else
@@ -22,12 +25,8 @@ $concept_id = "GO:0008150";
 //$xml = simplexml_load_string($xml);
 
 
-$xml = simplexml_load_file(url($ontology_id ,$concept_id));
-//echo url(40021,"GO:0008150")."<br>";
-
+$xml = $xml = simplexml_load_string(ontologycache::fetchCache("tree",url($ontology_id ,$concept_id)));
 $res_array;
-
-
 data('childs');
 sort($res_array);
 $res_arr["ResultSet"]["Result"]=$res_array;
@@ -62,9 +61,6 @@ foreach($xml->data->classBean->relations->entry as $entry )
             if($sub_concepts->relations->entry->int == "0")
             $temp_var .="||";
             $res_array[] = $temp_var;
-
-			//echo '<a href="' . proxy_url($ontology_id ,$sub_concepts->id ).'">'.$sub_concepts->label . "</a>";
-            //echo " " . $sub_concepts->relations->entry->int . "<br/>";
         }
 
     }
@@ -88,19 +84,11 @@ break;
 }
 
 
-
-function proxy_url($ontology_id ,$concept_id)
-    {
-   $uri = "http://localhost/parser";
-   return $url =   "?ontology_id=" . $ontology_id . "&concept_id=" . $concept_id;
-
-    }
-
 function url($ontology_id ,$concept_id)
     {
-   $mail = "chetan1@gmail.com";
-   $uri = "http://rest.bioontology.org/bioportal/virtual";
-   return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?" . $mail ;
+   $mail = BIOPORTAL_ADMIN_MAIL;
+   $uri = "http://rest.bioontology.org/bioportal/virtual/ontology";
+   return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?email=" . $mail ;
 
     }
 
