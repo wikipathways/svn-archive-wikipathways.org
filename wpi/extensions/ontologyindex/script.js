@@ -7,8 +7,8 @@ ontologies[2] = ["Cell Type",1006,"CL:0000000"];
 
 var last_select = null;
 var last_select_id = null;
-var last_select_species = "Homo sapiens";
 var species = "Homo sapiens";
+var last_select_species = species;
 //var top_level_terms = new Array(3);
 //top_level_terms = ["classic metabolic pathway - PW:0000002","disease pathway - PW:0000013","regulatory pathway - PW:0000004","signaling pathway - PW:0000003"];
 //top_level_terms['1'] = ["cell in vivo - CL:0000003","experimentally modified cell - CL:0000578","hematopoietic cell - CL:0000988","oenocyte - CL:0000487"];
@@ -29,7 +29,7 @@ addOnloadHook(
         "<div id='treeDiv'>Please select a top level Ontology term !</div>" +
         "</div>" ;
     init_ontology_list();
-    initTree();
+    
     }
 ) ;
 
@@ -49,7 +49,16 @@ function initTree() {
         tree.setDynamicLoad(loadNodeData);
 
         var root = tree.getRoot();
-        var tmpNode = new YAHOO.widget.TextNode("Pathway Ontology - PW:0000001", root, true);
+        if(YAHOO.util.Cookie.get("ontology") != "" && YAHOO.util.Cookie.get("ontology") != null)
+            {
+                var tmpNode = new YAHOO.widget.TextNode(YAHOO.util.Cookie.get("ontology"), root, true);
+                last_select = YAHOO.util.Cookie.get("ontologyId");
+            }
+        else
+            {
+                var tmpNode = new YAHOO.widget.TextNode("classic metabolic pathway - PW:0000002", root, true);
+                last_select = "PW:0000002";
+            }
         tmpNode.c_id = tmpNode.label.substring(tmpNode.label.lastIndexOf(" - ")+3,tmpNode.label.length);
         tmpNode.label = tmpNode.label.substring(0,tmpNode.label.lastIndexOf(" - "));
         tree.subscribe("labelClick", function(node) {
@@ -90,6 +99,11 @@ function fetch_ontology_list(no)
                         no++;
                         fetch_ontology_list(no);
                     }
+                else
+                    {
+                        document.getElementById(last_select).style.color = "#FF0000";
+                        document.getElementById(last_select).style.fontWeight = "bold";
+                    }
         }
 
 	}
@@ -114,34 +128,6 @@ var callback =
 
 }
 
-function get_pathways(label, id)
-{
-    var handleSuccess = function(o){
-
-    document.getElementById("pathway_list").innerHTML = o.responseText + "<br><hr width='50%' align='center'><br>";
-}
-
-var handleFailure = function(o){
-	if(o.responseText !== undefined){
-		div.innerHTML = "<ul><li>Transaction id: " + o.tId + "</li>";
-		div.innerHTML += "<li>HTTP status: " + o.status + "</li>";
-		div.innerHTML += "<li>Status code message: " + o.statusText + "</li></ul>";
-	}
-}
-
-var callback =
-{
-  success:handleSuccess,
-  failure:handleFailure,
-  argument: { foo:"foo", bar:"bar" }
-};
-    ontology_id = get_ontology_id(id);
-    var sUrl = opath + "/wp_proxy.php?action=pathways&ontology_term=" + label + "&ontology_id=" + ontology_id + "&concept_id=" + encodeURI(id) + "&species=" + species;
-    document.getElementById("pathway_list").innerHTML = "Loading...";
-    var request = YAHOO.util.Connect.asyncRequest('GET', sUrl, callback);
-    
-
-}
 
 function get_species()
 {
@@ -153,7 +139,12 @@ function get_species()
             output += "<li>" + "<a id='" + result[j] + "' onClick='set_species(\"" + result[j] + "\");'>" + result[j] + '</a>' + "</li>";
         }
     document.getElementById("species_list").innerHTML = "<font size='4'><b>Species :</b></font><ul>" + output + "</ul>";
-    set_species("Homo sapiens");
+    if(YAHOO.util.Cookie.get("species") != "" && YAHOO.util.Cookie.get("species") != null)
+        {
+        set_species(YAHOO.util.Cookie.get("species"));
+        }
+    else
+        set_species("Homo sapiens");
 }
 
 var handleFailure = function(o){
@@ -187,19 +178,16 @@ function set_species(specie)
            document.getElementById(specie).style.color = "#FF0000";
            document.getElementById(specie).style.fontWeight = "bold";
            last_select_species = specie;
+           YAHOO.util.Cookie.set("species", species);
            document.getElementById("ontology_list").innerHTML = "<font size='4'><b>Ontologies :</b></font><br>" ;
 //           document.getElementById("treeDiv").innerHTML = "Please select a top level Ontology term !";
            document.getElementById("pathway_list").innerHTML = "";
-//           if(last_select != null)
-//               {
-//                    create_tree(last_select_id,last_select);
-//                    alert("sdsd");
-//               }
-//           else
-//               {
-                    initTree();
-//                    alert("sdsd11");
-//               }
+
+//          if(YAHOO.util.Cookie.get("ontology") != "")
+//             create_tree(YAHOO.util.Cookie.get("ontology"), YAHOO.util.Cookie.get("ontologyId"));
+//          else
+//             create_tree("Pathway Ontology - PW:0000001", "PW:0000001");
+           initTree();
            fetch_ontology_list(0);
 }
 
@@ -220,6 +208,8 @@ function create_tree(root_id,id)
 
            last_select = id;
            last_select_id = root_id;
+           YAHOO.util.Cookie.set("ontology", last_select_id);
+           YAHOO.util.Cookie.set("ontologyId", last_select);
            document.getElementById(id).style.color = "#FF0000";
            document.getElementById(id).style.fontWeight = "bold";
            var tempNode = new YAHOO.widget.TextNode(aConcepts, root, tree);
