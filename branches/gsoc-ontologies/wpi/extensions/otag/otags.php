@@ -1,5 +1,6 @@
 <?php
 require_once('../../wpi.php');
+include('ontologycache.php');
 $title = $_POST['title'];
 if($_POST['action']=="fetch")
 {

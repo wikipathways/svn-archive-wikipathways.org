@@ -1,5 +1,6 @@
 <?php
-
+include('../../wpi.php');
+include('../ontologyindex/ontologycache.php');
 if(isset($_GET['ontology_id']))
 $ontology_id = $_GET['ontology_id'];
 else
@@ -27,7 +28,7 @@ $max_hits = 12 ;
 //$xml = simplexml_load_string($xml);
 //
 
-$xml = simplexml_load_file(url($ontology_id ,$search_term,$max_hits));
+$xml = simplexml_load_string(ontologycache::fetchCache("search",url($ontology_id ,$search_term,$max_hits)));
 //echo url(40021,"GO:0008150")."<br>";
 
 $res_array;
@@ -87,7 +88,7 @@ break;
 
 function url($ontology_id ,$search_term,$max_hits)
     {
-   $mail = "chetan1@gmail.com";
+   $mail = BIOPORTAL_ADMIN_MAIL;
    $uri = "http://rest.bioontology.org/bioportal/search";
    return $url = $uri . "/" . $search_term . "/?ontologyids=" . $ontology_id . "&maxnumhits=" . $max_hits . "&email=" . $mail ;
 
