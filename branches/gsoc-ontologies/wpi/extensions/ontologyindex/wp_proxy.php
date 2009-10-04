@@ -1,6 +1,7 @@
 <?php
 
 include('../../wpi.php');
+include('ontologycache.php');
 $ontology_id = $_GET['ontology_id'];
 $concept_id = $_GET['concept_id'];
 
@@ -11,9 +12,6 @@ switch($_GET['action'])
 {
     case 'tree':
         fetch_tree();
-        break;
-    case 'pathways':
-        fetch_pathways();
         break;
     case 'species':
         fetch_species();
@@ -29,6 +27,7 @@ switch($_GET['action'])
 
 function fetch_pw_list($imageMode)
 {
+
     $term = $_GET['term'];
     switch($_GET['filter'])
         {
@@ -61,14 +60,14 @@ function fetch_pw_list($imageMode)
                     if(count($pwArray)>0)
                     {
                         asort($pwArray,SORT_STRING);
-                        echo '<table><tbody>';
+                        echo '<table width="100%"><tbody>';
                         foreach($pwArray as $url=>$pwTitle)
                         {
                             $pwTitle = substr($pwTitle, strpos($pwTitle,"|-|")+ 3);
                             if($count%2 == 0)
-                                echo "<tr><td><span id='pathway_list_left'><ul><li>$pwTitle</li></ul></span></td>";
+                                echo "<tr><td>$pwTitle</span></td>";
                             else
-                                echo "<td align='left'><span id='pathway_list_right'><ul><li>$pwTitle</li></ul></span></td></tr>";
+                                echo "<td align='left'>$pwTitle</td></tr>";
                             $count++;
                         }
                         echo "</tbody></table>";
@@ -97,7 +96,7 @@ function fetch_pw_list($imageMode)
                         $pathwayArray[$row->title] = $row->value;
                     }
                     arsort($pathwayArray);
-                    echo '<table><tbody>';
+                    echo '<table width="100%"><tbody>';
                     foreach($pathwayArray as $title=>$value )
                     {
                         $p = Pathway::newFromTitle($title);
@@ -120,11 +119,11 @@ function fetch_pw_list($imageMode)
                         $display = ($imageMode)?process($title, $pwUrl):$pwUrl;
                         if($count%2 == 0)
                         {
-                            echo "<tr><td><span id='pathway_list_left'><ul><li>$display</li></ul></span></td>";;
+                            echo "<tr><td>$display</td>";;
                         }
                         else
                         {
-                            echo "<td><span id='pathway_list_right'><ul><li>$display</li></ul></span></td></tr>";;
+                            echo "<td>$display</td></tr>";;
                         }
                         $count++;
                     }
@@ -149,7 +148,7 @@ function fetch_pw_list($imageMode)
                                 $pathwayArray[$row->title] = $row->value;
                                 arsort($pathwayArray);
                             }
-                            echo "<table><tbody>";
+                            echo "<table  width='100%'><tbody>";
                             foreach($pathwayArray as $title=>$value )
                             {
                                 $p = Pathway::newFromTitle($title);
@@ -172,11 +171,11 @@ function fetch_pw_list($imageMode)
                                 $display = ($imageMode)?process($title, $pwUrl):$pwUrl;
                                 if($count%2 == 0)
                                 {
-                                    echo "<tr><td><span id='pathway_list_left'><ul><li>$display</li></ul></span></td>";;
+                                    echo "<tr><td>$display</td>";;
                                 }
                                 else
                                 {
-                                    echo "<td><span id='pathway_list_right'><ul><li>$display</li></ul></span></td></tr>";;
+                                    echo "<td>$display</td></tr>";;
                                 }
                                 $count++;
 
@@ -209,7 +208,7 @@ function fetch_pw_list($imageMode)
                                 $date = date('M d, Y', mktime(0,0,0,$month, $day, $year));
                                 $pathwayArray[$row->title] = $date;
                             }
-                            echo "<table><tbody>";                            
+                            echo "<table width='100%'><tbody>";
                             foreach($pathwayArray as $title=>$value )
                             {
                                 $p = Pathway::newFromTitle($title);
@@ -232,11 +231,11 @@ function fetch_pw_list($imageMode)
                                 $display = ($imageMode)?process($title, $pwUrl):$pwUrl;
                                 if($count%2 == 0)
                                 {
-                                    echo "<tr><td><span id='pathway_list_left'><ul><li>$display</li></ul></span></td>";;
+                                    echo "<tr><td>$display</td>";;
                                 }
                                 else
                                 {
-                                    echo "<td><span id='pathway_list_right'><ul><li>$display</li></ul></span></td></tr>";;
+                                    echo "<td>$display</td></tr>";;
                                 }
                                 $count++;
 
@@ -251,8 +250,8 @@ function fetch_pw_list($imageMode)
 function fetch_tree()
 {
     global $xml, $res_array, $ontology_id, $concept_id;
-
-    $xml = simplexml_load_file(url($ontology_id ,$concept_id));
+    $xml = simplexml_load_string(ontologycache::fetchCache("tree",url($ontology_id ,$concept_id)));
+//    ontologycache::updateCache("tree",url($ontology_id ,$concept_id),$xml->asXML());
 //    $ch = curl_init(url($ontology_id ,$concept_id));
 //    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 //    curl_setopt($ch, CURLOPT_HEADER, 0);
@@ -293,8 +292,7 @@ function fetch_terms()
             {
                 $p = Pathway::newFromTitle($row->pw_id);
                 $p_id = $row->pw_id;
-//              $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
-                $pw = $p->name();
+                $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
                 $res_array[] =  ">> " . $pw . " - " . $p_id . "0000a||";
                 //$pw .=  $row->pw_id . ", ";
             }
@@ -302,12 +300,9 @@ function fetch_terms()
             else
             {
                 $p = Pathway::newFromTitle($row->pw_id);
-//              $pw = "<font face='Verdana'><i><b>{$p->name()}</b></i></font>";
                 $p_id = $row->pw_id;
-//              $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
-                $pw = $p->name();
-                $res_array[] =  ">> <b><font face='Verdana' color='blue'>" . $pw . "</font></b> - " . $p_id . "0000a||";
-                
+                $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
+                $res_array[] =  ">> " . $pw . " - " . $p_id . "0000a||";
                 }
         }
 
@@ -370,56 +365,11 @@ function no_paths($match,$ontology_id,$concept_id)
     return $count;
 }
 
-function fetch_pathways()
-{
-    global $concept_id;
-    global $xml, $res_array, $ontology_id, $concept_id;
-    $dbr =& wfGetDB(DB_SLAVE);
-
-    echo "<b>" . $_GET['ontology_term'] . "</b><br>";
-    $sql = "SELECT * FROM ontology where `term_id` = '$concept_id'";
-    $res = $dbr->query($sql);
-    while($row = $dbr->fetchObject($res))
-        {
-            if($_GET['species'] != "All Species")
-            {
-            if(fetch_pathway_species($row->pw_id) == $_GET['species'])
-            echo  fetch_pathway_name($row->pw_id) . "<br>";
-            }
-            else
-            echo  fetch_pathway_name($row->pw_id) . "<br>";
-        }
-    $xml = simplexml_load_file(url($ontology_id ,$concept_id));
-    fetch_terms();
-    $res_arr["ResultSet"]["Result"]=$res_array;
-    if($res_array != null)
-    {
-    foreach($res_array as $term)
-    {
-    $id = str_replace("||", "", substr($term, strpos($term," - ")+3));
-    echo $term = "&nbsp;&nbsp;&nbsp;" . substr($term, 0, strpos($term," - ")) . " <br>";
-    $sql = "SELECT * FROM ontology where `term_id` = '$id'";
-    $res = $dbr->query($sql);
-    while($row = $dbr->fetchObject($res))
-        {
-            if($_GET['species'] != "All Species")
-            {
-            if(fetch_pathway_species($row->pw_id) == $_GET['species'])
-            echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . fetch_pathway_name($row->pw_id) . "<br>";
-            }
-            else
-            echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . fetch_pathway_name($row->pw_id) . "<br>";
-        }
-    }
-    }
-    //sort($res_array);
-}
-
 function url($ontology_id ,$concept_id)
     {
         $mail = BIOPORTAL_ADMIN_MAIL;
         $uri = "http://rest.bioontology.org/bioportal/virtual/ontology";
-        return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?" . $mail ;
+        return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?email=" . $mail ;
     }
 
 function fetch_pathway_name($title)
@@ -440,7 +390,7 @@ function fetch_species()
     $result = json_encode($result);
     echo($result);
 }
-function makeThumbLinkObj1( $pathway, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 180, $boxheight=false, $framed=false ) {
+function makeThumbLinkObj1( $pathway, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 300, $boxheight=false, $framed=false ) {
             global $wgStylePath, $wgContLang;
 
 			$pathway->updateCache(FILETYPE_IMG);
@@ -459,10 +409,10 @@ function makeThumbLinkObj1( $pathway, $label = '', $href = '', $alt, $align = 'r
                     $height = $img->getHeight();
             }
             if ( 0 == $width || 0 == $height ) {
-                    $width = $height = 180;
+                    $width = $height = 220;
             }
             if ( $boxwidth == 0 ) {
-                    $boxwidth = 180;
+                    $boxwidth = 230;
             }
             if ( $framed ) {
                     // Use image dimensions, don't scale
@@ -521,7 +471,7 @@ function process($title,$caption)
                                                             //we would rather parse wikitext, let me know if
                                                             //you know a way to do that (TK)
     }
-    $output = makeThumbLinkObj1($pathway, $caption, $href, $tooltip, $align, $id, 100);
+    $output = makeThumbLinkObj1($pathway, $caption, $href, $tooltip, $align, $id, 175);
     return $output;
     }
 ?> 
