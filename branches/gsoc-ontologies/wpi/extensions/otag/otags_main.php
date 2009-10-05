@@ -81,7 +81,6 @@ $output = <<<HTML
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
 <script type="text/javascript" src="$opath/js/script.js"></script>
 <script type="text/javascript">
-//once the DOM has loaded, we can go ahead and set up our tree:
 YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
 </script>
 HTML;
@@ -97,9 +96,6 @@ $output = <<<HTML
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css" />
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
 <script type="text/javascript" src="$opath/js/script.js"></script>
-<script type="text/javascript">
-//once the DOM has loaded, we can go ahead and set up our tree:
-</script>
 HTML;
 return   '<!-- ENCODED_CONTENT '.base64_encode($output).' -->' ; //. $check ;
 
