@@ -28,7 +28,7 @@ addOnloadHook(
         "</div>" +
         "<div id='container_right'>" +
         "<div id='pathway_list'></div>" +
-        "<div id='treeDiv'></div>" +
+        "<div id='treeDiv'>Loading...</div>" +
         "</div>" ;
         init_ontology_list();
     }
@@ -63,7 +63,16 @@ function fetch_ontology_list(no)
                                         fetch_ontology_list(no);
                                     }
                                 else
-                                    set_ontology(" ",last_select,"No");
+                                    {
+                                        if(YAHOO.util.Cookie.get('ontologyId') != "" && YAHOO.util.Cookie.get('ontologyId') != null)
+                                        {
+                                            last_select = YAHOO.util.Cookie.get('ontologyId');
+                                            set_ontology(YAHOO.util.Cookie.get('ontology'),YAHOO.util.Cookie.get('ontologyId'),"No");
+                                        }
+                                        else
+                                            set_ontology(" ",last_select,"No");
+                                        get_pathways_list();
+                                    }
                         }
 
 	}
@@ -138,14 +147,9 @@ function set_species(specie)
            document.getElementById("ontology_list").innerHTML = "<font size='4'><b>Ontologies :</b></font><br>" ;
            document.getElementById("ontology_list").innerHTML += "<a id='None' onClick='set_ontology(\"\",\"None\",\"Yes\");'>None</a><br />";
            document.getElementById("pathway_list").innerHTML = "";
-//           fetch_ontology_list(0);
            YAHOO.util.Cookie.set("species", species);
-           get_pathways_list();
            fetch_ontology_list(0);
-           if(YAHOO.util.Cookie.get('ontologyId') != "" && YAHOO.util.Cookie.get('ontologyId') != null)
-               set_ontology(YAHOO.util.Cookie.get('ontology'),YAHOO.util.Cookie.get('ontologyId'),"No");
-           else
-               set_ontology(" ",last_select,"No");
+
 }
 function get_pathways_list()
 {
@@ -200,7 +204,7 @@ function set_ontology(root_id,id,get_pathways)
            document.getElementById(id).style.color = "#FF0000";
            document.getElementById(id).style.fontWeight = "bold";
            if(get_pathways == "Yes")
-           get_pathways_list();
+                get_pathways_list();
 
 }
 
@@ -228,7 +232,6 @@ function get_ontology_id(tag_id)
                     ontology_id = ontologies[2][1];
                     break;
                 
-            }
-            
+            }           
             return ontology_id;
 }
