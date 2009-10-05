@@ -41,15 +41,15 @@ function fetch_pw_list($imageMode)
                         if($term!="")
                         {
                             $title = $p->getTitleObject()->getDbKey();
-                            $count = 0;
+                            $check = 0;
                             $dbr =& wfGetDB(DB_SLAVE);
                             $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
                             $res = $dbr->query($sql);
                             while($row = $dbr->fetchObject($res))
                             {
-                                $count++;
+                                $check++;
                             }
-                            if($count == 0)
+                            if($check == 0)
                             continue;
                         }
                         $pwName = $p->name();
@@ -105,14 +105,14 @@ function fetch_pw_list($imageMode)
                         if($term!="")
                         {
                             $title = $p->getTitleObject()->getDbKey();
-                            $count = 0;
+                            $check = 0;
                             $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
                             $res = $dbr->query($sql);
                             while($result = $dbr->fetchObject($res))
                             {
-                                $count++;
+                                $check++;
                             }
-                            if($count == 0)
+                            if($check == 0)
                             continue;
                         }
                         $pwUrl = "<a href='{$p->getFullUrl()}'>{$p->name()}</a><br /> (" . $value ." Revisions)";
@@ -157,14 +157,14 @@ function fetch_pw_list($imageMode)
                                 if($term!="")
                                 {
                                     $title = $p->getTitleObject()->getDbKey();
-                                    $count = 0;
+                                    $check = 0;
                                     $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
                                     $res = $dbr->query($sql);
                                     while($result = $dbr->fetchObject($res))
                                     {
-                                        $count++;
+                                        $check++;
                                     }
-                                    if($count == 0)
+                                    if($check == 0)
                                     continue;
                                 }
                                 $pwUrl = "<a href='{$p->getFullUrl()}'>{$p->name()}</a><br /> (" . $value ." Views)";
@@ -217,14 +217,14 @@ function fetch_pw_list($imageMode)
                                 if($term!="")
                                 {
                                     $title = $p->getTitleObject()->getDbKey();
-                                    $count = 0;
+                                    $check = 0;
                                     $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
                                     $res = $dbr->query($sql);
                                     while($result = $dbr->fetchObject($res))
                                     {
-                                        $count++;
+                                        $check++;
                                     }
-                                    if($count == 0)
+                                    if($check == 0)
                                     continue;
                                 }
                                 $pwUrl = "<a href='{$p->getFullUrl()}'>{$p->name()}</a><br /> (Edited on <b>" . $pathwayArray[$title] . "</b>) </li>";
