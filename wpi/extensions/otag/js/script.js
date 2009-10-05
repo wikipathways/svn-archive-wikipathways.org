@@ -12,9 +12,25 @@ Redistribution and use of this software in source and binary forms, with or with
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-//var path = "http://localhost/wikipathways/";
 
-ontologytree = function() {
+var out = " ";
+var opentag_id = -1;
+var div = document.getElementById('otags');
+var otagroot = document.getElementById('ontology_container');
+var save_img = document.getElementById('save_img');
+var save_link = document.getElementById('save_link');
+var title = wgPageName;
+var tags = new Array();
+var old_tags = new Array();
+var timeout = null;
+var ontologies = new Array(3);
+ontologies[0] = ["Pathway Ontology","PW:0000001",1035,39997,"treeDiv1"];
+ontologies[1] = ["Disease","DOID:4",1009,40256,"treeDiv2"];
+ontologies[2] = ["Cell Type","CL:0000000",1006,40177,"treeDiv3"];
+
+
+if(otagloggedIn == "true")
+    ontologytree = function() {
 
         function buildTree() {
         var tree = new Array();
@@ -98,75 +114,61 @@ function loadNodeData(node, fnLoadComplete)  {
         }
 
 
+if(otagloggedIn == "true")
+    function auto_complete (){
+        var oDS = new YAHOO.util.XHRDataSource( opath + "/search_proxy.php");
+        // Set the responseType
+        oDS.responseType = YAHOO.util.XHRDataSource.TYPE_JSON;
+        // Define the schema of the JSON results
+        oDS.responseSchema = {
+            resultsList : "ResultSet.Result",
+            fields : ["label","id","ontology"]
+        };
+        oDS.maxCacheEntries = 15;
+        // Instantiate the AutoComplete
+        var oAC = new YAHOO.widget.AutoComplete("myInput", "myContainer", oDS);
+        // Throttle requests sent
+        oAC.queryDelay = 0.2;
+        oAC.minQueryLength = 3;
+        oAC.useShadow = true;
+        oAC.prehighlightClassName = "yui-ac-prehighlight";
 
-function auto_complete (){
-   var oDS = new YAHOO.util.XHRDataSource( opath + "/search_proxy.php");
-    // Set the responseType
-    oDS.responseType = YAHOO.util.XHRDataSource.TYPE_JSON;
-    // Define the schema of the JSON results
-    oDS.responseSchema = {
-        resultsList : "ResultSet.Result",
-        fields : ["label","id","ontology"]
-    };
-    oDS.maxCacheEntries = 15;
-    // Instantiate the AutoComplete
-    var oAC = new YAHOO.widget.AutoComplete("myInput", "myContainer", oDS);
-    // Throttle requests sent
-    oAC.queryDelay = 0.2;
-    oAC.minQueryLength = 3;
-    oAC.useShadow = true;
-    oAC.prehighlightClassName = "yui-ac-prehighlight";
+        // The webservice needs additional parameters
+        oAC.generateRequest = function(sQuery) {
+            return "?search_term=" + sQuery ;
+        };
 
-    // The webservice needs additional parameters
-    oAC.generateRequest = function(sQuery) {
-        return "?search_term=" + sQuery ;
-    };
+        oAC.resultTypeList = false;
+        // Customize formatter to show thumbnail images
+        oAC.formatResult = function(oResultData, sQuery, sResultMatch) {
 
-    oAC.resultTypeList = false;
-    // Customize formatter to show thumbnail images
-    oAC.formatResult = function(oResultData, sQuery, sResultMatch) {
+            if(oResultData.label == "No results !")
+                return  "<em>" + oResultData.label + "</em>";
+            else
+                return  "<em>" + oResultData.label + "</em><br />" + oResultData.ontology ;
+        };
 
-        if(oResultData.label == "No results !")
-            return  "<em>" + oResultData.label + "</em>";
+        var itemSelectHandler = function(sType, aArgs) {
+        var oData = aArgs[2]; // object literal of data for the result
+        if(oData.label == "No results !")
+            {
+            }
         else
-            return  "<em>" + oResultData.label + "</em><br />" + oResultData.ontology ;
-    };
+            {
+                display_tag(oData.label,oData.id,0);
+            }
+        };
 
-var itemSelectHandler = function(sType, aArgs) {
-	var oData = aArgs[2]; // object literal of data for the result
-    if(oData.label == "No results !")
-        {
-        }
-    else
-        {
-            display_tag(oData.label,oData.id,0);
-        }
-};
+        oAC.itemSelectEvent.subscribe(itemSelectHandler);
 
-oAC.itemSelectEvent.subscribe(itemSelectHandler);
-
-    return {
-        oDS: oDS,
-        oAC: oAC
-    };
+        return {
+            oDS: oDS,
+            oAC: oAC
+        };
 }
 
 
 
-var out = " ";
-var opentag_id = -1;
-var div = document.getElementById('otags');
-var otagroot = document.getElementById('ontology_container');
-var save_img = document.getElementById('save_img');
-var save_link = document.getElementById('save_link');
-var title = wgPageName;
-var tags = new Array();
-var old_tags = new Array();
-var timeout = null;
-var ontologies = new Array(3);
-ontologies[0] = ["Pathway Ontology","PW:0000001",1035,39997,"treeDiv1"];
-ontologies[1] = ["Disease","DOID:4",1009,40256,"treeDiv2"];
-ontologies[2] = ["Cell Type","CL:0000000",1006,40177,"treeDiv3"];
 
 var handleSuccess = function(o){
 
@@ -308,7 +310,8 @@ function gettags() {
 
     var init = function () {
     setTimeout("gettags()",2000);
-    setTimeout("auto_complete()",2000);
+    if(otagloggedIn == "true")
+        setTimeout("auto_complete()",2000);
     } ();
 
 
@@ -341,11 +344,6 @@ function display_tags(){
             div.innerHTML =  output;
             enable_save(25);
         
-//addOnloadHook(
-//    function () {
-//        addTab("javascript:doQwikify()", "wikify", "ca-wikify", "Mark for wikification");
-//    }
-//);
 }
 
 function add_tag(concept,concept_id)
@@ -374,21 +372,22 @@ if(opentag_id != concept_id)
         var url = "http://bioportal.bioontology.org/visualize/" + ontology_version_id + "/" + concept_id;
         output="<div class='otag'><b>Term</b> : " + concept + "<br/><b>ID</b> : " + concept_id + "<br/>"
             + "<a href='" + url + "' target='_blank'><img src='" + opath + "/info.png'></a>&nbsp;"
-       // "<input type='hidden' id='concept' value='" + concept + "'> <br/>";
-        if(id!=0)
-            {
-                if(check == "no")
-                    {
-                        output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/apply.png' /></a>&nbsp;";
-                        output += "<a title='Remove' href='javascript:delete_tags(" + (id-1) +  ");'><img src='" + opath + "/delete.png' /></a><br></div>";
-                    }
-            }
-        else
-            {
-                output += "<a title='Add' href='javascript:add_tag(\"" + concept +  "\",\""+concept_id + "\");'><img src='" + opath + "/new.png' /></a>&nbsp;";
-                output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/cancel.png' /></a><br></div>";
-            }
-        opentag_id = concept_id;
+        
+        if(otagloggedIn == "true")
+            if(id!=0)
+                {
+                    if(check == "no")
+                        {
+                            output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/apply.png' /></a>&nbsp;";
+                            output += "<a title='Remove' href='javascript:delete_tags(" + (id-1) +  ");'><img src='" + opath + "/delete.png' /></a><br></div>";
+                        }
+                }
+            else
+                {
+                    output += "<a title='Add' href='javascript:add_tag(\"" + concept +  "\",\""+concept_id + "\");'><img src='" + opath + "/new.png' /></a>&nbsp;";
+                    output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/cancel.png' /></a><br></div>";
+                }
+            opentag_id = concept_id;
     }
 else
     {
@@ -437,50 +436,11 @@ function enable_save(opacity)
     if(opacity == null)
         opacity = 20;
     document.getElementById('otagprogress').style.display = "none";
-//    if(timeout != null)
-//        {
-//            clearTimeout(timeout);
-//        }
-//
-//    if(opacity != 100)
-//        {
-//
-//            if(otagroot.style.MozOpacity == null)
-//                {
-//                    opacity += 5;
-//                    otagroot.style.filter = 'alpha(opacity=' + opacity + ')';
-//
-//
-//                }
-//            else
-//                {
-//                    opacity += 5;
-//                    otagroot.style.MozOpacity = opacity/100 ;
-//                    // document.getElementById('test1').innerHTML = opacity/100;
-//                }
-//            timeout = setTimeout(function(){enable_save(opacity); opacity = null},200);
-//        }
+
 }
 
 function disable_save(opacity)
 {
     document.getElementById('otagprogress').style.display = "block";
-//    if(timeout != null)
-//        {
-//            clearTimeout(timeout);
-//        }
-//
-//    if(opacity != 25)
-//        {
-//            if(otagroot.style.MozOpacity == null)
-//                {
-//                    opacity -= 5;
-//                }
-//            else
-//                {
-//                    opacity -= 5;
-//                    otagroot.style.MozOpacity = opacity/100 ;
-//                }
-//            timeout = setTimeout(function(){disable_save(opacity); opacity = null},150);
-//        }
+
 }
