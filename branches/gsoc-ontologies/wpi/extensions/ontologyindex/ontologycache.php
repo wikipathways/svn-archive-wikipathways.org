@@ -37,7 +37,7 @@ public static function fetchCache($function,$params)
            return($row->response);
        else
        {
-           if($xml = simplexml_load_file($params))
+           if($xml = @simplexml_load_file($params))
            {
                $xml = $xml->asXML();
                ontologycache::updateCache($function,$params,$xml);

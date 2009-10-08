@@ -251,17 +251,7 @@ function fetch_tree()
 {
     global $xml, $res_array, $ontology_id, $concept_id;
     $xml = simplexml_load_string(ontologycache::fetchCache("tree",url($ontology_id ,$concept_id)));
-//    ontologycache::updateCache("tree",url($ontology_id ,$concept_id),$xml->asXML());
-//    $ch = curl_init(url($ontology_id ,$concept_id));
-//    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//    curl_setopt($ch, CURLOPT_HEADER, 0);
-//    curl_setopt($ch, CURLOPT_PROXY, "http://10.3.1.61");
-//    curl_setopt($ch, CURLOPT_PROXYPORT, 2525);
-//
-//    $xml = curl_exec($ch);
-//    curl_close($ch);
-//
-//    $xml = simplexml_load_string($xml);
+
 
     fetch_terms();
 
@@ -323,7 +313,12 @@ foreach($xml->data->classBean->relations->entry as $entry )
             if($_GET['mode'] != "")
             {
             if($_GET['mode'] == "tree")
-            $total_match = " (" . $exact_match . "/" . ( $path_match + $exact_match ) . ")";
+            {
+            if($path_match + $exact_match > 0)
+                $total_match = " (" . $exact_match . "/" . ( $path_match + $exact_match ) . ")";
+            else
+                continue;
+            }
             else
             if($_GET['mode'] == "sidebar")
             $total_match = " (" . ( $path_match + $exact_match ) . ")";
