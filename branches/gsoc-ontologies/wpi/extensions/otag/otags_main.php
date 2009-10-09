@@ -19,8 +19,6 @@ function wfotag() {
 
 function oheader(&$parser, &$text)
 {
-
-
 $text = preg_replace(
             '/<!-- ENCODED_CONTENT ([0-9a-zA-Z\\+]+=*) -->/e',
             'base64_decode("$1")',
@@ -28,8 +26,8 @@ $text = preg_replace(
 
         );
         return true;
-
 }
+
 function ofunction( $input, $argv, &$parser ) {
      global $wgTitle , $wgOut, $opath;
 
@@ -60,9 +58,11 @@ $output = <<<HTML
 <div id="otags">Loading ... </div>
 <div id="test1">&nbsp;</div>
 <div id="myAutoComplete">
-<input id="myInput" type="text" value="..." onfocus="clear_box(this.id);" >
+<input id="myInput" type="text" onfocus="clear_box(this.id);" >
 <div id="myContainer"></div>
 </div>
+<div id="otaghelp">To add a tag, either select from the available ontology trees below or type a search term in the search box.</div>
+<div style="clear:both;"></div>
 <table>
 <tr valign="top">
 <td>
@@ -84,7 +84,9 @@ $output = <<<HTML
 YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
 </script>
 HTML;
+
 else
+
 $output = <<<HTML
 <div id="otagprogress" style="display:none" align='center'><span><img src='$opath/progress.gif'> Saving...</span></div>
 <div id="ontology_container" class="yui-skin-sam">
@@ -97,6 +99,7 @@ $output = <<<HTML
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
 <script type="text/javascript" src="$opath/js/script.js"></script>
 HTML;
+
 return   '<!-- ENCODED_CONTENT '.base64_encode($output).' -->' ; //. $check ;
 
 }
