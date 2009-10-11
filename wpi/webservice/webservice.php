@@ -56,6 +56,7 @@ $operations = array(
 	"findInteractions",
 	"getXrefList",
 	"findPathwaysByLiterature",
+	"getOntologyTerms",
 );
 $opParams = array(
 	"listOrganisms" => "MIXED",
@@ -79,6 +80,7 @@ $opParams = array(
 	"findInteractions" => "MIXED",
 	"getXrefList" => "MIXED",
 	"findPathwaysByLiterature" => "MIXED",
+	"getOntologyTerms" => "MIXED",
 );
 
 $classmap = array(); //just let the engine know you prefer classmap mode
@@ -107,6 +109,10 @@ $restmap = array(
 	"findInteractions" => array(
 		"HTTPMethod" =>"GET",
 		"RESTLocation" => "findInteractions/query/{query}"
+	),
+	"getOntologyTerms" => array(
+		"HTTPMethod" => "GET",
+                "RESTLocation" => "getOntologyTermsByPathway/{pathwayId}"
 	),
 );
 
@@ -626,6 +632,32 @@ function getColoredPathway($pwId, $revision, $graphId, $color, $fileType) {
 		throw new WSFault("Receiver", "Unable to get pathway: " . $e);
 	}
 	return array("data" => $data);
+}
+
+/**
+ * Get a list of ontology terms for a given pathway
+ * @param string $pwId The pathway identifier
+ * @return an array of table fields
+ **/ 
+function getOntologyTermsByPathway($pwId) {
+	$pw = new Pathway($pwId);
+        $terms = array();
+        $dbr = wfGetDB( DB_SLAVE );
+        $res = $dbr->select(
+        	'ontology',
+                array('*'),
+                array('pw_id' => $pwId)
+        );
+        while($row = $dbr->fetchObject( $res )) {
+                $terms = array("resultElement" => "wikipathways",
+                      "rowElement" => "ontology",
+                      "elements" => array( "termId" => "term_id",
+                                            "term" => "term",
+                                           "ontology" => "ontology",
+                                           "termPath" => "term_path"));
+        }
+        $dbr->freeResult( $res );
+        return $terms;
 }
 
 //Non ws functions
