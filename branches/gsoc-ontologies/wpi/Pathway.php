@@ -54,7 +54,6 @@ class Pathway {
 	 * this will be the page title without namespace prefix).
 	*/
 	function __construct($id, $updateCache = false) {
-		wfDebug("Creating pathway: $id\n");
 		if(!$id) throw new Exception("id argument missing in constructor for Pathway");
 
 		$this->pwPageTitle = Title::newFromText($id, NS_PATHWAY);
@@ -259,7 +258,13 @@ class Pathway {
 		return Pathway::$spCode2Name[$code];
 	}
 	
-	public static function getAllPathways() {
+	public static function getAllPathways($species = false) {
+		//Check if species is supported
+		if($species) {
+			if(!in_array($species, self::getAvailableSpecies())) {
+				throw new Exception("Species '$species' is not supported.");
+			}
+		}
 		$allPathways = array();
 		$dbr =& wfGetDB(DB_SLAVE);
 		$ns = NS_PATHWAY;
@@ -270,6 +275,7 @@ class Pathway {
 			try {
 				$pathway = Pathway::newFromTitle($row[0]);
 				if($pathway->isDeleted()) continue; //Skip deleted pathways
+				if($species && $pathway->getSpecies() != $species) continue; //Filter by organism
 				if(!$pathway->getTitleObject()->userCan('read')) continue; //Skip hidden pathways
 				$allPathways[
 					$pathway->getIdentifier()] = $pathway;
@@ -630,7 +636,7 @@ class Pathway {
 		/*
 		 * Filter out additional illegal character that shouldn't be in a file name
 		 */
-		$filtered = preg_replace( "/[\/\?\<\>\\\:\*\|]/", '-', $prefix);
+		$filtered = preg_replace( "/[\/\?\<\>\\\:\*\|\[\]]/", '-', $prefix);
 		
 		$title = Title::newFromText( $filtered, NS_IMAGE );
 		if(!$title) {
@@ -1111,8 +1117,10 @@ class Pathway {
 			$msg .= $line . "\n";
 		}
 		if($status != 0 ) {
-			//Remove cached GPML file
-			unlink($gpmlFile);
+			//Not needed anymore, since we now use a unique file name for
+			//each revision, so it's guaranteed to update.
+			////Remove cached GPML file
+			//unlink($gpmlFile);
 			throw new Exception("Unable to convert to $outFile:\n<BR>Status:$status\n<BR>Message:$msg\n<BR>Command:$cmd<BR>");
 			wfDebug("Unable to convert to $outFile:\n<BR>Status:$status\n<BR>Message:$msg\n<BR>Command:$cmd<BR>");
 		}
