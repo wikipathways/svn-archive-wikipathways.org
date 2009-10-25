@@ -26,7 +26,7 @@ public static function updateCache($function,$params,$response)
 public static function fetchCache($function,$params)
 {
 
-    $time = time() - 60*60*24;
+    $time = time() - 60*60*24*7;
     $dbr =& wfGetDB(DB_SLAVE);
     $query = "SELECT * FROM `ontologycache` where function = '$function' AND params = '$params' ORDER BY timestamp DESC ";
     $res = $dbr->query($query);
