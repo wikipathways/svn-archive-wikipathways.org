@@ -36,7 +36,8 @@ function fetch_pw_list($imageMode)
                     $pathways = Pathway::getAllPathways();
 
                     foreach($pathways as $p) {
-                        if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
+                        if($p->isDeleted()) continue;
+                        if($p->getSpecies() != $_GET['species']  && $_GET['species'] != "All Species")
                         continue;
                         if($term!="")
                         {
@@ -100,11 +101,11 @@ function fetch_pw_list($imageMode)
                     foreach($pathwayArray as $title=>$value )
                     {
                         $p = Pathway::newFromTitle($title);
-                        if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
+                        if($p->isDeleted()) continue;
+                        if($p->getSpecies() != $_GET['species']  && $_GET['species'] != "All Species")
                         continue;
                         if($term!="")
                         {
-                            $title = $p->getTitleObject()->getDbKey();
                             $check = 0;
                             $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
                             $res = $dbr->query($sql);
@@ -152,7 +153,8 @@ function fetch_pw_list($imageMode)
                             foreach($pathwayArray as $title=>$value )
                             {
                                 $p = Pathway::newFromTitle($title);
-                                if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
+                                if($p->isDeleted()) continue;
+                                if($p->getSpecies() != $_GET['species']  && $_GET['species'] != "All Species")
                                 continue;
                                 if($term!="")
                                 {
@@ -212,8 +214,9 @@ function fetch_pw_list($imageMode)
                             foreach($pathwayArray as $title=>$value )
                             {
                                 $p = Pathway::newFromTitle($title);
-                                if($p->species() != $_GET['species']  && $_GET['species'] != "All Species")
-                                continue;
+                                if($p->isDeleted()) continue;
+                                if($p->getSpecies() != $_GET['species']  && $_GET['species'] != "All Species")
+                                    continue;
                                 if($term!="")
                                 {
                                     $title = $p->getTitleObject()->getDbKey();
@@ -225,7 +228,7 @@ function fetch_pw_list($imageMode)
                                         $check++;
                                     }
                                     if($check == 0)
-                                    continue;
+                                        continue;
                                 }
                                 $pwUrl = "<a href='{$p->getFullUrl()}'>{$p->name()}</a><br /> (Edited on <b>" . $pathwayArray[$title] . "</b>) </li>";
                                 $display = ($imageMode)?process($title, $pwUrl):$pwUrl;
@@ -276,20 +279,20 @@ function fetch_terms()
     $res = $dbr->query($sql);
     while($row = $dbr->fetchObject($res))
         {
+            $p = Pathway::newFromTitle($row->pw_id);
+            if($p->isDeleted()) continue;
             if($_GET['species'] != "All Species")
             {
-            if(fetch_pathway_species($row->pw_id) == $_GET['species'])
+            if($p->getSpecies() == $_GET['species'])
             {
-                $p = Pathway::newFromTitle($row->pw_id);
+                
                 $p_id = $row->pw_id;
                 $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
                 $res_array[] =  ">> " . $pw . " - " . $p_id . "0000a||";
-                //$pw .=  $row->pw_id . ", ";
             }
             }
             else
             {
-                $p = Pathway::newFromTitle($row->pw_id);
                 $p_id = $row->pw_id;
                 $pw = "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
                 $res_array[] =  ">> " . $pw . " - " . $p_id . "0000a||";
@@ -298,7 +301,6 @@ function fetch_terms()
 
     }
 $arr = $xml->data;
-//print_r($xml->data->classBean->id->relations);
 
 foreach($xml->data->classBean->relations->entry as $entry )
 {
@@ -347,9 +349,11 @@ function no_paths($match,$ontology_id,$concept_id)
     $res = $dbr->query($sql);
     while($row = $dbr->fetchObject($res))
     {
+        $p = Pathway::newFromTitle($row->pw_id);
+        if($p->isDeleted()) continue;
         if($_GET['species'] != "All Species")
         {
-            if(fetch_pathway_species($row->pw_id) == $_GET['species'])
+            if($p->getSpecies() == $_GET['species'])
             $count++;
         }
         else
@@ -366,18 +370,6 @@ function url($ontology_id ,$concept_id)
         $uri = "http://rest.bioontology.org/bioportal/virtual/ontology";
         return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?email=" . $mail ;
     }
-
-function fetch_pathway_name($title)
-{
-    $p = Pathway::newFromTitle($title);
-    return "<font face='Verdana'><i><b><a href='{$p->getFullUrl()}'>{$p->name()}</a></b></i></font>";
-}
-function fetch_pathway_species($title)
-{
-    $p = Pathway::newFromTitle($title);
-    $specie = $p->species();
-    return $specie;
-}
 
 function fetch_species()
 {
