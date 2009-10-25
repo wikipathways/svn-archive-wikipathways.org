@@ -371,7 +371,7 @@ if(opentag_id != concept_id)
         var output = " ";
         var url = "http://bioportal.bioontology.org/visualize/" + ontology_version_id + "/" + concept_id;
         output="<div class='otag'><b>Term</b> : " + concept + "<br/><b>ID</b> : " + concept_id + "<br/>"
-            + "<a href='" + url + "' target='_blank'><img src='" + opath + "/info.png'></a>&nbsp;"
+            + "<a href='" + url + "'  title='View more Info on BioPortal !' target='_blank'><img src='" + opath + "/info.png'></a>&nbsp;"
         
         if(otagloggedIn == "true")
             if(id!=0)
@@ -379,12 +379,12 @@ if(opentag_id != concept_id)
                     if(check == "no")
                         {
                             output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/apply.png' /></a>&nbsp;";
-                            output += "<a title='Remove' href='javascript:delete_tags(" + (id-1) +  ");'><img src='" + opath + "/delete.png' /></a><br></div>";
+                            output += "<a title='Remove' href='javascript:delete_tags(" + (id-1) +  ");'><img src='" + opath + "/cancel.png' /></a><br></div>";
                         }
                 }
             else
                 {
-                    output += "<a title='Add' href='javascript:add_tag(\"" + concept +  "\",\""+concept_id + "\");'><img src='" + opath + "/new.png' /></a>&nbsp;";
+                    output += "<a title='Add' href='javascript:add_tag(\"" + concept +  "\",\""+concept_id + "\");'><img src='" + opath + "/apply.png' /></a>&nbsp;";
                     output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/cancel.png' /></a><br></div>";
                 }
             opentag_id = concept_id;
@@ -415,20 +415,11 @@ function delete_tags(index)
     makeRequest("Deleted tag : " + tags[index][0] + " (" + ontology_name + ")");
 }
 
-function clear_box(id)
+function clear_box()
 {
-    if(id == 1)
-        {
-            document.getElementById('myInput').value = '...';
-        }
-        else
-            {
-                if(document.getElementById(id).value == '...' || document.getElementById(id).value == 'No results !')
-                    {
-                        document.getElementById(id).value='';
-                    }
-            }
-       
+
+    document.getElementById('myInput').value='';
+     
 }
 
 function enable_save(opacity)

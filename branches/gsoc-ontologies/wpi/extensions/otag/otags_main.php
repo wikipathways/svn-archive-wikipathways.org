@@ -77,7 +77,6 @@ $output = <<<HTML
 </div>
 <link rel="stylesheet" type="text/css" href="$opath/otag.css" />
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/autocomplete/assets/skins/sam/autocomplete.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css" />
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
 <script type="text/javascript" src="$opath/js/script.js"></script>
 <script type="text/javascript">
@@ -94,9 +93,6 @@ $output = <<<HTML
 <div id="test1">&nbsp;</div>
 </div>
 <link rel="stylesheet" type="text/css" href="$opath/otag.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/autocomplete/assets/skins/sam/autocomplete.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
 <script type="text/javascript" src="$opath/js/script.js"></script>
 HTML;
 

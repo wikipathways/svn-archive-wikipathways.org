@@ -30,7 +30,6 @@ function add()
     $bp = $entry->children($namespaces['bp']);
     unset($bp->openControlledVocabulary);
     }
-  //  echo $otag;
 
     if($otag != "NULL")
         {
@@ -49,11 +48,11 @@ function add()
                $tag[2] = mysql_real_escape_string($tag[2]);
                $path = $path_arr[$tag[1]];
                $n = $xml->Biopax->addChild("bp:openControlledVocabulary","","http://www.biopax.org/release/biopax-level2.owl#");
-                $n->addChild("TERM",$tag[0]);
-                $n->addChild("ID",$tag[1]);
-                $n->addChild("Ontology",$tag[2]);
-                $dbw->insert( 'ontology',
-                  array(
+               $n->addChild("TERM",$tag[0]);
+               $n->addChild("ID",$tag[1]);
+               $n->addChild("Ontology",$tag[2]);
+               $dbw->insert( 'ontology',
+                     array(
                            'term_id' => $tag[1],
                            'term'    => $tag[0],
                            'ontology'=> $tag[2],
@@ -72,7 +71,6 @@ function add()
 
     $gpml = $xml->asXML();
     $pathway->updatePathway($gpml,$comment);
-    //throw new Exception("sdsd");
     echo "Success";
 }
 
@@ -84,7 +82,6 @@ function fetch()
 
 $query = "SELECT * FROM `ontology` " . "WHERE `pw_id` = '$title' ORDER BY `ontology`";
 $res = $dbr->query($query);
-//$res = $dbr->select( 'ontology', array('term','term_id','ontology'), array( 'pw_id' => $title ), $fname = 'Database::select', $options = array('Group by' => 'ontology' ));
 $result_arr;
 while($row = $dbr->fetchObject($res))
 {
