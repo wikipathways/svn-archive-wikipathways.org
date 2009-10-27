@@ -1,5 +1,5 @@
 #index_mode {
-border:1px solid black;
+border:1px solid grey;
 clear:both;
 margin-bottom:10px;
 margin-left:auto;
@@ -9,7 +9,7 @@ width:400px;
 cursor:pointer;
 }
 #container_left {
-border:1px dashed Chocolate;
+border:1px solid grey;
 float:left;
 padding:5px 15px 0;
 width:200px;
@@ -21,7 +21,6 @@ cursor:pointer;
 cursor:pointer;
 }
 #container_right {
-border:1px dashed black;
 margin-left:20px;
 margin-right:auto;
 padding:20px 0 10px 25px;
