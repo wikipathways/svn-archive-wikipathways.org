@@ -18,8 +18,8 @@ var top_level_terms = new Array(3);
 addOnloadHook(
     function () {
     document.getElementById("index_container").innerHTML = "<div id='index_mode'>" +
-        "<a id='imgMode' href='" + server_url +"image'>Image</a> | <a id='listMode' href='" + server_url +"list'>List</a> | <a id='treeMode' href='" + server_url +"tree'>Tree</a>" +
-        "<br> Sort by : " + "<a id='All' style='color: #FF0000;' onClick='set_filter(\"All\");'> Alphabetical</a> " + " | " + "<a id='Edited' onClick='set_filter(\"Edited\");'>Most Edited</a> | <a id='Popular' onClick='set_filter(\"Popular\");'>Most Viewed</a> | <a id='last_edited' onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
+        "<a id='listMode' href='" + server_url +"list'>List</a> | <a id='imageMode' href='" + server_url +"image'>Image</a> | <a id='treeMode' href='" + server_url +"tree'>Tree</a>" +
+        "<br> Sort by : " + "<a id='All' style='color: #FF0000;font-weight:bold;' onClick='set_filter(\"All\");'> Alphabetical</a> " + " | " + "<a id='Edited' onClick='set_filter(\"Edited\");'>Most Edited</a> | <a id='Popular' onClick='set_filter(\"Popular\");'>Most Viewed</a> | <a id='last_edited' onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
         "</div>" +
         "<div id='container_left'>" +
         "<div id='species_list'>Loading...</div>" + 
@@ -30,7 +30,15 @@ addOnloadHook(
         "<div id='pathway_list'></div>" +
         "<div id='treeDiv'>Loading...</div>" +
         "</div>" ;
-        init_ontology_list();
+
+        if(YAHOO.util.Cookie.get('sort') != "" && YAHOO.util.Cookie.get('sort') != null)
+        {
+            var sort = YAHOO.util.Cookie.get('sort');
+            set_filter(sort,"true");
+        }
+       document.getElementById(page_mode + "Mode").style.color = "#FF0000";
+       document.getElementById(page_mode + "Mode").style.fontWeight = "bold";
+       init_ontology_list();
     }
 ) ;
 
@@ -208,15 +216,17 @@ function set_ontology(root_id,id,get_pathways)
 
 }
 
-function set_filter(filterName)
+function set_filter(filterName,init)
 {
     document.getElementById(last_select_filter).style.color = "#002BB8";
     document.getElementById(last_select_filter).style.fontWeight = "normal";
     document.getElementById(filterName).style.color = "#FF0000";
     document.getElementById(filterName).style.fontWeight = "bold";
+    YAHOO.util.Cookie.set("sort", filterName);
     last_select_filter = filterName;
     filter = filterName;
-    get_pathways_list();
+    if(init == "" || init == null)
+        get_pathways_list();
 }
 function get_ontology_id(tag_id)
 {

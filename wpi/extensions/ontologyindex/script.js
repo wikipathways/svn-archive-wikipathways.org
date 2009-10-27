@@ -17,7 +17,7 @@ var last_select_species = species;
 addOnloadHook(
     function () {
     document.getElementById("index_container").innerHTML = "<div id='index_mode'>" +
-        "<a href='" + server_url +"image'>Image</a> | <a href='" + server_url +"list'>List</a> | <a href='" + server_url +"tree'>Tree</a>" +
+        "<a id='listMode' href='" + server_url +"list'>List</a> | <a id='imageMode' href='" + server_url +"image'>Image</a> | <a id='treeMode' href='" + server_url +"tree'>Tree</a>" +
         "</div>" +
         "<div id='container_left'>" +
         "<div id='species_list'>Loading...</div>" + 
@@ -28,7 +28,10 @@ addOnloadHook(
         "<div id='pathway_list'></div>" +
         "<div id='treeDiv'>Please select a top level Ontology term !</div>" +
         "</div>" ;
-    init_ontology_list();
+
+   document.getElementById(page_mode + "Mode").style.color = "#FF0000";
+   document.getElementById(page_mode + "Mode").style.fontWeight = "bold";
+   init_ontology_list();
     
     }
 ) ;
