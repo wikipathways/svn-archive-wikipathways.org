@@ -17,9 +17,10 @@ var top_level_terms = new Array(3);
 
 addOnloadHook(
     function () {
-    document.getElementById("index_container").innerHTML = "<div id='index_mode'>" +
-        "<a id='listMode' href='" + server_url +"list'>List</a> | <a id='imageMode' href='" + server_url +"image'>Image</a> | <a id='treeMode' href='" + server_url +"tree'>Tree</a>" +
-        "<br> Sort by : " + "<a id='All' style='color: #FF0000;font-weight:bold;' onClick='set_filter(\"All\");'> Alphabetical</a> " + " | " + "<a id='Edited' onClick='set_filter(\"Edited\");'>Most Edited</a> | <a id='Popular' onClick='set_filter(\"Popular\");'>Most Viewed</a> | <a id='last_edited' onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
+    document.getElementById("index_container").innerHTML = "<div class='btns'>" +
+        "<font size='4'><a class='btn' href='" + server_url +"list'><span id='listMode'>List</span></a> <a class='btn' href='" + server_url +"image'><span id='imageMode'>Image</span></a> <a class='btn' href='" + server_url +"tree'><span id='treeMode'>Tree</span></a></font>" +
+        "</div>" +"<div id='index_mode'>" +
+        "<b>Sort by :</b> " + "<a id='All' style='color: #FF0000;font-weight:bold;' onClick='set_filter(\"All\");'> Alphabetical</a> " + " | " + "<a id='Edited' onClick='set_filter(\"Edited\");'>Most Edited</a> | <a id='Popular' onClick='set_filter(\"Popular\");'>Most Viewed</a> | <a id='last_edited' onClick='set_filter(\"last_edited\");'>Last Edited</a>" +
         "</div>" +
         "<div id='container_left'>" +
         "<div id='species_list'>Loading...</div>" + 
