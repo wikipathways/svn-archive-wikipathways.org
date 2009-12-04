@@ -12,10 +12,7 @@ function wfotag() {
 	global $wgParser;
     $wgHooks['ParserAfterTidy'][]='oheader';
 	$wgParser->setHook( "OntologyTags", "ofunction" );
-    
-
 }
-
 
 function oheader(&$parser, &$text)
 {
@@ -29,24 +26,24 @@ $text = preg_replace(
 }
 
 function ofunction( $input, $argv, &$parser ) {
-     global $wgTitle , $wgOut, $opath;
+     global $wgTitle , $wgOut, $opath, $wgOntologiesJSON;
 
      $title = $parser->getTitle();
      $loggedIn = $title->userCan('edit') ? "true" : "false";
-
      $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>');
      $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js"></script>');
      $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/animation/animation-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/datasource/datasource-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/autocomplete/autocomplete-min.js"></script>');
      $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo/yahoo-min.js"></script>');
      $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/event/event-min.js"></script>');
      $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>');
      $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/treeview/treeview-min.js"></script>');
+     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/datasource/datasource-min.js"></script>');
+     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/autocomplete/autocomplete-min.js"></script>');
      $wgOut->addScript(
 		"<script type=\"{$wgJsMimeType}\">" .
 		"var opath=\"$opath\";" .
         "var otagloggedIn = \"$loggedIn\";" .
+        "var ontologiesJSON = '$wgOntologiesJSON';" .
 		"</script>\n"
 	);
     
@@ -54,11 +51,11 @@ function ofunction( $input, $argv, &$parser ) {
 if($loggedIn == "true")
 $output = <<<HTML
 <div id="otagprogress" style="display:none" align='center'><span><img src='$opath/progress.gif'> Saving...</span></div>
-<div id="ontology_container" class="yui-skin-sam">
-<div id="otags">Loading ... </div>
-<div id="test1">&nbsp;</div>
+<div id="ontologyContainer" class="yui-skin-sam">
+<div id="ontologyTags"></div>
+<div id="ontologyTagDisplay">&nbsp;</div>
 <div id="myAutoComplete">
-<input id="myInput" type="text" onfocus="clear_box(this.id);" >
+<input id="myInput" type="text" onfocus="clear_box();" >
 <div id="myContainer"></div>
 </div>
 <div id="otaghelp">To add a tag, either select from the available ontology trees below or type a search term in the search box.</div>
@@ -66,13 +63,13 @@ $output = <<<HTML
 <table>
 <tr valign="top">
 <td>
-<div id="treeDiv1" class="treeDiv"></div>
+<div id="ontologyTree1" class="treeDiv"></div>
 </td>
 <td>
-<div id="treeDiv2" class="treeDiv"></div>
+<div id="ontologyTree2" class="treeDiv"></div>
 </td>
 <td>
-<div id="treeDiv3" class="treeDiv"></div>
+<div id="ontologyTree3" class="treeDiv"></div>
 </td></tr></table>
 </div>
 <link rel="stylesheet" type="text/css" href="$opath/otag.css" />
@@ -88,9 +85,9 @@ else
 
 $output = <<<HTML
 <div id="otagprogress" style="display:none" align='center'><span><img src='$opath/progress.gif'> Saving...</span></div>
-<div id="ontology_container" class="yui-skin-sam">
-<div id="otags">Loading ... </div>
-<div id="test1">&nbsp;</div>
+<div id="ontologyContainer" class="yui-skin-sam">
+<div id="ontologyTags"> </div>
+<div id="ontologyTagDisplay">&nbsp;</div>
 </div>
 <link rel="stylesheet" type="text/css" href="$opath/otag.css" />
 <script type="text/javascript" src="$opath/js/script.js"></script>
