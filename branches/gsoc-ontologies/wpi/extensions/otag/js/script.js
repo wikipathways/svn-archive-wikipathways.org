@@ -15,42 +15,54 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 var opentag_id = -1;
 var div = document.getElementById('ontologyTags');
 var otagroot = document.getElementById('ontologyContainer');
+var treeRoot = document.getElementById('ontologyTrees');
 var save_img = document.getElementById('save_img');
 var save_link = document.getElementById('save_link');
 var title = wgPageName;
 var ontologies = YAHOO.lang.JSON.parse(ontologiesJSON);
+
 for(i=0;i<ontologies.length;i++)
 {
     div.innerHTML += "<div id='" + ontologies[i][0] + "'><b>" + ontologies[i][0] + "</b> : </div>";
 }
 fetchTags();
 
-if(otagloggedIn == "true")
+if(otagloggedIn == 1)
 {
-    ontologytree = function() {
+    createDOM = function() {
 
+        for(i=0;i<ontologies.length;i++)
+        {
+            Treediv = document.createElement("span");
+            Treediv.id = "ontologyTree" + (i + 1);
+            Treediv.className = "ontologyTree";
+            treeRoot.appendChild(Treediv);
+        }
+    } ();
+
+    ontologytree = function() {
         function buildTree() {
             var tree = new Array();
-            for (var tree_no=0; tree_no<3; tree_no++) {
-                tree[tree_no] = new YAHOO.widget.TreeView("ontologyTree" + (tree_no + 1));
-                tree[tree_no].setDynamicLoad(loadNodeData);
-                var root = tree[tree_no].getRoot();
-                var aConcepts = [ontologies[tree_no][0] + " - " + ontologies[tree_no][1]] ;
+            for (var no=0; no<3; no++) {
+                tree[no] = new YAHOO.widget.TreeView("ontologyTree" + (no + 1));
+                tree[no].setDynamicLoad(loadNodeData);
+                var root = tree[no].getRoot();
+                var aConcepts = [ontologies[no][0] + " - " + ontologies[no][1]] ;
 
                 for (var i=0, j=aConcepts.length; i<j; i++) {
                     var tempNode = new YAHOO.widget.TextNode(aConcepts[i], root, false);
                     tempNode.c_id=tempNode.label.substring(tempNode.label.lastIndexOf(" - ")+3,tempNode.label.length);
                     tempNode.label = tempNode.label.substring(0,tempNode.label.lastIndexOf(" - "));
                 }
-                tree[tree_no].subscribe("labelClick", function(node) {
-                    display_tag(node.label,node.c_id,"true");
+                tree[no].subscribe("labelClick", function(node) {
+                    displayTag(node.label,node.c_id,"true");
                     tree[0].destroy();
                     tree[1].destroy();
                     tree[2].destroy();
                     tree = null;
                     YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
                 });
-                tree[tree_no].draw();
+                tree[no].draw();
             }
         }
 
@@ -67,10 +79,9 @@ function loadNodeData(node, fnLoadComplete)  {
     //on which we'll search for related words:
     // encodeURI(node.label);
     var ontology_id = getOntologyId(0,node.c_id);
-    var sUrl = opath + "/wp_proxy.php?ontology_id=" + ontology_id + "&concept_id=" + encodeURI(node.c_id);
+    var sUrl = opath + "/otags.php?action=tree&tagId=" + encodeURI(node.c_id);
     var callback = {
         success: function(oResponse) {
-            YAHOO.log("XHR transaction was successful.", "info", "example");
             var oResults = YAHOO.lang.JSON.parse(oResponse.responseText);
             if((oResults.ResultSet.Result) && (oResults.ResultSet.Result.length)) {
                 if(YAHOO.lang.isArray(oResults.ResultSet.Result)) {
@@ -92,7 +103,6 @@ function loadNodeData(node, fnLoadComplete)  {
         },
 
         failure: function(oResponse) {
-            YAHOO.log("Failed to process XHR transaction.", "info", "example");
             oResponse.argument.fnLoadComplete();
         },
 
@@ -106,8 +116,9 @@ function loadNodeData(node, fnLoadComplete)  {
         timeout: 13000
     };
 
-    YAHOO.util.Connect.asyncRequest('GET', sUrl, callback);
+    YAHOO.util.Connect.asyncRequest('POST', sUrl, callback);
 }
+
     ontologySearch = function () {
         var oDS = new YAHOO.util.XHRDataSource( opath + "/otags.php");
         // Set the responseType
@@ -128,7 +139,7 @@ function loadNodeData(node, fnLoadComplete)  {
 
         // The webservice needs additional parameters
         oAC.generateRequest = function(sQuery) {
-            return "?action=search&search_term=" + sQuery ;
+            return "?action=search&searchTerm=" + sQuery ;
         };
 
         oAC.resultTypeList = false;
@@ -148,7 +159,7 @@ function loadNodeData(node, fnLoadComplete)  {
             }
             else
             {
-                display_tag(oData.label,oData.id,"true");
+                displayTag(oData.label,oData.id,"true");
             }
         };
 
@@ -200,7 +211,6 @@ function getOntologyId(type,tag_id)
 
 function removeTag(conceptId)
 {
-    tag_close();
     disableSave();
     var rand = Math.random();
 
@@ -234,12 +244,11 @@ function addTag(concept, conceptId)
     
     var ontology = getOntologyName(conceptId);
     var rand = Math.random();
-    tag_close();
     disableSave();
 
     if(document.getElementById(ontology).innerHTML.indexOf(conceptId)>0)
     {
-        document.getElementById('ontologyTagDisplay').innerHTML = "<div class='otag'><font color='red'>Error : The pathway is already tagged with this term !</font><br><a title='Close' href='javascript:tag_close();'><img src='" + opath + "/cancel.png' /></a><br></div>";
+        document.getElementById('ontologyTagDisplay').innerHTML = "<div class='otag'><font color='red'>Error : The pathway is already tagged with this term !</font><br><a title='Close' href='javascript:closeTag();'><img src='" + opath + "/img/cancel.png' /></a><br></div>";
         return;
     }
     
@@ -250,7 +259,7 @@ function addTag(concept, conceptId)
         }
         else
         {
-            document.getElementById(ontology_name).innerHTML += " <a class='ontologyTag' href='javascript:display_tag(\"" + concept + "\",\"" + conceptId + "\");' id=\"" + conceptId + "\">" + concept + "</a> ";
+            document.getElementById(ontology_name).innerHTML += " <a class='ontologyTag' href='javascript:displayTag(\"" + concept + "\",\"" + conceptId + "\");' id=\"" + conceptId + "\">" + concept + "</a> ";
         }
     };
 
@@ -283,7 +292,7 @@ function fetchTags()
                 var ontologyName = tags[i].ontology;
                 var concept = tags[i].term;
                 var conceptId = tags[i].term_id;
-                document.getElementById(ontologyName).innerHTML += " <a  class='ontologyTag' href='javascript:display_tag(\"" + concept + "\",\"" + conceptId + "\");' id=\"" + conceptId + "\">" + concept + "</a> ";
+                document.getElementById(ontologyName).innerHTML += " <a  class='ontologyTag' href='javascript:displayTag(\"" + concept + "\",\"" + conceptId + "\");' id=\"" + conceptId + "\">" + concept + "</a> ";
             }
         }
     };
@@ -304,7 +313,7 @@ function fetchTags()
 //    makeRequest("Deleted tag : " + tags[index][0] + " (" + ontology_name + ")");
 }
 
-function display_tag(concept, conceptId, newTag)
+function displayTag(concept, conceptId, newTag)
 {
     if(opentag_id != conceptId)
     {
@@ -312,18 +321,18 @@ function display_tag(concept, conceptId, newTag)
         var output = " ";
         var url = "http://bioportal.bioontology.org/visualize/" + ontology_version_id + "/" + conceptId;
         output="<div class='otag'><b>Term</b> : " + concept + "<br/><b>ID</b> : " + conceptId + "<br/>"
-        + "<a href='" + url + "'  title='View more Info on BioPortal !' target='_blank'><img src='" + opath + "/info.png'></a>&nbsp;"
+        + "<a href='" + url + "'  title='View more Info on BioPortal !' target='_blank'><img src='" + opath + "/img/info.png'></a>&nbsp;"
 
-        if(otagloggedIn == "true")
+        if(otagloggedIn == 1)
             if(newTag == "true")
             {
-                output += "<a title='Add' href='javascript:addTag(\"" + concept +  "\",\""+conceptId + "\");'><img src='" + opath + "/apply.png' /></a>&nbsp;";
-                output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/cancel.png' /></a><br></div>";
+                output += "<a title='Add' href='javascript:addTag(\"" + concept +  "\",\""+conceptId + "\");'><img src='" + opath + "/img/apply.png' /></a>&nbsp;";
+                output += "<a title='Close' href='javascript:closeTag();'><img src='" + opath + "/img/cancel.png' /></a><br></div>";
             }
             else
             {
-                output += "<a title='Close' href='javascript:tag_close();'><img src='" + opath + "/apply.png' /></a>&nbsp;";
-                output += "<a title='Remove' href='javascript:removeTag(\"" + conceptId +  "\");'><img src='" + opath + "/cancel.png' /></a><br></div>";
+                output += "<a title='Close' href='javascript:closeTag();'><img src='" + opath + "/img/apply.png' /></a>&nbsp;";
+                output += "<a title='Remove' href='javascript:removeTag(\"" + conceptId +  "\");'><img src='" + opath + "/img/cancel.png' /></a><br></div>";
             }
         opentag_id = conceptId;
     }
@@ -335,15 +344,15 @@ function display_tag(concept, conceptId, newTag)
     document.getElementById('ontologyTagDisplay').innerHTML = output;
 }
 
-function tag_close()
+function closeTag()
 {
     opentag_id = -1;
     document.getElementById('ontologyTagDisplay').innerHTML = "<br>";
-    clear_box();
+    clearBox();
 }
 
 
-function clear_box()
+function clearBox()
 {
     document.getElementById('myInput').value='';
 }
@@ -358,6 +367,7 @@ function enableSave(opacity)
 
 function disableSave(opacity)
 {
+    closeTag();
     document.getElementById('otagprogress').style.display = "block";
 
 }

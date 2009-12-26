@@ -1,4 +1,11 @@
-.treeDiv {background: #fff; margin-top:0em; padding-right:100px; min-height:7em; font-size: 13px;}
+.ontologyTree { 
+    background:#FFFFFF none repeat scroll 0 0;
+    font-size:13px;
+    margin:15px 0 0 5px;
+    min-height:3em;
+    float:left;
+    width:350px;
+}
 
 #myAutoComplete {
     width:17em; /* set width here or else widget will expand to fit its container */
@@ -33,4 +40,6 @@ div.otag {
     padding:0 7px 0 7px;
     margin-right: 3px;
 }
+
+
 

@@ -1,12 +1,9 @@
 <?php
-require_once('../../wpi.php');
 
-//ontologycache::updateCache();
-//ontologycache::fetchCache();
-//define("INTERVAL",60*60*24);
+include('../../wpi.php');
+
 class ontologycache
 {
-
 public static function updateCache($function,$params,$response)
 {
     $dbw =& wfGetDB( DB_MASTER );
@@ -26,11 +23,14 @@ public static function updateCache($function,$params,$response)
 public static function fetchCache($function,$params)
 {
 
-    $time = time() - 60*60*24*7;
+    global $wgOntologiesExpiryTime;
+    
+    $time = time() - $wgOntologiesExpiryTime;
     $dbr =& wfGetDB(DB_SLAVE);
     $query = "SELECT * FROM `ontologycache` where function = '$function' AND params = '$params' ORDER BY timestamp DESC ";
     $res = $dbr->query($query);
     //$res = $dbr->select( 'ontology', array('term','term_id','ontology'), array( 'pw_id' => $title ), $fname = 'Database::select', $options = array('Group by' => 'ontology' ));
+    
     if($row = $dbr->fetchObject($res))
     {
        if($row->timestamp > $time)
@@ -55,18 +55,14 @@ public static function fetchCache($function,$params)
     }
     else
     {
-           $xml = simplexml_load_file($params);
-           $xml = $xml->asXML();
-           ontologycache::updateCache($function,$params,$xml);
-           return($xml);
-           
+           if($xml = @simplexml_load_file($params))
+           {
+                $xml = $xml->asXML();
+                ontologycache::updateCache($function,$params,$xml);
+                return($xml);
+           }
     }
    $dbr->freeResult( $res );
 }
-public static function check($function)
-{
-    echo $function;
-}
-
 }
 ?>
