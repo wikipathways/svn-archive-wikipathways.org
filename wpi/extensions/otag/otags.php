@@ -1,5 +1,6 @@
 <?php
 require_once('ontologyfunctions.php');
+
 switch($_REQUEST['action'])
 {
     case 'remove' :
@@ -11,29 +12,14 @@ switch($_REQUEST['action'])
         break;
 
     case 'search' :
-        echo ontologyfunctions::getBioPortalSearchResults($_GET['search_term']);
+        echo ontologyfunctions::getBioPortalSearchResults($_GET['searchTerm']);
         break;
     
     case 'fetch' :
-        {
-            $title = $_POST['title'];
-            $dbr =& wfGetDB(DB_SLAVE);
-            $query = "SELECT * FROM `ontology` " . "WHERE `pw_id` = '$title' ORDER BY `ontology`";
-            $res = $dbr->query($query);
-            while($row = $dbr->fetchObject($res))
-            {
-                $term['term_id'] = $row->term_id;
-                $term['term'] = $row->term;
-                $term['ontology'] = $row->ontology;
-                $resultArray['Resultset'][]=$term;
-                $count++;
-            }
-           $dbr->freeResult( $res );
-           $resultJSON = json_encode($resultArray);
-            if($count > 0)
-                 echo $resultJSON ;
-            else
-                echo "No Tags";
-        }
+        echo ontologyfunctions::getOntologyTags($_POST['title']);
+        break;
+
+    case 'tree' :
+        echo ontologyfunctions::getBioPortalTreeResults($_GET['tagId']);
         break;
 }

@@ -1,12 +1,12 @@
 <?php
 
-include('../../wpi.php');
-include('ontologycache.php');
+include('../otag/ontologyfunctions.php');
+
 $ontology_id = $_GET['ontology_id'];
 $concept_id = $_GET['concept_id'];
 
-$xml;
-$res_array;
+$xml = "";
+$res_array = array();
 
 switch($_GET['action'])
 {
@@ -17,15 +17,15 @@ switch($_GET['action'])
         fetch_species();
         break;
     case 'list':
-        fetch_pw_list(false);
+        fetchPathwayList(false);
         break;
     case 'image':
-        fetch_pw_list(true);
+        fetchPathwayList(true);
         break;
 }
 
 
-function fetch_pw_list($imageMode)
+function fetchPathwayList($imageMode)
 {
 
     $term = $_GET['term'];
@@ -44,7 +44,7 @@ function fetch_pw_list($imageMode)
                             $title = $p->getTitleObject()->getDbKey();
                             $check = 0;
                             $dbr =& wfGetDB(DB_SLAVE);
-                            $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%' OR `term_path` LIKE '%$term') AND (`pw_id` = '$title')";
+                            $sql = "SELECT * FROM ontology where (`term_id` = '$term' OR `term_path` LIKE '%$term.%')   AND (`pw_id` = '$title')";
                             $res = $dbr->query($sql);
                             while($row = $dbr->fetchObject($res))
                             {
@@ -253,7 +253,7 @@ function fetch_pw_list($imageMode)
 function fetch_tree()
 {
     global $xml, $res_array, $ontology_id, $concept_id;
-    $xml = simplexml_load_string(ontologycache::fetchCache("tree",url($ontology_id ,$concept_id)));
+    $xml = simplexml_load_string(ontologycache::fetchCache("tree", ontologyfunctions::getBioPortalURL('tree', array("ontologyId" => $ontology_id, "conceptId" => $concept_id))));
 
 
     fetch_terms();
@@ -309,13 +309,15 @@ foreach($xml->data->classBean->relations->entry as $entry )
 
        foreach($entry->list->classBean as $sub_concepts)
         {
-   			$exact_match = no_paths("exact",$ontology_id,$sub_concepts->id);
-            $path_match = no_paths("any",$ontology_id,$sub_concepts->id);
 
             if($_GET['mode'] != "")
             {
             if($_GET['mode'] == "tree")
             {
+
+   			$exact_match = no_paths("exact",$ontology_id,$sub_concepts->id);
+            $path_match = no_paths("path",$ontology_id,$sub_concepts->id);
+
             if($path_match + $exact_match > 0)
                 $total_match = " (" . $exact_match . "/" . ( $path_match + $exact_match ) . ")";
             else
@@ -323,7 +325,7 @@ foreach($xml->data->classBean->relations->entry as $entry )
             }
             else
             if($_GET['mode'] == "sidebar")
-            $total_match = " (" . ( $path_match + $exact_match ) . ")";
+                $total_match = " (" . no_paths("all",$ontology_id,$sub_concepts->id) . ") ";
             }
             
             $temp_var = $sub_concepts->label . $total_match ." - " . $sub_concepts->id;
@@ -340,36 +342,39 @@ foreach($xml->data->classBean->relations->entry as $entry )
 function no_paths($match,$ontology_id,$concept_id)
 {
     $count = 0;
+    $pwIdArray = array();
     $dbr =& wfGetDB(DB_SLAVE);
     if($match == "exact")
-    $sql = "SELECT * FROM ontology where `term_id` = '$concept_id'";
+        $sql = "SELECT * FROM ontology where `term_id` = '$concept_id'";
+    elseif($match == "path")
+        $sql = "SELECT * FROM ontology where `term_path` LIKE '%$concept_id%' ";
     else
-    $sql = "SELECT * FROM ontology where `term_path` LIKE '%$concept_id.%' OR `term_path` LIKE '%$concept_id'";
+        $sql = "SELECT * FROM ontology where (`term_id` = '$concept_id' OR `term_path` LIKE '%$concept_id%') ";
 
     $res = $dbr->query($sql);
+
     while($row = $dbr->fetchObject($res))
     {
-        $p = Pathway::newFromTitle($row->pw_id);
+        array_push($pwIdArray,$row->pw_id);
+    }
+   $dbr->freeResult( $res );
+   $pwIdArray = array_unique($pwIdArray);
+   
+    foreach($pwIdArray as $pwId)
+    {
+        $p = Pathway::newFromTitle($pwId);
         if($p->isDeleted()) continue;
         if($_GET['species'] != "All Species")
         {
             if($p->getSpecies() == $_GET['species'])
-            $count++;
+                $count++;
         }
         else
         $count++;
     }
-       $dbr->freeResult( $res );
-
     return $count;
 }
 
-function url($ontology_id ,$concept_id)
-    {
-        $mail = BIOPORTAL_ADMIN_MAIL;
-        $uri = "http://rest.bioontology.org/bioportal/virtual/ontology";
-        return $url = $uri . "/" . $ontology_id . "/" . $concept_id . "?email=" . $mail ;
-    }
 
 function fetch_species()
 {
@@ -377,7 +382,7 @@ function fetch_species()
     $result = json_encode($result);
     echo($result);
 }
-function makeThumbLinkObj1( $pathway, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 300, $boxheight=false, $framed=false ) {
+function makeThumbNail( $pathway, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 300, $boxheight=false, $framed=false ) {
             global $wgStylePath, $wgContLang;
 
 			$pathway->updateCache(FILETYPE_IMG);
@@ -444,7 +449,6 @@ function makeThumbLinkObj1( $pathway, $label = '', $href = '', $alt, $align = 'r
             }
             $s .= '  <div class="thumbcaption"'.$textalign.'>'.$label."</div></div></div>";
             return str_replace("\n", ' ', $s);
-            //return $s;
     }
 function process($title,$caption)
     {
@@ -458,7 +462,7 @@ function process($title,$caption)
                                                             //we would rather parse wikitext, let me know if
                                                             //you know a way to do that (TK)
     }
-    $output = makeThumbLinkObj1($pathway, $caption, $href, $tooltip, $align, $id, 175);
+    $output = makeThumbNail($pathway, $caption, $href, $tooltip, $align, $id, 175);
     return $output;
     }
 ?> 

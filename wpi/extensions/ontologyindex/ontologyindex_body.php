@@ -10,39 +10,33 @@ class ontologyindex extends SpecialPage {
 
 	function execute( $par ) {
 		global $wgRequest, $wgOut;
-        
 		$this->setHeaders();
-        
-
-            $this->tree();
-
+        $this->init();
 	}
     
-    function tree()
+    function init()
     {
-        global $wgOut,$wgRequest;
+        global $wgOut, $wgRequest, $wgOntologiesJSON, $wgStylePath;
         $opath = WPI_URL . "/extensions/ontologyindex" ;
         $mode = $wgRequest->getVal('mode');
         $mode = ($mode == "")?"list":$mode;
-        $wgOut->addHTML('<link rel="stylesheet" type="text/css" href="' . $opath . '/otagindex.css" />
-                         <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
-                         <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
-                         <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js"></script>
-                         <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/treeview/treeview-min.js"></script>
-                         <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>
-                         <script src="http://yui.yahooapis.com/2.7.0/build/yahoo/yahoo-min.js"></script>
-                         <script src="http://yui.yahooapis.com/2.7.0/build/event/event-min.js"></script>
-                         <script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/cookie/cookie-min.js"></script>');
+
+        $oldStylePath = $wgStylePath;
+        $wgStylePath = $opath;
+        $wgOut->addStyle("otagindex.css");
+
+        $wgOut->addScript('<script type="text/javascript" src="' . $opath . '/yui2.7.0.js"></script>');
         $wgOut->addHTML("<div id='index_container'></div>");
         $wgOut->addScript(
             "<script type='text/javascript'>var opath=\"$opath\";
             var page_mode = \"$mode\";
+            var ontologiesJSON = '$wgOntologiesJSON';
             </script>"
     	);
-        if($mode == "tree")
-        $wgOut->addScript("<script type='text/javascript' src='$opath/script.js'></script>");
-        else
-        $wgOut->addScript("<script type='text/javascript' src='$opath/script_list.js'></script>");
+
+        $wgStylePath = $oldStylePath;
+
+        $wgOut->addScript("<script type='text/javascript' src='$opath/ontologyindex.js'></script>");
     }
 
 

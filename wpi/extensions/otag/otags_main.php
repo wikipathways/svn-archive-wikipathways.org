@@ -26,19 +26,27 @@ $text = preg_replace(
 }
 
 function ofunction( $input, $argv, &$parser ) {
-     global $wgTitle , $wgOut, $opath, $wgOntologiesJSON;
+     global $wgTitle , $wgOut, $opath, $wgOntologiesJSON,$wgStylePath;
+    
+     $oldStylePath = $wgStylePath;
+	 $wgStylePath = $opath . "/css/";
 
      $title = $parser->getTitle();
-     $loggedIn = $title->userCan('edit') ? "true" : "false";
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/animation/animation-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo/yahoo-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/event/event-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/treeview/treeview-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/datasource/datasource-min.js"></script>');
-     $wgOut->addScript('<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/autocomplete/autocomplete-min.js"></script>');
+     $loggedIn = $title->userCan('edit') ? 1 : 0;
+     
+     if($loggedIn)
+     {
+        $wgOut->addScript('<script type="text/javascript" src="' . $opath . '/js/yui2.7.0.allcomponents.js"></script>');
+        $wgOut->addStyle("yui2.7.0.css");
+     }
+     else
+     {
+        $wgOut->addScript('<script type="text/javascript" src="' . $opath . '/js/yui2.7.0.mincomponents.js"></script>');
+     }
+
+	 $wgOut->addStyle("otag.css");
+     $wgStylePath = $oldStylePath;
+
      $wgOut->addScript(
 		"<script type=\"{$wgJsMimeType}\">" .
 		"var opath=\"$opath\";" .
@@ -46,35 +54,22 @@ function ofunction( $input, $argv, &$parser ) {
         "var ontologiesJSON = '$wgOntologiesJSON';" .
 		"</script>\n"
 	);
-    
 
-if($loggedIn == "true")
+if($loggedIn)
 $output = <<<HTML
-<div id="otagprogress" style="display:none" align='center'><span><img src='$opath/progress.gif'> Saving...</span></div>
+<div id="otagprogress" style="display:none" align='center'><span><img src='$opath/img/progress.gif'> Saving...</span></div>
 <div id="ontologyContainer" class="yui-skin-sam">
 <div id="ontologyTags"></div>
 <div id="ontologyTagDisplay">&nbsp;</div>
 <div id="myAutoComplete">
-<input id="myInput" type="text" onfocus="clear_box();" >
+<input id="myInput" type="text" onfocus="clearBox();" >
 <div id="myContainer"></div>
 </div>
 <div id="otaghelp">To add a tag, either select from the available ontology trees below or type a search term in the search box.</div>
 <div style="clear:both;"></div>
-<table>
-<tr valign="top">
-<td>
-<div id="ontologyTree1" class="treeDiv"></div>
-</td>
-<td>
-<div id="ontologyTree2" class="treeDiv"></div>
-</td>
-<td>
-<div id="ontologyTree3" class="treeDiv"></div>
-</td></tr></table>
+<div id="ontologyTrees"></div>
 </div>
-<link rel="stylesheet" type="text/css" href="$opath/otag.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/autocomplete/assets/skins/sam/autocomplete.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/treeview/assets/skins/sam/treeview.css" />
+<div style="clear:both;"></div>
 <script type="text/javascript" src="$opath/js/script.js"></script>
 <script type="text/javascript">
 YAHOO.util.Event.onDOMReady(ontologytree.init, ontologytree,true);
@@ -89,11 +84,10 @@ $output = <<<HTML
 <div id="ontologyTags"> </div>
 <div id="ontologyTagDisplay">&nbsp;</div>
 </div>
-<link rel="stylesheet" type="text/css" href="$opath/otag.css" />
 <script type="text/javascript" src="$opath/js/script.js"></script>
 HTML;
 
-return   '<!-- ENCODED_CONTENT '.base64_encode($output).' -->' ; //. $check ;
+return   '<!-- ENCODED_CONTENT '.base64_encode($output).' -->' ; 
 
 }
 

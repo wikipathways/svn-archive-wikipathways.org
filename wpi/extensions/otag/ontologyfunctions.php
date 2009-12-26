@@ -1,16 +1,12 @@
 <?php
-require_once('../../wpi.php');
 require_once('../ontologyindex/ontologycache.php');
-//echo ontologyfunctions::getBioPortalChildResults("PW:0000001");
-//echo ontologyfunctions::getBioPortalURL("tree",array("conceptId"=>"PW:0000001","ontologyId"=>"1035"));//"PW:0000001","sdsd","WP24");
-
 
 class ontologyfunctions
 {
     public static function removeOntologyTag($tagId, $pwTitle)
     {
         $dbw =& wfGetDB( DB_MASTER );
-        $comment = "Term : $tagId removed !";
+        $comment = "Ontology Term : '$tagId' removed !";
         $pathway = Pathway::newFromTitle($pwTitle);
 		$gpml = $pathway->getGpml();
         $xml = simplexml_load_string($gpml);
@@ -35,7 +31,7 @@ class ontologyfunctions
 
     public static function addOntologyTag($tagId, $tag, $pwTitle)
     {
-        $comment = "Term : $tag added !";
+        $comment = "Ontology Term : '$tag' added !";
         $pathway = Pathway::newFromTitle($pwTitle);
         $ontology = ontologyfunctions::getOntologyName($tagId);
         $path = ontologyfunctions::getOntologyTagPath($tagId);
@@ -70,7 +66,29 @@ class ontologyfunctions
         $dbw->immediateCommit();
         return "SUCCESS";
     }
-    
+
+    public static function getOntologyTags($pwId)
+    {
+        $title = $pwId;
+        $dbr =& wfGetDB(DB_SLAVE);
+        $query = "SELECT * FROM `ontology` " . "WHERE `pw_id` = '$title' ORDER BY `ontology`";
+        $res = $dbr->query($query);
+        while($row = $dbr->fetchObject($res))
+        {
+            $term['term_id'] = $row->term_id;
+            $term['term'] = $row->term;
+            $term['ontology'] = $row->ontology;
+            $resultArray['Resultset'][]=$term;
+            $count++;
+        }
+       $dbr->freeResult( $res );
+       $resultJSON = json_encode($resultArray);
+        if($count > 0)
+            return $resultJSON ;
+        else
+            return "No Tags";
+    }
+
     public static function getOntologyTagPath($id)
     {
 
@@ -167,11 +185,11 @@ class ontologyfunctions
         $resultArr["ResultSet"]["Result"]=$resultArray;
         $resultJSON = json_encode($resultArr);
 
-        echo $resultJSON ;
+        return $resultJSON ;
 
     }
 
-    public static function getBioPortalChildResults($termId)
+    public static function getBioPortalTreeResults($termId)
     {
         $ontologyId = ontologyfunctions::getOntologyVersion($termId);
         $url = ontologyfunctions::getBioPortalURL("tree", array("ontologyId" => $ontologyId, "conceptId" => $termId));
@@ -194,7 +212,7 @@ class ontologyfunctions
         sort($resultArray);
         $resultArr["ResultSet"]["Result"]=$resultArray;
         $resultJSON = json_encode($resultArr);
-        echo $resultJSON ;
+        return $resultJSON ;
     }
 }
 ?>
