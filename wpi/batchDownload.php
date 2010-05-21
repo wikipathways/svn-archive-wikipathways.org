@@ -9,7 +9,6 @@ $wgExtensionFunctions[] = "wfBatchDownload";
 Pathway::registerFileType(FILETYPE_PDF);
 Pathway::registerFileType(FILETYPE_PWF);
 Pathway::registerFileType(FILETYPE_TXT);
-Pathway::registerFileType(FILETYPE_BIOPAX);
 
 function wfBatchDownload() {
     global $wgParser;
