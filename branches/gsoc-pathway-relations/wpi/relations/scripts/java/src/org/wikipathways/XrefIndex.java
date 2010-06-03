@@ -65,6 +65,7 @@ public class XrefIndex {
 	 */
 	public void disconnect() throws SQLException {
 		statements.clear();
+		con.commit();
 		con.close();
 		con = null;
 	}
