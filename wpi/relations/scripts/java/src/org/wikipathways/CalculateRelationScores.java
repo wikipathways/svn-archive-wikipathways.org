@@ -164,18 +164,28 @@ public class CalculateRelationScores {
 			List<WSPathwayInfo> pathways = new ArrayList<WSPathwayInfo>();
 			for(File f : wpcache.getFiles()) pathways.add(wpcache.getPathwayInfo(f));
 			
-			//Calculate the scores
-			log.info("Calculating scores");
-			for(int i = 0; i < pathways.size(); i++) {
-				String pathway1 = pathways.get(i).getId();
-				log.fine("Processing pathway " + pathway1 + " (" + i + " out of " + pathways.size() + ")");
-				Set<Xref> xrefs1 = index.getOriginalXrefs(pathway1);
-				Set<Xref> all1 = index.getAllXrefs(pathway1);
-				for(int j = i + 1; j < pathways.size(); j++) {
-					String pathway2 = pathways.get(j).getId();
-					Set<Xref> xrefs2 = index.getOriginalXrefs(pathway2);
-					
-					scores.add(getScore(pathway1, xrefs1, all1, pathway2, xrefs2));
+			//Calculate the scores per species
+			Map<String, List<WSPathwayInfo>> pathwaysBySpecies = new HashMap<String, List<WSPathwayInfo>>();
+			for(WSPathwayInfo p : pathways) {
+				List<WSPathwayInfo> pws = pathwaysBySpecies.get(p.getSpecies());
+				if(pws == null) pathwaysBySpecies.put(p.getSpecies(), pws = new ArrayList<WSPathwayInfo>());
+				pws.add(p);
+			}
+			
+			for(String species : pathwaysBySpecies.keySet()) {
+				log.info("Calculating scores for " + species);
+				List<WSPathwayInfo> pws = pathwaysBySpecies.get(species);
+				for(int i = 0; i < pws.size(); i++) {
+					String pathway1 = pws.get(i).getId();
+					log.fine("Processing pathway " + pathway1 + " (" + i + " out of " + pws.size() + ")");
+					Set<Xref> xrefs1 = index.getOriginalXrefs(pathway1);
+					Set<Xref> all1 = index.getAllXrefs(pathway1);
+					for(int j = i + 1; j < pws.size(); j++) {
+						String pathway2 = pws.get(j).getId();
+						Set<Xref> xrefs2 = index.getOriginalXrefs(pathway2);
+						
+						scores.add(getScore(pathway1, xrefs1, all1, pathway2, xrefs2));
+					}
 				}
 			}
 			
