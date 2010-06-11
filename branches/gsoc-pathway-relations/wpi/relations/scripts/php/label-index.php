@@ -4,7 +4,7 @@ include('../../../wpi.php');
 chdir("../../relations/scripts/php");
 
 
-LabelCache::update();
+LabelCache::execute();
 
 class LabelCache
 {
@@ -23,7 +23,7 @@ class LabelCache
         $this->_db =& wfGetDB(DB_SLAVE);
     }
 
-    public static function update()
+    public static function execute()
     {
         $cache = new LabelCache();
         $cache->init();
@@ -42,8 +42,8 @@ class LabelCache
                 for($i = count($logs); $i > 0; $i--)
                 {
                     $log = explode("\t", trim($logs[$i]));
-                    $timeStamp = $log[3];
-                    $logStatus = $log[2];
+                    $timeStamp = $log[4];
+                    $logStatus = $log[3];
                     if($logStatus == 'finished')
                     {
                         $lastUpdated = $timeStamp;
@@ -56,22 +56,43 @@ class LabelCache
                 }
             }
         }
+        else
+            $this->createLogFile($this->_logFileName);
 
+        $this->addLog("started");
 
         if($this->_initialized == 0)
         {
-            $this->createLogFile($this->_logFileName);
             $this->createTable();
-            $this->addLog("started");
             $pathways = $this->getPathways();
-            $this->addLog("finished", 0, count($pathways), 'yoyo');
         }
         else
         {
-            $this->addLog("started");
             $pathways = $this->getPathways($lastUpdated);
-            $this->addLog("finished", 0, count($pathways), 'yoyo');
         }
+        if(count($pathways) > 0)
+        {
+            $this->updateCache($pathways);
+        }
+        $this->addLog("finished", 0, count($pathways));
+    }
+
+    private function updateCache($pathways)
+    {
+        $labelsCached = $this->getCachedLabels();
+        foreach($pathways as $pwId)
+        {
+            $labels = $this->getLabels($pwId);
+            foreach($labels as $label)
+            {
+                if(!in_array($label, $labelsCached))
+                {
+                    $this->addLabel($label);
+                    $labelCount++;
+                }
+            }
+        }
+
 
     }
 
@@ -118,7 +139,7 @@ class LabelCache
         $res = $this->_db->select( $this->_labelCacheTable, array('id','label_name','time_stamp'));
         while($row = $dbr->fetchObject($res))
         {
-            $labels[] = $row;
+            $labels[] = $row['label_name'];
         }
         $this->_db->freeResult($res );
         return $labels;
@@ -151,6 +172,10 @@ class LabelCache
 
     }
 
+    private function addLabel()
+    {
+
+    }
     private function createLogFile()
     {
         $this->_logCount = 0;
