@@ -72,28 +72,33 @@ class LabelCache
         }
         if(count($pathways) > 0)
         {
-            $this->updateCache($pathways);
+            $labelCount = $this->updateCache($pathways);
         }
-        $this->addLog("finished", 0, count($pathways));
+        $this->addLog("finished", $labelCount, count($pathways));
     }
 
     private function updateCache($pathways)
     {
+        $labelCount = 0;
         $labelsCached = $this->getCachedLabels();
-        foreach($pathways as $pwId)
+        if(count($pathways > 0))
         {
-            $labels = $this->getLabels($pwId);
-            foreach($labels as $label)
+            foreach($pathways as $pwId)
             {
-                if(!in_array($label, $labelsCached))
+                $labels = $this->getLabels($pwId);
+                foreach($labels as $label)
                 {
-                    $this->addLabel($label);
-                    $labelCount++;
+                    if(!in_array($label, $labelsCached))
+                    {
+                        $this->addLabel($label);
+                        $labelsCached[] = $label;
+                        $labelCount++;
+                    }
                 }
             }
         }
 
-
+        return $labelCount;
     }
 
 
@@ -102,6 +107,7 @@ class LabelCache
         $sql = "CREATE TABLE IF NOT EXISTS `{$this->_labelCacheTable}` (
                     `id` INT( 5 ) UNSIGNED NOT NULL AUTO_INCREMENT ,
                     `label_name` VARCHAR( 50 ) NOT NULL ,
+                    `time_added` INT( 15 ) UNSIGNED,
                     `last_updated` INT( 15 ) UNSIGNED,
                      PRIMARY KEY ( `id` )
                 );";
@@ -122,7 +128,7 @@ class LabelCache
         foreach($gpml->Label as $label )
         {
             $attributes = $label->attributes();
-            $labels[] = (string)$attributes->TextLabel;
+            $labels[] = trim((string)$attributes->TextLabel);
         }
         return $labels;
 
@@ -136,12 +142,12 @@ class LabelCache
 
     private function getCachedLabels()
     {
-        $res = $this->_db->select( $this->_labelCacheTable, array('id','label_name','time_stamp'));
-        while($row = $dbr->fetchObject($res))
+        $res = $this->_db->select( $this->_labelCacheTable, array('id','label_name'));
+        while($row = $this->_db->fetchObject($res))
         {
             $labels[] = $row['label_name'];
         }
-        $this->_db->freeResult($res );
+        $this->_db->freeResult($res);
         return $labels;
     }
 
@@ -168,13 +174,15 @@ class LabelCache
             }
         }
 
-        return $pwList;
+        return array($pwList[0]);
 
     }
 
-    private function addLabel()
+    private function addLabel($label)
     {
-
+        $this->_db->insert( $this->_labelCacheTable, array(
+                                        'label_name' => $label,
+                                        'time_added'=> time()));
     }
     private function createLogFile()
     {
