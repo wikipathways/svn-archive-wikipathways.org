@@ -31,6 +31,8 @@ class LabelCache
 
     private function init()
     {
+        $labelCount = 0;
+
         if(file_exists($this->_logFileName))
         {
             $logs = file($this->_logFileName);
@@ -81,11 +83,12 @@ class LabelCache
     {
         $labelCount = 0;
         $labelsCached = $this->getCachedLabels();
-        if(count($pathways > 0))
+
+        foreach($pathways as $pwId)
         {
-            foreach($pathways as $pwId)
+            $labels = $this->getLabels($pwId);
+            if(count($labels) > 0)
             {
-                $labels = $this->getLabels($pwId);
                 foreach($labels as $label)
                 {
                     if(!in_array($label, $labelsCached))
@@ -145,7 +148,7 @@ class LabelCache
         $res = $this->_db->select( $this->_labelCacheTable, array('id','label_name'));
         while($row = $this->_db->fetchObject($res))
         {
-            $labels[] = $row['label_name'];
+            $labels[] = $row->label_name;
         }
         $this->_db->freeResult($res);
         return $labels;
@@ -162,6 +165,8 @@ class LabelCache
             foreach($pathways as $pathway)
             {
                 $pwList[] = $pathway->id;
+                if(count($pwList) > 10)
+                    return $pwList;
             }
         }
         else
@@ -174,8 +179,7 @@ class LabelCache
             }
         }
 
-        return array($pwList[0]);
-
+        return $pwList;
     }
 
     private function addLabel($label)
