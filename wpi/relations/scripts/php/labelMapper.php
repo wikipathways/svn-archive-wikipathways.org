@@ -5,20 +5,17 @@ require_once('../../../search.php');
 require_once('wpi.php');
 chdir($currentDir);
 
-
-LabelMapper::execute();
-
 class LabelMapper
 {
     private $_client;
     private $_db;
-    private $_logFileName = "label-mapper.log";
-    private $_errorFileName = "label-mapper-error.log";
     // 0 -> Not Initialzed 1 -> Initialzed
     private $_initialized = 0;
     private $_logCount = 0;
-    private $_labelMappingTable = 'labelmappings';
-
+    public $_labelMappingTable = 'labelmappings';
+    public $_logFileName = "label-mapper.log";
+    public $_errorFileName = "label-mapper-error.log";
+    
     public function __construct()
     {
         $this->_client = new SoapClient('http://relations.wikipathways.org/wpi/webservice/webservice.php?wsdl');
@@ -27,8 +24,8 @@ class LabelMapper
 
     public static function execute()
     {
-        $cache = new LabelMapper();
-        $cache->init();
+        $mapper = new LabelMapper();
+        $mapper->init();
     }
 
     private function init()
@@ -184,7 +181,7 @@ class LabelMapper
             foreach($gpml->Label as $label )
             {
                 $attributes = $label->attributes();
-                $labels[] = trim((string)$attributes->TextLabel);
+                $labels[] = strtolower(trim((string)$attributes->TextLabel));
             }
 
         }
