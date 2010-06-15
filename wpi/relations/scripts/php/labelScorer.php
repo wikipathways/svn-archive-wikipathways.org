@@ -1,13 +1,30 @@
 <?php
 
+if(php_sapi_name() != 'cli')
+{
+    echo "This script must be run from the command line\n";
+    exit();
+}
+
 $currentDir = getcwd();
 require_once('../../../wpi.php');
 chdir($currentDir);
 require_once('labelMapper.php');
 
+if($argc > 1)
+{
+    parse_str($argv[1], $args);
+    if($args['method'] == 'update')
+    {
+        LabelScorer::execute();
+    }
+}
 
-$scorer = new LabelScorer();
-$scorer->init();
+/*
+ * Calculates relations/scores between pairs of pathways based on the common labels.
+ *
+ * Usage : a) Call the static function execute() b) Execute from command line by executing "php LabelScorer.php method=update"
+ */
 
 class LabelScorer
 {
@@ -25,6 +42,12 @@ class LabelScorer
         $this->_labelMappingTable = $mapper->_labelMappingTable;
     }
 
+    public static function execute()
+    {
+        $scorer = new LabelScorer();
+        $scorer->init();
+    }
+
     public function init()
     {
         // Refresh the scores file
@@ -33,6 +56,11 @@ class LabelScorer
             unlink($this->_scoresFile);
         }
         $fh = fopen($this->_scoresFile, 'w');
+        if(!$fh)
+        {
+            echo "Please set proper permissions for Score file.\n";
+            exit();
+        }
         $fileHeaders = "PW1\tPW2\tNr Common Labels\n";
         fwrite($fh, $fileHeaders);
         fclose($fh);

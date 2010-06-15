@@ -1,13 +1,33 @@
 <?php
 
+if(php_sapi_name() != 'cli')
+{
+    echo "This script must be run from the command line\n";
+    exit();
+}
+
 $currentDir = getcwd();
 require_once('../../../search.php');
 require_once('wpi.php');
 chdir($currentDir);
 
+if($argc > 1)
+{
+    parse_str($argv[1], $args);
+    if($args['method'] == 'update')
+    {
+        LabelMapper::execute();
+    }
+}
+
+/*
+ * Creates/Updates the associations between the labels and the pathways.
+ *
+ * Usage : a) Call the static function execute() b) Execute from command line by executing "php LabelMapper.php method=update"
+ */
+
 class LabelMapper
 {
-    private $_client;
     private $_db;
     // 0 -> Not Initialzed 1 -> Initialzed
     private $_initialized = 0;
@@ -18,7 +38,6 @@ class LabelMapper
     
     public function __construct()
     {
-        $this->_client = new SoapClient('http://relations.wikipathways.org/wpi/webservice/webservice.php?wsdl');
         $this->_db =& wfGetDB(DB_SLAVE);
     }
 
@@ -63,7 +82,6 @@ class LabelMapper
         }
 
         $this->addLog("started");
-
         if($this->_initialized == 0)
         {
             $this->createTable();
@@ -118,7 +136,7 @@ class LabelMapper
                 }
             }
         }
-        $this->addLog("finished", $labelCount, count($pathways), $mappingCount, "test run");
+        $this->addLog("finished", $labelCount, count($pathways), $mappingCount);
         return $labelCount;
     }
 
@@ -188,15 +206,9 @@ class LabelMapper
 
         $uniqueLabels = array_unique($labels);
         return $uniqueLabels;
-//   $labels = getLabels($pathway->id);
-//            echo $labels[0];
-//            $result = findPathwaysByLabels("TCA AND CYcle");
-//            print_r($result);
-//            endScript();
-
     }
 
-    private function getPathways($lastUpdated = 0, $species = '')
+    public function getPathways($lastUpdated = 0, $species = '')
     {
         $pwList = array();
 
@@ -209,11 +221,36 @@ class LabelMapper
         }
         else
         {
-            $results = (array)$this->_client->getRecentChanges(array('timestamp' =>  $lastUpdated))->pathways;
-            foreach($results as $result)
+            $dbr =& wfGetDB( DB_SLAVE );
+            $forceclause = $dbr->useIndexClause("rc_timestamp");
+            $recentchanges = $dbr->tableName( 'recentchanges');
+
+            $sql = "SELECT
+                                    rc_namespace,
+                                    rc_title,
+                                    MAX(rc_timestamp)
+                            FROM $recentchanges $forceclause
+                            WHERE
+                                    rc_namespace = " . NS_PATHWAY . "
+                                    AND
+                                    rc_timestamp > '$timestamp'
+                            GROUP BY rc_title
+                            ORDER BY rc_timestamp DESC
+                    ";
+            $res = $dbr->query( $sql, "getRecentChanges" );
+
+            $objects = array();
+            while ($row = $dbr->fetchRow ($res))
             {
-                if($species == '' || $result->species == $species)
-                    $pwList[] =  $result->id;
+                    try {
+                            $ts = $row['rc_title'];
+                            $p = Pathway::newFromTitle($ts);
+                            if(!$p->getTitleObject()->isRedirect() && $p->isReadable()) {
+                                $pwList[] = $ts;
+                            }
+                    } catch(Exception $e) {
+                            $this->addError("Exception thrown for pathway: $ts");
+                    }
             }
         }
 
@@ -224,10 +261,15 @@ class LabelMapper
     {
         $this->_logCount = 0;
         $logHeaders = "id\tlabel-count\tpathway-count\tmappings\tstatus\ttimestamp\tcomments\n";
-        $logHandle = fopen($this->_logFileName, 'a');
+        $logHandle = fopen($this->_logFileName, 'w');
+        if(!$logHandle)
+        {
+            echo "Please set proper permissions for log files!\n";
+            exit();
+        }
         fwrite($logHandle, $logHeaders);
         fclose($logHandle);
-        $errorHandle = fopen($this->_errorFileName, 'a');
+        $errorHandle = fopen($this->_errorFileName, 'w');
         fwrite($errorHandle, "error\ttimestamp");
         fclose($errorHandle);
     }
@@ -239,6 +281,11 @@ class LabelMapper
 
         $log = "$this->_logCount\t$labelCount\t$pathwayCount\t$mappings\t$status\t$timeStamp\t$comments\t\n";
         $logHandle = fopen($this->_logFileName, 'a');
+        if(!$logHandle)
+        {
+            echo "Please set proper permissions for log files!\n";
+            exit();
+        }
         fwrite($logHandle, $log);
         fclose($logHandle);
     }
@@ -247,6 +294,11 @@ class LabelMapper
     {
         $timeStamp = date("YmdiHs");
         $errorHandle = fopen($this->_errorFileName, 'a');
+        if(!$errorHandle)
+        {
+            echo "Please set proper permissions for log files!\n";
+            exit();
+        }
         $error = "$error\t$timeStamp";
         fwrite($errorHandle, $error);
         fclose($errorHandle);
