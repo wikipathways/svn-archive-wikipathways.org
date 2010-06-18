@@ -4,7 +4,7 @@ $currentDir = getcwd();
 require_once('../../../wpi.php');
 chdir($currentDir);
 
-relations::updateDb();
+//print_r(relations::fetchRelations("xref","WP1396", "WP189", 100));
 
 class relations
 {
@@ -74,7 +74,7 @@ class relations
         if($pwId_2 != '')
             $conditions[] = "pwId_2 = '$pwId_2'";
         if($minScore > 0)
-            $conditions[] = "score > '$score'";
+            $conditions[] = "score > '$minScore'";
 
         if(count($conditions) > 0)
         {
