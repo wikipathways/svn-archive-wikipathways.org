@@ -11,15 +11,28 @@ require_once('../../../wpi.php');
 chdir($currentDir);
 require_once('labelMapper.php');
 
-if($argc > 1)
+$argsMsg = "Available options: \na)Initiate/Update => method=update\n\n";
+
+if($argv[0] == 'labelScorer.php')
 {
-    parse_str($argv[1], $args);
-    if($args['method'] == 'update')
+    if($argc > 1)
     {
-        LabelScorer::execute();
+        parse_str($argv[1], $args);
+        switch($args['method'])
+        {
+            case 'update':
+                LabelScorer::execute();
+            break;
+            default:
+                echo $argsMsg;
+        }
+
+    }
+    else
+    {
+        echo $argsMsg;
     }
 }
-
 /*
  * Calculates relations/scores between pairs of pathways based on the common labels.
  *
@@ -33,7 +46,7 @@ class LabelScorer
     private $_labelMappings = array();
     private $_pathwayMappings = array();
     private $_relations = array();
-    public $_scoresFile = "label-mapper-scores.txt";
+    public $_scoresFile = "label-relations-scores.txt";
 
     public function __construct()
     {
@@ -68,12 +81,16 @@ class LabelScorer
         $pathways = $this->getMappedPathways();
         if(count($pathways) > 0)
         {
-            foreach($pathways as $pwId)
+            foreach($pathways as $pwId => $pwSpecies)
             {
                 $relations = $this->findRelations($pwId);
-                foreach($relations as $pw => $score)
+                foreach($relations as $pwTo => $score)
                 {
-                    $this->logScore($pwId, $pw, $score);
+                    // Get relations between pathways of same species
+                    if($pwSpecies == $pathways[$pwTo])
+                    {
+                        $this->logScore($pwId, $pwTo, $score);
+                    }
                 }
                 $this->_relations[$pwId] = 1;
             }
@@ -83,10 +100,10 @@ class LabelScorer
     public function getMappedPathways()
     {
         $pathways = array();
-        $res = $this->_db->query("Select Distinct pwId from labelmappings");
+        $res = $this->_db->query("Select pwId,species from labelmappings Group by pwId");
 
         while($row = $this->_db->fetchObject($res))
-            $pathways[] = $row->pwId;
+            $pathways[$row->pwId] = $row->species;
 
         return $pathways;
     }
@@ -98,11 +115,11 @@ class LabelScorer
         foreach($labels as $label)
         {
             $pathways = $this->getPathwaysbyLabel($label);
-            foreach($pathways as $pw)
+            foreach($pathways as $pwTo)
             {
-               if(!array_key_exists($pw, $this->_relations) && $pwId != $pw)
+               if(!array_key_exists($pwTo, $this->_relations) && $pwId != $pwTo)
                {
-                   $relation[$pw]++;
+                   $relation[$pwTo]++;
                }
             }
         }

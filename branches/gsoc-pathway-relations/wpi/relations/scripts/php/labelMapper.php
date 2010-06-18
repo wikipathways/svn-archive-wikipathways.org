@@ -11,15 +11,33 @@ require_once('../../../search.php');
 require_once('wpi.php');
 chdir($currentDir);
 
-if($argc > 1)
+$argsMsg = "Available options: \na)Initiate/Update => method=update b)Purge => method=purge\n\n";
+
+if($argv[0] == 'labelMapper.php')
 {
-    parse_str($argv[1], $args);
-    if($args['method'] == 'update')
+    if($argc > 1)
     {
-        LabelMapper::execute();
+        parse_str($argv[1], $args);
+        switch($args['method'])
+        {
+            case 'update':
+                $mapper = new LabelMapper();
+                $mapper->init();
+            break;
+            case 'purge':
+                $mapper = new LabelMapper();
+                $mapper->purge();
+            break;
+            default:
+                echo $argsMsg;
+        }
+
+    }
+    else
+    {
+        echo $argsMsg;
     }
 }
-
 /*
  * Creates/Updates the associations between the labels and the pathways.
  *
@@ -41,13 +59,7 @@ class LabelMapper
         $this->_db =& wfGetDB(DB_SLAVE);
     }
 
-    public static function execute()
-    {
-        $mapper = new LabelMapper();
-        $mapper->init();
-    }
-
-    private function init()
+    public function init()
     {
         $labelCount = 0;
 
@@ -126,7 +138,7 @@ class LabelMapper
 
                 $mappings = $this->findPathwaysByLabel($label);
                 $mappingCount += count($mappings);
-
+                
                 if(count($mappings) > 0)
                 {
                     foreach($mappings as $mapping)
@@ -179,6 +191,11 @@ class LabelMapper
                 $mapping['pwId'] = substr($indexerId, strripos($indexerId, ":")+1);
                 $mapping['score'] = (string)$result->getScore();
                 $mappings[] = $mapping;
+//                if($mapping['pwId'] == 'WP801')
+//                {
+//                    echo "yes $query\n";
+//                    echo "no " .  $query) . "\n\n";
+//                }
             }
         }
         return $mappings;
@@ -199,7 +216,8 @@ class LabelMapper
             foreach($gpml->Label as $label )
             {
                 $attributes = $label->attributes();
-                $labels[] = strtolower(trim((string)$attributes->TextLabel));
+                $label = strtolower(trim((string)$attributes->TextLabel));
+                $labels[] = str_replace(array("\n",":"), " ", $label);
             }
 
         }
@@ -221,6 +239,7 @@ class LabelMapper
         }
         else
         {
+            $timestamp = $lastUpdated;
             $dbr =& wfGetDB( DB_SLAVE );
             $forceclause = $dbr->useIndexClause("rc_timestamp");
             $recentchanges = $dbr->tableName( 'recentchanges');
@@ -239,7 +258,6 @@ class LabelMapper
                     ";
             $res = $dbr->query( $sql, "getRecentChanges" );
 
-            $objects = array();
             while ($row = $dbr->fetchRow ($res))
             {
                     try {
@@ -272,6 +290,14 @@ class LabelMapper
         $errorHandle = fopen($this->_errorFileName, 'w');
         fwrite($errorHandle, "error\ttimestamp");
         fclose($errorHandle);
+    }
+
+    public function purge()
+    {
+        unlink($this->_logFileName);
+        $dbr =& wfGetDB( DB_SLAVE );
+        $sql = "TRUNCATE TABLE $this->_labelMappingTable";
+        $res = $dbr->query($sql);
     }
 
     private function addLog($status, $labelCount = 0, $pathwayCount = 0, $mappings = 0, $comments = '')
