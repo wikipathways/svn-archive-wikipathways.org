@@ -2,6 +2,7 @@
 chdir(dirname(realpath(__FILE__)) . "/../");
 require_once('wpi.php');
 require_once('search.php');
+require_once('relations.php');
 chdir($dir);
 
 ## Log the request ##
@@ -52,6 +53,7 @@ $operations = array(
 	"findInteractions",
 	"getXrefList",
 	"findPathwaysByLiterature",
+        "getRelations",
 );
 $opParams = array(
 	"listOrganisms" => "MIXED",
@@ -75,6 +77,7 @@ $opParams = array(
 	"findInteractions" => "MIXED",
 	"getXrefList" => "MIXED",
 	"findPathwaysByLiterature" => "MIXED",
+        "getRelations" => "MIXED",
 );
 
 $classmap = array(); //just let the engine know you prefer classmap mode
@@ -123,6 +126,10 @@ $restmap = array(
 	"getRecentChanges" => array(
 		"HTTPMethod" =>"GET",
 		"RESTLocation" => "getRecentChanges"
+	),
+	"getRelations" => array(
+		"HTTPMethod" =>"GET",
+		"RESTLocation" => "getRelations"
 	),
 );
 
@@ -680,6 +687,34 @@ function getColoredPathway($pwId, $revision, $graphId, $color, $fileType) {
 	return array("data" => $data);
 }
 
+/**
+ * Get the relations for the given pathways.
+ * @param string $type The type of relation for the score has to be fetched (optional).
+ * @param string $pwId_1 The id of the Pathway for the relation has to be fetched (optional).
+ * @param string $pwId_2 The id of the second Pathway for the relation has to be fetched (optional).
+ * @param int $minScore The minimum score for which the relations are fetched (optional).
+ * @return array of object WSRelation $relations The Relations
+ **/
+function getRelations($type = "", $pwId_1 = "", $pwId_2 = "", $minScore = 0) {
+
+        try{
+            
+            $relations = array();
+            $relations = Relations::fetchRelations($type, $pwId_1, $pwId_2, $minScore);
+
+            $wsRelations = array();
+            foreach($relations as $relation) {
+                    $wsRelation = new WSRelation($relation);
+                    $wsRelations[] = $wsRelation;
+            }
+            return array("relations" => $wsRelations);
+            
+	} catch(Exception $e) {
+		wfDebug(__METHOD__ . " (ERROR): $e\n");
+		throw new WSFault("Receiver", $e);
+	}
+}
+
 //Non ws functions
 function authenticate($username, $token, $write = false) {
 	global $wgUser, $wgAuth;
@@ -977,4 +1012,39 @@ class WSCurationTagHistory {
 	 */
 	public $time;
 }
+
+ /**
+ * @namespace http://www.wikipathways.org/webservice
+ */
+ class WSRelation {
+
+	public function __construct($result) {
+		$this->pathwayId_1 = $result->pwId_1;
+                $this->pathwayId_2 = $result->pwId_2;
+                $this->type = $result->type;
+                $this->score = $result->score;
+	}
+
+	/**
+	 *@var string $pathwayId_1 The id of the first pathway for which the relation is fetched
+	 */
+	public $pathwayId_1;
+
+	/**
+	 *@var string $pathwayId_2 The id of the second pathway for which the relation is fetched
+	 */
+	public $pathwayId_2;
+
+	/**
+	 *@var string $type The type of the relation
+	 */
+	public $type;
+
+	/**
+	 *@var string $score The degree of relativeness(score) between the pair of pathways
+	 */
+	public $score;
+
+}
+
 ?>
