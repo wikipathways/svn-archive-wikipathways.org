@@ -15,7 +15,7 @@ $argsMsg = "Available options: \na)Initiate/Update => method=update b)Purge => m
 
 if($argv[0] == 'labelMapper.php')
 {
-    if($argc > 1)
+    if($argc == 2)
     {
         parse_str($argv[1], $args);
         switch($args['method'])
@@ -50,6 +50,7 @@ class LabelMapper
     // 0 -> Not Initialzed 1 -> Initialzed
     private $_initialized = 0;
     private $_logCount = 0;
+    public $_minLabelLength = 4;
     public $_labelMappingTable = 'labelmappings';
     public $_logFileName = "label-mapper.log";
     public $_errorFileName = "label-mapper-error.log";
@@ -204,6 +205,8 @@ class LabelMapper
     private function getLabels($pathways)
     {
         $labels = array();
+        $stopLabels = array('pathway', 'protein', 'proteins', 'complex', 'nucleus', 'of proteins', 'cell', 'membrane', 'activation', 'interaction');
+
         if(!is_array($pathways))
             $pathways = array($pathways);
 
@@ -217,9 +220,10 @@ class LabelMapper
             {
                 $attributes = $label->attributes();
                 $label = strtolower(trim((string)$attributes->TextLabel));
-                $labels[] = str_replace(array("\n",":"), " ", $label);
+                $label = str_replace(array("\n",":"), " ", $label);
+                if(strlen($label) >= $this->_minLabelLength && !in_array($label, $stopLabels))
+                    $labels[] = $label;
             }
-
         }
 
         $uniqueLabels = array_unique($labels);
