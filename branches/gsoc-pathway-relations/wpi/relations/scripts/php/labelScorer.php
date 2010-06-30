@@ -15,7 +15,7 @@ $argsMsg = "Available options: \na)Initiate/Update => method=update\n\n";
 
 if($argv[0] == 'labelScorer.php')
 {
-    if($argc > 1)
+    if($argc == 2)
     {
         parse_str($argv[1], $args);
         switch($args['method'])
