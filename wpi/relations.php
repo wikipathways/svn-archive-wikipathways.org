@@ -72,9 +72,12 @@ Example: php relations.php method=relation pwId_1=WP500 pwId_2=WP520 minscore=5 
                     $results = Relations::fetchRelations($type, $pwId_1, $pwId_2, $minscore);
 
                     echo "Pathway Id 1\tPathway Id 2\tScore\tRelation type\n";
-                    foreach($results as $relation)
+                    if(count($results) > 0)
                     {
-                        echo "{$relation->pwId_1}\t{$relation->pwId_2}\t{$relation->score}\t{$relation->type}\n";
+                        foreach($results as $relation)
+                        {
+                            echo "{$relation->pwId_1}\t{$relation->pwId_2}\t{$relation->score}\t{$relation->type}\n";
+                        }
                     }
                 break;
 
