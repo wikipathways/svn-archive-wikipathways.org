@@ -11,7 +11,7 @@ require_once('../../../wpi.php');
 chdir($currentDir);
 require_once('labelMapper.php');
 
-$argsMsg = "Available options: \na)Initiate/Update => method=update\n\n";
+$argsMsg = "Available options: \na)Initiate/Update => method=update\nb)Purge => method=purge\n\n";
 
 if($argv[0] == 'labelScorer.php')
 {
@@ -22,6 +22,9 @@ if($argv[0] == 'labelScorer.php')
         {
             case 'update':
                 LabelScorer::execute();
+            break;
+            case 'purge':
+                LabelScorer::purge();
             break;
             default:
                 echo $argsMsg;
@@ -57,8 +60,24 @@ class LabelScorer
 
     public static function execute()
     {
+        $mapper = new LabelMapper();
+        $mapper->init();
         $scorer = new LabelScorer();
         $scorer->init();
+    }
+
+    public static function purge()
+    {
+        $mapper = new LabelMapper();
+        $mapper->purge();        
+        
+        $scorer = new LabelScorer();
+        
+        // Refresh the scores file
+        if(is_file($scorer->_scoresFile))
+        {
+            unlink($scorer->_scoresFile);
+        }
     }
 
     public function init()
