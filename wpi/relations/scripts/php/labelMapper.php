@@ -41,7 +41,7 @@ if($argv[0] == 'labelMapper.php')
 /*
  * Creates/Updates the associations between the labels and the pathways.
  *
- * Usage : a) Call the static function execute() b) Execute from command line by executing "php LabelMapper.php method=update"
+ * Usage : a) Call the function init() using an instance of the Class b) Execute from command line by executing "php LabelMapper.php method=update"
  */
 
 class LabelMapper
@@ -299,6 +299,7 @@ class LabelMapper
     public function purge()
     {
         unlink($this->_logFileName);
+        unlink($this->_errorFileName);
         $dbr =& wfGetDB( DB_SLAVE );
         $sql = "TRUNCATE TABLE $this->_labelMappingTable";
         $res = $dbr->query($sql);
