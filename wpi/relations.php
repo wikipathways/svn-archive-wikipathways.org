@@ -14,9 +14,9 @@ Params: [type]=[path to score file], Seperate multiple entries by space
 Example: php relations.php method=update xref=xref.txt label=label.txt
 
 b)Get Relations => method=relation
-Params: [param-name]=[param-value], Seperate multiple entries by &
-Available Params: pwId_1, pwId_2, minScore, type(xref/label)
-Example: php relations.php method=relation pwId_1=WP500 pwId_2=WP520 minscore=5 type=xref
+Params: [param-name]=[param-value], Separate multiple entries by &
+Available Params: pwId_1, pwId_2, minScore, type(xref/label/ontology), species(replace the space with a -)
+Example: php relations.php method=relation pwId_1=WP500 pwId_2=WP520 minscore=5 type=xref species=Homo-sapiens\n
 ";
     if($argv[0] == 'relations.php')
     {
@@ -51,7 +51,6 @@ Example: php relations.php method=relation pwId_1=WP500 pwId_2=WP520 minscore=5 
                             }                            
                         }
                     }
-
                     Relations::updateDb($relationType);
                 break;
 
@@ -61,22 +60,26 @@ Example: php relations.php method=relation pwId_1=WP500 pwId_2=WP520 minscore=5 
                     $pwId_1 = "";
                     $pwId_2 = "";
                     $minscore = "";
+                    $species = "";
 
                     for($i = 2; $i < count($argv); $i++)
                     {
                         parse_str($argv[$i]);
                     }
 
+                    if($species != "")
+                        $species = str_replace("-", " ", $species);
+
 //                    echo $type . " " . $pwId_1 . " " . $pwId_2 . " " . $minscore;
                     
-                    $results = Relations::fetchRelations($type, $pwId_1, $pwId_2, $minscore);
+                    $results = Relations::fetchRelations($type, $pwId_1, $pwId_2, $minscore, $species);
 
-                    echo "Pathway Id 1\tPathway Id 2\tScore\tRelation type\n";
+                    echo "Pathway Id 1\tPathway Id 2\tScore\tRelation type\tSpecies\n";
                     if(count($results) > 0)
                     {
                         foreach($results as $relation)
                         {
-                            echo "{$relation->pwId_1}\t{$relation->pwId_2}\t{$relation->score}\t{$relation->type}\n";
+                            echo "{$relation->pwId_1}\t{$relation->pwId_2}\t{$relation->score}\t{$relation->type}\t{$relation->species}\n";
                         }
                     }
                 break;
@@ -99,6 +102,7 @@ Example: php relations.php method=relation pwId_1=WP500 pwId_2=WP520 minscore=5 
 class Relations
 {
     public static $_relationsTable = "relations";
+    private static $_pathwaySpecies = array();
 
     public static function lastUpdated()
     {
@@ -115,23 +119,23 @@ class Relations
             return true;
     }
 
-    private static function refreshTable()
+    private static function refreshTable($relationType)
     {
         $dbw =& wfGetDB( DB_MASTER );
         $sql = "CREATE TABLE IF NOT EXISTS `" . self::$_relationsTable . "` (
                     `pwId_1` VARCHAR( 10 ) NOT NULL ,
                     `pwId_2` VARCHAR( 10 ) NOT NULL ,
                     `type` VARCHAR( 10 ) NOT NULL ,
-                    `score` FLOAT UNSIGNED NOT NULL
+                    `score` FLOAT UNSIGNED NOT NULL,
+                    `species` VARCHAR( 50 ) NOT NULL
                 );";
         $create = $dbw->query($sql);
-        $sql = "Truncate table "  . self::$_relationsTable ;
+        $sql = "Delete FROM "  . self::$_relationsTable . " WHERE type ='" . $relationType . "'" ;
         $truncate = $dbw->query($sql);
     }
 
     public static function updateDb($relationType)
     {
-        self::refreshTable();
         $dbw =& wfGetDB( DB_MASTER );
 
         foreach($relationType as $method)
@@ -141,26 +145,43 @@ class Relations
                 echo "Error: File not found! {$method['file']}\n";
                 exit();
             }
-            
-            $relations = self::readScoreFile($method['file']);
-            foreach($relations as $relation)
-            {
-                 $dbw->insert( self::$_relationsTable , array(
-                                                'pwId_1' => $relation['pwId_1'],
-                                                'pwId_2' => $relation['pwId_2'],
-                                                'type' => $method['type'],
-                                                'score' => $relation['score']
-                                                )
-                                            );
-            }
-        }
 
+            //Remove only those typep of relations which are being updated.
+            self::refreshTable($method['type']);
+
+            $file = file($method['file']);
+            for($i = 1; $i < count($file); $i++)
+            {
+                $relation = explode("\t",trim($file[$i]));
+                $relation = array(
+                                'pwId_1' => $relation[0],
+                                'pwId_2' => $relation[1],
+                                'score' => $relation[2],
+                                );
+                if($relation['score'] > 0)
+                {
+                     $species = self::getSpecies($relation['pwId_1']);
+
+                     $dbw->insert( self::$_relationsTable , array(
+                                                    'pwId_1' => $relation['pwId_1'],
+                                                    'pwId_2' => $relation['pwId_2'],
+                                                    'type' => $method['type'],
+                                                    'score' => $relation['score'],
+                                                    'species' => $species
+                                            ));
+                }
+
+            }
+
+            unset($file);
+        }
     }
 
-    public static function fetchRelations($type = '', $pwId_1 = '', $pwId_2 = '', $minScore = 0)
+    public static function fetchRelations($type = '', $pwId_1 = '', $pwId_2 = '', $minScore = 0, $species = '')
     {
         $dbr =& wfGetDB(DB_SLAVE);
         $query = "SELECT * FROM " . self::$_relationsTable ;
+        $minScore = (int)$minScore;
         $conditions = array();
         
         if($type != '')
@@ -177,13 +198,18 @@ class Relations
         }
 
         if($minScore > 0)
-            $conditions[] = "score > '$minScore'";
+            $conditions[] = "score > $minScore";
+        
+        if($species != '')
+            $conditions[] = "species = '$species'";
 
         if(count($conditions) > 0)
         {
             $cons = implode (" AND ", $conditions);
             $query .= " Where $cons";
         }
+
+
 
         $res = $dbr->query($query);
         while($row = $dbr->fetchObject($res))
@@ -194,26 +220,20 @@ class Relations
 
         return $result;
     }
-    
-    private static function readScoreFile($scoreFile)
-    {
-        $file = file($scoreFile);
-        $relations = array();
 
-        for($i = 1; $i < count($file); $i++)
+    private static function getSpecies($pathwayId)
+    {
+        if(array_key_exists($pathwayId, self::$_pathwaySpecies))
         {
-            $relation = explode("\t",trim($file[$i]));
-            $relation = array(
-                            'pwId_1' => $relation[0],
-                            'pwId_2' => $relation[1],
-                            'score' => $relation[2],
-                            );
-            if($relation['score'] > 0)
-            {
-                $relations[] = $relation;
-            }
+            return self::$_pathwaySpecies[$pathwayId];
         }
-        return $relations;
+        else
+        {
+            $pathway = Pathway::newFromTitle($pathwayId);
+            $species = $pathway->getSpecies();
+            self::$_pathwaySpecies[$pathwayId] =  $species;
+            return $species;
+        }
     }
 }
 

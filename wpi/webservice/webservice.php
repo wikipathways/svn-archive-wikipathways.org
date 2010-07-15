@@ -695,14 +695,14 @@ function getColoredPathway($pwId, $revision, $graphId, $color, $fileType) {
  * @param string $pwId_1 The id of the Pathway for the relation has to be fetched (optional).
  * @param string $pwId_2 The id of the second Pathway for the relation has to be fetched (optional).
  * @param int $minScore The minimum score for which the relations are fetched (optional).
+ * @param string $species Limit the query by species.
  * @return array of object WSRelation $relations The Relations
  **/
-function getRelations($type = "", $pwId_1 = "", $pwId_2 = "", $minScore = 0) {
+function getRelations($type = "", $pwId_1 = "", $pwId_2 = "", $minScore = 0, $species = "") {
 
         try{
-            
             $relations = array();
-            $relations = Relations::fetchRelations($type, $pwId_1, $pwId_2, $minScore);
+            $relations = Relations::fetchRelations($type, $pwId_1, $pwId_2, $minScore, $species);
 
             $wsRelations = array();
             foreach($relations as $relation) {
@@ -1021,21 +1021,29 @@ class WSCurationTagHistory {
  class WSRelation {
 
 	public function __construct($result) {
-		$this->pathwayId_1 = $result->pwId_1;
-                $this->pathwayId_2 = $result->pwId_2;
+                if($result->pwId_1) {
+                    $this->pathway1 = new WSPathwayInfo(
+                            Pathway::newFromTitle($result->pwId_1)
+                    );
+		}
+                if($result->pwId_2) {
+                    $this->pathway2 = new WSPathwayInfo(
+                            Pathway::newFromTitle($result->pwId_2)
+                    );
+		}
                 $this->type = $result->type;
-                $this->score = $result->score;
+                $this->score = (int)$result->score;
 	}
 
 	/**
-	 *@var string $pathwayId_1 The id of the first pathway for which the relation is fetched
+	 * @var object WSPathwayInfo $pathway1 for the first pathway
 	 */
-	public $pathwayId_1;
+	public $pathway1;
 
 	/**
-	 *@var string $pathwayId_2 The id of the second pathway for which the relation is fetched
+	 * @var object WSPathwayInfo $pathway2 for the second pathway
 	 */
-	public $pathwayId_2;
+	public $pathway2;
 
 	/**
 	 *@var string $type The type of the relation
@@ -1043,10 +1051,9 @@ class WSCurationTagHistory {
 	public $type;
 
 	/**
-	 *@var string $score The degree of relativeness(score) between the pair of pathways
+	 *@var int $score The degree of relativeness(score) between the pair of pathways
 	 */
 	public $score;
-
 }
 
 ?>
