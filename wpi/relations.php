@@ -146,27 +146,24 @@ class Relations
                 exit();
             }
 
-            //Remove only those typep of relations which are being updated.
+            //Remove only those type of relations which are being updated.
             self::refreshTable($method['type']);
 
             $file = file($method['file']);
             for($i = 1; $i < count($file); $i++)
             {
                 $relation = explode("\t",trim($file[$i]));
-                $relation = array(
-                                'pwId_1' => $relation[0],
-                                'pwId_2' => $relation[1],
-                                'score' => $relation[2],
-                                );
-                if($relation['score'] > 0)
+
+                if($relation[2] > 0)
                 {
-                     $species = self::getSpecies($relation['pwId_1']);
+                     $species = self::getSpecies($relation[0]);
+                     $score = self::normalizeScore($relation[2], $relation[3], $relation[4]);
 
                      $dbw->insert( self::$_relationsTable , array(
-                                                    'pwId_1' => $relation['pwId_1'],
-                                                    'pwId_2' => $relation['pwId_2'],
+                                                    'pwId_1' => $relation[0],
+                                                    'pwId_2' => $relation[1],
                                                     'type' => $method['type'],
-                                                    'score' => $relation['score'],
+                                                    'score' => $score,
                                                     'species' => $species
                                             ));
                 }
@@ -234,6 +231,11 @@ class Relations
             self::$_pathwaySpecies[$pathwayId] =  $species;
             return $species;
         }
+    }
+
+    private static function normalizeScore($score, $pwId_1Count, $pwId_2Count)
+    {
+        return $normalizedScore = $score / min($pwId_1Count, $pwId_2Count);
     }
 }
 
