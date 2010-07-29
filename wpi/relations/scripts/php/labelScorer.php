@@ -87,31 +87,36 @@ class LabelScorer
         {
             unlink($this->_scoresFile);
         }
+
         $fh = fopen($this->_scoresFile, 'w');
         if(!$fh)
         {
             echo "Please set proper permissions for Score file.\n";
             exit();
         }
-        $fileHeaders = "PW1\tPW2\tNr Common Labels\n";
+
+        $fileHeaders = "Pathway 1\tPathway 2\tNr shared labels\tNr labels pathway 1\tNr labels pathway 2\tNr unique labels both pathways\n";
         fwrite($fh, $fileHeaders);
         fclose($fh);
 
         $pathways = $this->getMappedPathways();
         if(count($pathways) > 0)
         {
-            foreach($pathways as $pwId => $pwSpecies)
+            foreach($pathways as $pwFrom => $pwSpecies)
             {
-                $relations = $this->findRelations($pwId);
+                $relations = $this->findRelations($pwFrom);
                 foreach($relations as $pwTo => $score)
                 {
                     // Get relations between pathways of same species
                     if($pwSpecies == $pathways[$pwTo])
                     {
-                        $this->logScore($pwId, $pwTo, $score);
+                        $pwFromLabelCount = count($this->getLabelsbyPathway($pwFrom));
+                        $pwToLabelCount = count($this->getLabelsbyPathway($pwTo));
+
+                        $this->logScore($pwFrom, $pwTo, $score, $pwFromLabelCount, $pwToLabelCount);
                     }
                 }
-                $this->_relations[$pwId] = 1;
+                $this->_relations[$pwFrom] = 1;
             }
         }
     }
@@ -127,16 +132,16 @@ class LabelScorer
         return $pathways;
     }
 
-    private function findRelations($pwId)
+    private function findRelations($pwFrom)
     {
-        $labels = $this->getLabelsbyPathway($pwId);
+        $labels = $this->getLabelsbyPathway($pwFrom);
         $relation = array();
         foreach($labels as $label)
         {
             $pathways = $this->getPathwaysbyLabel($label);
             foreach($pathways as $pwTo)
             {
-               if(!array_key_exists($pwTo, $this->_relations) && $pwId != $pwTo)
+               if(!array_key_exists($pwTo, $this->_relations) && $pwFrom != $pwTo)
                {
                    $relation[$pwTo]++;
                }
@@ -186,10 +191,10 @@ class LabelScorer
         return $pathways;
     }
 
-    private function logScore($pw1, $pw2, $score)
+    private function logScore($pwFrom, $pwTo, $score, $pwFromLabelCount, $pwToLabelCount)
     {
         $fh = fopen($this->_scoresFile, 'a');
-        $log = "$pw1\t$pw2\t$score\n";
+        $log = "$pwFrom\t$pwTo\t$score\t$pwFromLabelCount\t$pwToLabelCount\n";
         fwrite($fh, $log);
         fclose($fh);
     }
