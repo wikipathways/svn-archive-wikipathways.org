@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
-				xmlns:flex="flare.flex.*" layout="absolute" 
-				creationComplete="init()" horizontalAlign="left" verticalAlign="top">
+				xmlns:flex="flare.flex.*" layout="horizontal" 
+				creationComplete="init()">
 	<mx:Script source="wikipathways.as"/>
-	<mx:Script source="SaveScreenShot.as"/>
 	<mx:Script>
 		<![CDATA[
 			import flare.animate.Transitioner;
@@ -31,7 +30,6 @@
 			import mx.controls.sliderClasses.Slider;
 			import mx.core.UIComponent;
 			import mx.events.SliderEvent;
-			import mx.managers.CursorManager;
 			import mx.rpc.events.ResultEvent;
 			import mx.rpc.http.HTTPService;
 			
@@ -59,7 +57,6 @@
 			private var relationTypeList:Array = [ "xref", "label"];
 				
 			private var currentLayoutId:int = 3;
-			public var appRoot:String = "http://relations.wikipathways.org/wpi/relations/scripts/flexapp/";
 			
 			public function init():void
 			{
@@ -96,8 +93,8 @@
 				vis = new Visualization(visData);
 				// Set the bounds
 				vis.bounds = new Rectangle(uic.x , uic.y , 1000, 500);
-				vis.x = 50;
-				vis.y = 50;
+				vis.x = 20;
+				vis.y = 10;
 				
 				addLabel();																		
 				
@@ -203,9 +200,6 @@
 					speciesSelect.enabled = true;
 					selectLayout.enabled = true;
 					typeSelect.enabled = true;
-					saveScreenShot.enabled = true;
-					
-					CursorManager.removeBusyCursor();
 				}
 				else
 				{
@@ -213,11 +207,7 @@
 					scoreSlider.enabled = false;
 					speciesSelect.enabled = false;
 					selectLayout.enabled = false;
-					typeSelect.enabled = false;
-					saveScreenShot.enabled = false; 
-					
-					CursorManager.setBusyCursor();
-
+					typeSelect.enabled = false;	
 				}	
 			}	
 				
@@ -237,7 +227,6 @@
 						break;
 					case 2:
 						var forceLayout:ForceDirectedLayout = new ForceDirectedLayout();
-//						vis.x = vis.width / 2;
 						forceLayout.defaultSpringLength = 80;
 						forceLayout.defaultParticleMass = 2;
 						forceLayout.defaultSpringTension = 0.1;
@@ -271,9 +260,17 @@
 		]]>
 	</mx:Script>
 
-<mx:Panel layout="vertical" width="100%" title="Wikipathways Relations" horizontalAlign="left" verticalAlign="top">
-	<mx:HBox height="50" width="100%" borderStyle="solid" cornerRadius="0" borderColor="#0B0B0B" themeColor="#161616" alpha="1.0" verticalAlign="middle" horizontalGap="8" backgroundColor="#ECE9E9" backgroundAlpha="0.8" paddingLeft="20">
-		<!-- <mx:Image source="images/wikipathways_logo.png" id="logo"/> -->
+	<mx:HBox height="500" width="750">
+		<mx:Canvas id="container" width="100%" height="100%" borderStyle="outset" cornerRadius="30" borderColor="#8A8A8A">
+			<mx:Canvas width="100%" height="100%" backgroundColor="0x000000" id="cv" />
+			<flex:FlareVis id="tviz" width="100%" height="100%" mask="{cv}" hitArea="{container}">
+				<mx:UIComponent id="uic" />
+			</flex:FlareVis>			
+		</mx:Canvas>
+	</mx:HBox>	
+	<mx:VBox height="500" width="220" borderStyle="solid" cornerRadius="15" borderColor="#0B0B0B" themeColor="#161616" alpha="1.0">
+		<mx:Image source="images/wikipathways_logo.png" id="logo"/>
+		<mx:Button id="resetZoomButton" label="Reset Zoom" enabled="false" />
 		<mx:Label text="Relations Type" />
 		<mx:ComboBox id="typeSelect" dataProvider="{relationTypeList}" change='selectRelationTypeHandler(event)' enabled="false" />
 		<mx:Label text="Change Layout" />
@@ -288,16 +285,5 @@
 					snapInterval="0.05"
 					enabled="false"
 					/>
-		<mx:Button id="resetZoomButton" label="Reset Zoom" enabled="false" />
-		<mx:Button id="saveScreenShot" label="Save.." enabled="false" click="sendJPG(vizContainer)"/>
-	</mx:HBox>	
-	<mx:HBox height="500" width="100%" id="vizContainer">
-		<mx:Canvas id="container" width="100%" height="100%" borderStyle="outset" cornerRadius="30" borderColor="#8A8A8A">
-			<mx:Canvas width="100%" height="100%" backgroundColor="0x000000" id="cv" />
-			<flex:FlareVis id="tviz" width="100%" height="100%" mask="{cv}" hitArea="{container}" backgroundImage="images/wikipathways_logo.png" backgroundAlpha="0.4">
-				<mx:UIComponent id="uic" />
-			</flex:FlareVis>			
-		</mx:Canvas>
-	</mx:HBox>	
-</mx:Panel>	
+	</mx:VBox>
 </mx:Application>
