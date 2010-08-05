@@ -242,8 +242,8 @@ import mx.managers.CursorManager;
 			var oldX:Number = _object.x;
 			var oldY:Number = _object.y;
 			Displays.zoomBy(_object, dz);
-			_object.x = _stage.mouseX - ((_stage.mouseX - oldX)*dz);
-			_object.y = _stage.mouseY - ((_stage.mouseY - oldY)*dz);
+			_object.x = _hit.mouseX - ((_hit.mouseX - oldX)*dz);
+			_object.y = _hit.mouseY - ((_hit.mouseY - oldY)*dz);
 			
 			
 		}
