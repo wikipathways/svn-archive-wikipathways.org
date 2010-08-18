@@ -7,8 +7,10 @@ chdir($dir);
 ## Log the request ##
 //Try to find the called operation
 $operation = '';
-if(preg_match("/<soapenv:Body>(.*?)>/us", $HTTP_RAW_POST_DATA, $match)) {
+if(preg_match("/Body>(.*?)>/us", $HTTP_RAW_POST_DATA, $match)) {
 	$operation = trim($match[1]);
+#} else if(preg_match("/Body>(.*?)>/us", file_get_contents('php://input'), $match)){
+#	$operation = trim($match[1]);
 } else if(in_array("wsdl", array_keys($_REQUEST))) { //WSDL requests
 	$operation = "wsdl";
 } else if($_SERVER["PATH_INFO"]) {
@@ -116,6 +118,7 @@ $restmap = array(
 		"HTTPMethod" =>"GET",
 		"RESTLocation" => "findInteractions"
 	),
+<<<<<<< .working
 	"findPathwaysByLiterature" => array(
 		"HTTPMethod" =>"GET",
 		"RESTLocation" => "findPathwaysByLiterature"
@@ -148,6 +151,22 @@ $restmap = array(
 		"HTTPMethod" =>"GET",
 		"RESTLocation" => "getPathwaysByParentOntologyTerm"
 	)
+	"findPathwaysByLiterature" => array(
+		"HTTPMethod" =>"GET",
+		"RESTLocation" => "findPathwaysByLiterature"
+	),
+	"getXrefList" => array(
+		"HTTPMethod" =>"GET",
+		"RESTLocation" => "getXrefList"
+	),
+	"getPathwayHistory" => array(
+		"HTTPMethod" =>"GET",
+		"RESTLocation" => "getPathwayHistory"
+	),
+	"getRecentChanges" => array(
+		"HTTPMethod" =>"GET",
+		"RESTLocation" => "getRecentChanges"
+	),
 );
 
 $svr = new WSService(array(
@@ -197,6 +216,7 @@ function listPathways($organism = false) {
 function getPathway($pwId, $revision = 0) {
 	try {
 		$pathway = new Pathway($pwId);
+		if($revision) $pathway->setActiveRevision($revision);
 		$pwi = new WSPathway($pathway);
 		return array("pathway" => $pwi);
 	} catch(Exception $e) {
@@ -412,7 +432,7 @@ function getRecentChanges($timestamp)
 		try {
 				$ts = $row['rc_title'];
 			$p = Pathway::newFromTitle($ts);
-			if(!$p->getTitleObject()->isRedirect()) {
+			if(!$p->getTitleObject()->isRedirect() && $p->isReadable()) {
 				$objects[] = new WSPathwayInfo($p);			
 			}
 		} catch(Exception $e) {
@@ -446,26 +466,26 @@ function findPathwaysByText($query, $species = '') {
 
 /**
  * Find pathways by a datanode xref.
- * @param array of string $id The datanode identifier (e.g. 'P45985')
- * @param array of string $code Optional, limit the query by database (e.g. 'S' for UniProt). Leave
+ * @param array of string $ids The datanode identifier (e.g. 'P45985')
+ * @param array of string $codes Optional, limit the query by database (e.g. 'S' for UniProt). Leave
  * blank to search on all databases
  * @return array of object WSSearchResult $result Array of WSSearchResult objects
  **/
-function findPathwaysByXref($id, $code = '') {
+function findPathwaysByXref($ids, $codes = '') {
 	try {
-		if($code) {
-			if(count($code) == 1) { //One code for all ids
-				$code = array_fill(0, count($id), $code[0]);
-			} else if(count($code) != count($id)) {
+		if($codes) {
+			if(count($codes) == 1) { //One code for all ids
+				$codes = array_fill(0, count($ids), $codes[0]);
+			} else if(count($codes) != count($ids)) {
 				throw new WSFault("Sender", "Number of supplied ids does not match number of system codes");
 			}
 		} else {
-			$code = array_fill(0, count($id), '');
+			$codes = array_fill(0, count($ids), '');
 		}
 		$xrefs = array();
 		$xrefsStr = array();
-		for($i = 0; $i < count($id); $i += 1) {
-			$x = new XRef($id[$i], $code[$i]);
+		for($i = 0; $i < count($ids); $i += 1) {
+			$x = new XRef($ids[$i], $codes[$i]);
 			$xrefs[] = $x;
 			$xrefsStr[] = (string)$x;
 		}
@@ -847,7 +867,11 @@ function getPathwaysByParentOntologyTerm($term) {
 }
 
 function formatXml($xml) {
-	return preg_replace("/\&/", "&amp;", $xml);
+	if(is_array($xml)) {
+		return array_map(htmlentities, $xml);
+	} else {
+		return htmlentities($xml);
+	}
 }
 
 //Class definitions
@@ -942,7 +966,7 @@ class WSSearchResult extends WSPathwayInfo {
 		parent::__construct($hit->getPathway());
 		$this->score = $hit->getScore();
 		if($includeFields === null) {
-			$includeFields = $hit->getFieldValues();
+			$includeFields = $hit->getFieldNames();
 		}
 		$this->fields = array();
 		foreach($includeFields as $fn) {
@@ -993,7 +1017,7 @@ class WSIndexField {
 class WSPathway extends WSPathwayInfo {
 	function __construct($pathway) {
 		parent::__construct($pathway);
-		$this->gpml = formatXml($pathway->getGPML());
+		$this->gpml = $pathway->getGPML();
 	}
 	/**
 	* @var string $gpml - the GPML code

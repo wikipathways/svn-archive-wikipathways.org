@@ -9,6 +9,7 @@ $wgExtensionFunctions[] = "wfBatchDownload";
 Pathway::registerFileType(FILETYPE_PDF);
 Pathway::registerFileType(FILETYPE_PWF);
 Pathway::registerFileType(FILETYPE_TXT);
+Pathway::registerFileType(FILETYPE_BIOPAX);
 
 function wfBatchDownload() {
     global $wgParser;
@@ -117,6 +118,9 @@ class BatchDownloader {
 		$fileName = "wikipathways_" . $this->species . 
 					$cat . $list . $t . $et . "_{$this->fileType}.zip";
 		$fileName = str_replace(' ', '_', $fileName);
+		//Filter out illegal chars
+		$fileName = preg_replace( "/[\/\?\<\>\\\:\*\|\[\]]/", '-', $fileName);
+		
 		return WPI_CACHE_PATH . "/" . $fileName;
 	}
 	
@@ -217,8 +221,7 @@ class BatchDownloader {
 			$pathways = array();
 			//Apply additional filter by species
 			foreach($allpws as $p) {
-				$pspecies = str_replace(' ', '_', $p->species());
-				if($pspecies == $species && $this->species) {
+				if($p->getSpecies() == $this->species) {
 					$pathways[$p->getIdentifier()] = $p;
 				}
 			}

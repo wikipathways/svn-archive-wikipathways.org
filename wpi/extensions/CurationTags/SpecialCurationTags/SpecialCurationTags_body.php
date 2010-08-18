@@ -13,18 +13,13 @@ class SpecialCurationTags extends SpecialPage {
 		$this->setHeaders();
 		
 		if($tagName = $_REQUEST['showPathwaysFor']) {
+			$def = CurationTag::getTagDefinition();
+			$useRev = $def->xpath('Tag[@name="' . $tagName . '"]/@useRevision');
+
 			$disp = htmlentities(CurationTag::getDisplayName($tagName));
 			$pages = CurationTag::getPagesForTag($tagName);
-			
-			$nr = count($pages);
-			$wgOut->addWikiText(
-				"The table below shows all $nr pathways that are tagged with curation tag: " .
-				"'''$disp'''. "
-			);
-			$wgOut->addHTML("<p><a href='$url'>back</a></p>");
-			$wgOut->addHTML("<table class='prettytable sortable'><tbody>");
-			$wgOut->addHTML("<th>Pathway name<th>Organism<th>Created by<th><th>Last modified by<th>");
-			
+			$nr = 0;
+			$table = "";
 			foreach($pages as $pageId) {
 				try {
 					$t = Title::newFromId($pageId);
@@ -32,22 +27,36 @@ class SpecialCurationTags extends SpecialPage {
 						$p = Pathway::newFromTitle($t);
 						if($p->isDeleted()) continue; //Skip deleted pathways
 						
-						$wgOut->addHTML(
-							"<tr><td><a href='{$p->getFullUrl()}'>{$p->name()}</a><td>{$p->species()}"
-						);
+						$nr = $nr + 1;
+						
+						$table .= "<tr><td><a href='{$p->getFullUrl()}'>{$p->name()}</a><td>{$p->species()}";
 						$tag = new MetaTag($tagName, $pageId);
-						$ucreate = User::newFromId($tag->getUserAdd());
-						$tcreate = $wgLang->timeanddate( $tag->getTimeAdd(), true );
 						$umod = User::newFromId($tag->getUserMod());
 						$tmod = $wgLang->timeanddate( $tag->getTimeMod(), true );
-						$lcreate = $wgUser->getSkin()->userLink( $ucreate->getId(), $ucreate->getName() );
 						$lmod = $wgUser->getSkin()->userLink( $umod->getId(), $umod->getName() );
-						$wgOut->addHTML("<td>$lcreate<td>$tcreate<td>$lmod<td>$tmod");
+						
+						if($useRev) {
+							$latest = "<td>";
+							$latest .= $p->getLatestRevision() == $tag->getPageRevision() ? "<font color='green'>yes</font>" : "<font color='red'>no</font>";
+						}
+						$table .= "<td>$lmod<td>$tmod$latest";
 					}
 				} catch(Exception $e) {
 					wfDebug("SpecialCurationTags: unable to create pathway object for page " . $pageId);
 				}
 			}
+			
+			$wgOut->addWikiText(
+				"The table below shows all $nr pathways that are tagged with curation tag: " .
+				"'''$disp'''. "
+			);
+			$wgOut->addHTML("<p><a href='$url'>back</a></p>");
+			$wgOut->addHTML("<table class='prettytable sortable'><tbody>");
+			$wgOut->addHTML("<th>Pathway name<th>Organism<th>Tagged by<th>");
+			if($useRev) {
+				$wgOut->addHTML("<th>Applies to latest revision");
+			}
+			$wgOut->addHTML($table);
 		} else {
 			$wgOut->addWikiText("This page lists all available curation tags. " .
 				"See the [[Help:CurationTags|help page]] for instructions on how to use curation tags.");
