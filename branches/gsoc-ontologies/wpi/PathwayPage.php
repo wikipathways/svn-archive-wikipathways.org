@@ -234,28 +234,19 @@ TEXT;
 		//AP20081218: Operating System Detection
 		require_once 'DetectBrowserOS.php';
 		//echo (browser_detection( 'os' ));
-		if (browser_detection( 'os' ) != 'win' && browser_detection( 'os' ) != 'nt'){
-                $download = array(
+		 $download = array(
                         'PathVisio (.gpml)' => self::getDownloadURL($pathway, 'gpml'),
+                        'Scalable Vector Graphics (.svg)' => self::getDownloadURL($pathway, 'svg'),
                         'Gene list (.txt)' => self::getDownloadURL($pathway, 'txt'),
+                        'Biopax level 3 (.owl)' => self::getDownloadURL($pathway, 'owl'),
                         'Eu.Gene (.pwf)' => self::getDownloadURL($pathway, 'pwf'),
                         'Png image (.png)' => self::getDownloadURL($pathway, 'png'),
                         'Acrobat (.pdf)' => self::getDownloadURL($pathway, 'pdf'),
-                );
-		} else {
-		$download = array(
-			'PathVisio (.gpml)' => self::getDownloadURL($pathway, 'gpml'),
-			'GenMAPP (.mapp)' => self::getDownloadURL($pathway, 'mapp'),
-			'Gene list (.txt)' => self::getDownloadURL($pathway, 'txt'),
-			'Eu.Gene (.pwf)' => self::getDownloadURL($pathway, 'pwf'),
-			'Png image (.png)' => self::getDownloadURL($pathway, 'png'),
-			'Acrobat (.pdf)' => self::getDownloadURL($pathway, 'pdf'),
-		);
+           );
+		if (browser_detection( 'os' ) == 'win' || browser_detection( 'os' ) == 'nt'){
+               $download['GenMAPP (.mapp)'] = self::getDownloadURL($pathway, 'mapp');
 		}
 
-		$pwTitle = $pathway->getTitleObject()->getFullText();
-		$cytoscape = "<li><a href='" . WPI_SCRIPT_URL . "?action=launchCytoscape&pwTitle=$pwTitle'>Open in Cytoscape</a></li>";
-		
 		$downloadlist = '';
 		foreach(array_keys($download) as $key) {
 			$downloadlist .= "<li><a href='{$download[$key]}'>$key</a></li>";
@@ -266,7 +257,6 @@ TEXT;
 <li><a href="#nogo2" class="button buttondown"><span>Download</span></a>
 		<ul>
 			$downloadlist
-			$cytoscape
 		</ul>
 </li>
 </ul>

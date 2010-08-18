@@ -1,26 +1,3 @@
-/* Fix to make DOMParser work under IE */
-if (typeof DOMParser == "undefined") {
-   DOMParser = function () {}
-
-   DOMParser.prototype.parseFromString = function (str, contentType) {
-      if (typeof ActiveXObject != "undefined") {
-         var d = new ActiveXObject("MSXML.DomDocument");
-         d.loadXML(str);
-         return d;
-      } else if (typeof XMLHttpRequest != "undefined") {
-         var req = new XMLHttpRequest;
-         req.open("GET", "data:" + (contentType || "application/xml") +
-                         ";charset=utf-8," + encodeURIComponent(str), false);
-         if (req.overrideMimeType) {
-            req.overrideMimeType(contentType);
-         }
-         req.send(null);
-         return req.responseXML;
-      }
-   }
-}
-/* End of fix */
-
 var CurationTags = {};
 
 /**
@@ -134,10 +111,12 @@ CurationTags.loadAvailableTagsCallback = function(xhr) {
 		for(i=0;i<nodes.length;i++) {
 			var n = nodes[i];
 			var revision = n.getAttribute("useRevision");
+			var shortName = n.getAttribute("shortName");
 			var tagd = {};
 			tagd.name = n.getAttribute("name");;
 			tagd.displayName = n.getAttribute("displayName");
 			revision == "true" ? tagd.revision = true : tagd.revision = false;
+			shortName ? tagd.shortName = shortName : tagd.shortName = tagd.displayName;
 			CurationTags.tagDefinitions[tagd.name] = tagd;
 		}
 	} else {
@@ -227,9 +206,20 @@ CurationTags.removeTagCallback = function(xhr) {
 		} else {
 			CurationTags.showError("Element for tag '" + tagName + "' not found");
 		}
+		CurationTags.updatePageHistory(tagName);
 	}
 	CurationTags.hideProgress();
 	CurationTags.refreshNoTagsMsg();
+}
+
+/**
+ * Update the tag to the current page revision (forces save and keeps tag text unchanged).
+ */
+CurationTags.updateTag = function(tagName) {
+	var tagData = CurationTags.tagData[tagName];
+	if(tagData) {
+		CurationTags.saveTag(tagName, tagData.text, CurationTags.pageRevision);
+	}
 }
 
 CurationTags.saveTag = function(tagName, tagText, tagRev) {
@@ -300,6 +290,39 @@ CurationTags.loadHistoryCallback = function(xhr) {
 	}
 	
 	CurationTags.hideProgress();
+}
+
+/**
+ * Show to which revision a tag applies on the page history table (if this exists).
+ * See wpi/extensions/pathwayHistory.php for details on the page history table.
+ **/
+CurationTags.updatePageHistory = function(tagName) {
+	var tagDef = CurationTags.tagDefinitions[tagName];
+	if(tagDef && tagDef.revision) {
+		var tagData = CurationTags.tagData[tagName];
+		var rev = tagData.revision;
+		
+		var id =  CurationTags.makeId('historyTag_' + tagName);
+		
+		//Remove old occurences
+		var oldtd = document.getElementById(id);
+		if(oldtd) {
+			oldtd.parentNode.removeChild(oldtd);
+		}
+		
+		//Find the revision row in the table and append tag name
+		var td = document.getElementById('historyTable_' + rev + '_tag');
+		if(td) {
+			//Get the class/color from the tag
+			var tag = document.getElementById(CurationTags.makeId(tagName + '_hover'));
+			var cls = tag.className;
+			var html = td.innerHTML;
+			if(!html) html = '';
+			td.innerHTML = html + '<div id="' + id + 
+				'" style="padding: 0 0 0 3px; font-size: 9px; line-height: 11px" class="' + cls + 
+				'">' + tagDef.shortName + '</div>';
+		}
+	}
 }
 
 CurationTags.showEditDiv = function(tagName) {
@@ -385,6 +408,7 @@ CurationTags.refresh = function(tagName) {
 	if(tagName) {
 		CurationTags.loadTag(tagName);
 		CurationTags.scrollToElement(CurationTags.tagElements[tagName]);
+		CurationTags.updatePageHistory(tagName);
 	} else {
 		CurationTags.displayDiv.innerHTML = "";
 		CurationTags.loadTags();
@@ -410,7 +434,10 @@ CurationTags.loadTagsCallback = function(xhr) {
 		var nodes = xml.documentElement.childNodes;
 		
 		for(i=0;i<nodes.length;i++) {
-			CurationTags.loadTag(nodes[i].firstChild.nodeValue);
+			var tagname = nodes[i].firstChild.nodeValue;
+			if(tagname) {
+			CurationTags.loadTag(tagname);
+			}
 		}
 		CurationTags.refreshNoTagsMsg();
 	}
@@ -420,7 +447,7 @@ CurationTags.loadTagsCallback = function(xhr) {
 CurationTags.loadTag = function(tagName) {
 	sajax_do_call(
 		"CurationTagsAjax::getTagData",
-		[tagName, CurationTags.pageId],
+		[tagName, CurationTags.pageId, CurationTags.pageRevision],
 		CurationTags.loadTagCallback
 	);
 }
@@ -445,11 +472,11 @@ CurationTags.loadTagCallback = function(xhr) {
 		}
 		
 		var elm = CurationTags.tagElements[tagName];
-		var tagContent = document.getElementById("tagContent_" + tagName);
+		var tagContent = document.getElementById( CurationTags.makeId("tagContent_" + tagName));
 		
 		if(!elm) { //New tag
 			var elm = document.createElement("div");
-			elm.id = "tagDiv_" + tagName;
+			elm.id =  CurationTags.makeId("tagDiv_" + tagName);
 			elm.className = "tagcontainer";
 			
 			//TODO: Only showing buttons on mouseover on tag works great under FF
@@ -466,7 +493,7 @@ CurationTags.loadTagCallback = function(xhr) {
 			
 			if(CurationTags.mayEdit) {
 				var btns = document.createElement("div");
-				btns.id = "tagBtns_" + tagName;
+				btns.id =  CurationTags.makeId("tagBtns_" + tagName);
 				btns.className = "tagbuttons transparent";
 				remove = "<A title='Remove' " +
 					"href='javascript:CurationTags.removeTag(\"" + tagName + "\")'>" +
@@ -480,7 +507,8 @@ CurationTags.loadTagCallback = function(xhr) {
 			
 			tagContent = document.createElement("div");
 			tagContent.className = "tagcontents";
-			tagContent.id = "tagContent_" + tagName;
+			tagContent.id =  CurationTags.makeId("tagContent_" + tagName);
+		
 			elm.appendChild(tagContent);
 		}
 		
@@ -490,21 +518,56 @@ CurationTags.loadTagCallback = function(xhr) {
 		tagd.text = tagText;
 		CurationTags.tagData[tagName] = tagd;
 		
+		if(CurationTags.mayEdit) {
+			//Replace {{{update_link}}} with a link to apply the tag to the most
+			//recent revision
+			html = html.replace("{{{update_link}}}", 
+				"<a href='javascript:CurationTags.updateTag(\"" + tagName + "\")'>Click here</a> to apply to current revision.");
+		} else {
+			html = html.replace("{{{update_link}}}", "");
+		}
+		//To make the message show up when hovering over tag:
+		//part 1: replace UNIQUEID placeholder with tag name
+          html = html.replace(/UNIQUEID/g, CurationTags.makeId(tagName));
+			
 		tagContent.innerHTML = html;
 		
+		//To make the message show up when hovering over tag:
+		//part 2: insert event listeners
+        var control = document.getElementById( CurationTags.makeId(tagName + "_hover"));
+        var show = document.getElementById( CurationTags.makeId(tagName + "_show"));
+		if (show && control) {
+			var funOver = function(e){
+				show.style.display = '';
+			}
+			var funOut = function(e){
+				show.style.display = 'none';
+			}
+			if (control.addEventListener) {
+				control.addEventListener('mouseover', funOver, false);
+				control.addEventListener('mouseout', funOut, false);
+			}
+			else 
+				if (control.attachEvent) {
+					control.attachEvent('onmouseover', funOver);
+					control.attachEvent('onmouseout', funOut);
+				}
+		}
+			
 		CurationTags.refreshNoTagsMsg();
+		CurationTags.updatePageHistory(tagName);
 	}
 }
 
 CurationTags.showTagButtons = function(tagName) {
-	var btn = document.getElementById("tagBtns_" + tagName);
+	var btn = document.getElementById( CurationTags.makeId("tagBtns_" + tagName));
 	if(btn) {
 		btn.className = "tagbuttons solid";
 	}
 }
 
 CurationTags.hideTagButtons = function(tagName) {
-	var btn = document.getElementById("tagBtns_" + tagName);
+	var btn = document.getElementById( CurationTags.makeId("tagBtns_" + tagName));
 	if(btn) {
 		btn.className = "tagbuttons transparent";
 	}
@@ -558,7 +621,24 @@ CurationTags.scrollToElement = function(elm){
 
 CurationTags.getRequestXML = function(xhr) {
 	var text = CurationTags.trim(xhr.responseText);
-	return new DOMParser().parseFromString(text,"text/xml");
+	return CurationTags.parseXML(text);
+}
+
+CurationTags.parseXML = function(xml) {
+	var xmlDoc = null;
+	if (window.DOMParser) {
+		parser = new DOMParser();
+		xmlDoc = parser.parseFromString(xml, "text/xml");
+	} else { //Internet Explorer
+		xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+		xmlDoc.async = "false";
+		xmlDoc.loadXML(xml);
+	}
+	return xmlDoc;
+}
+
+CurationTags.makeId = function(id) {
+	return id.replace(/:/g, '');
 }
 
 CurationTags.trim = function(str) {

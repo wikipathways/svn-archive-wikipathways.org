@@ -14,25 +14,27 @@ if($argv[0] == "DataSourcesCache.php") {
 }
 
 class DataSourcesCache {
-	private static $url = "http://svn.bigcat.unimaas.nl/bridgedb/trunk/resources/datasources.txt";
+	private static $url = "http://svn.bigcat.unimaas.nl/bridgedb/trunk/org.bridgedb.bio/resources/org/bridgedb/bio/datasources.txt";
 	static $file = "datasources.txt";
 	static $content = null;
 	
 	public static function update() {
 		## Download a fresh datasources file
 		$txt = file_get_contents(self::$url);
-		$f = WPI_CACHE_PATH . "/" . self::$file;
-		$fh = fopen($f, 'w');
-		fwrite($fh, $txt);
-		fclose($fh);
-		chmod($f, 0666);
-		self::$content = $txt;
+		if($txt) { //Only update if file could be downloaded
+			$f = WPI_CACHE_PATH . "/" . self::$file;
+			$fh = fopen($f, 'w');
+			fwrite($fh, $txt);
+			fclose($fh);
+			chmod($f, 0666);
+			self::$content = $txt;
+		}
 	}
 	
 	private static function read() {
 		$f = WPI_CACHE_PATH . "/" . self::$file;
 		if(file_exists($f)) {
-			file_get_contents($f);
+			return file_get_contents($f);
 		}
 	}
 	

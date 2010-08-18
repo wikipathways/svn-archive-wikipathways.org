@@ -68,10 +68,17 @@ $wgDBserver         = "localhost";
 $wgDBport           = "5432";
 $wgDBprefix         = "";
 
+# Load organism registry
+require_once('wpi/Organism.php');
 # Load passwords/usernames
 require('pass.php');
 # Load globals
 require_once('wpi/globals.php');
+
+# Default javascript locations
+if(!isset($jsJQuery)) $jsJQuery = "$wgScriptPath/wpi/js/jquery/jquery-1.3.2.js";
+if(!isset($jsJQueryUI)) $jsJQueryUI = "$wgScriptPath/wpi/js/jquery-ui/jquery-ui-1.7.2.custom.min.js";
+if(!isset($jsSvgWeb)) $jsSvgWeb = "$wgScriptPath/wpi/js/svgweb/svg-uncompressed.js\" data-path=\"$wgScriptPath/wpi/js/svgweb";
 
 # Schemas for Postgres
 $wgDBmwschema       = "mediawiki";
@@ -171,6 +178,20 @@ $wgSVGConverters['inkscape'] = '$path/inkscape -z -b white -w $width -f $input -
 
 # Allow direct linking to external images (so we don't have to upload them to the wiki)
 $wgAllowExternalImages = true;
+
+# Ontology data
+
+# Ontologies in JSON format for use in the Javascript
+# Format : ["<Ontology Name>", <Ontology Id>, <Version Id>]
+$wgOntologiesJSON = '[' . '["Pathway Ontology","PW:0000001",1035,39997]' . ',' . '["Disease","DOID:4",1009,40256]' . ',' . '["Cell Type","CL:0000000",1006,40177]]';
+# Ontologies Array to be used in the PHP Code
+$wgOntologiesArray = json_decode($wgOntologiesJSON);
+# Email address for the User Identification parameter to be used while making REST calls to BioPortal
+$wgOntologiesBioPortalEmail =  "apico@gladstone.ucsf.edu";
+# Maximum number of search results returned while searching BioPortal
+$wgOntologiesBioPortalSearchHits =  12;
+# Time after which data in the cache is refreshed (in Seconds)
+$wgOntologiesExpiryTime = 60*60*24*7;
 
 ##Custom namespaces
 define("NS_PATHWAY", 102); //NS_PATHWAY is same as NS_GPML since refactoring
@@ -311,6 +332,12 @@ require_once('wpi/extensions/recentChangesBox.php');
 require_once('wpi/extensions/pathwayBibliography.php');
 require_once('wpi/extensions/otag/otags_main.php');
 require_once('wpi/extensions/ontologyindex/ontologyindex.php');
+require_once('wpi/extensions/PathwayViewer/PathwayViewer.php');
+require_once('wpi/extensions/StubManager/StubManager.php');
+require_once('wpi/extensions/ParserFunctionsHelper/ParserFunctionsHelper.php');
+require_once('wpi/extensions/SecureHTML/SecureHTML.php');
+require_once('wpi/extensions/RSS/rss.php');
+
 /* This shouldn't be in LocalSettings.php, since that's checked
 in to the svn repository. Put it in pass.php instead!
 // Sign up for keys at http://recaptcha.net/api/getKey
@@ -360,4 +387,17 @@ $wgReadOnlyFile = "readonly.enable";
 //Increase recent changes retention time
 $wgRCMaxAge = 60 * 24 * 3600;
 
+//Setup xrefpanel
+$wpiJavascriptSnippets[] = "XrefPanel_dataSourcesUrl = '" . WPI_CACHE_URL . "/datasources.txt';";
+if($wpiBridgeUrl !== false) { //bridgedb web service support can be disabled by setting $wpiBridgeDb to false
+	if(!isset($wpiBridgeUrl) || $wpiBridgeUseProxy) {
+		//Point to bridgedb proxy by default
+		$wpiJavascriptSnippets[] = "XrefPanel_bridgeUrl = '" . WPI_URL . '/extensions/bridgedb.php' . "';";
+	} else {
+		$wpiJavascriptSnippets[] = "XrefPanel_bridgeUrl = '$wpiBridgeUrl';";
+	}
+}
+
+//Lastly, include javascripts (that may have been added by other extensions)
+require_once('wpi/Javascript.php');
 ?>

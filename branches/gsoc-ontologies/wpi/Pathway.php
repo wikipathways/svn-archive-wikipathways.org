@@ -1,4 +1,5 @@
 <?php
+require_once('Organism.php');
 require_once('PathwayData.php');
 require_once('CategoryHandler.php');
 require_once('MetaDataCache.php');
@@ -9,28 +10,6 @@ Class that represents a Pathway on WikiPathways
 class Pathway {
 	public static $ID_PREFIX = 'WP';
 	public static $DELETE_PREFIX = "Deleted pathway: ";
-	
-	private static $spName2Code = array(
-		'Anopheles gambiae' => 'Ag',
-		'Arabidopsis thaliana' => 'At',
-		'Bos taurus' => 'Bt',
-		'Bacillus subtilis' => 'Bs',
-		'Caenorhabditis elegans' => 'Ce',
-		'Canis familiaris' => 'Cf',
-		'Danio rerio' => 'Dr',
-		'Drosophila melanogaster' => 'Dm',
-		'Escherichia coli' => 'Ec',
-		'Equus caballus' => 'Qc',
-		'Gallus gallus' => 'Gg',
-		'Homo sapiens' => 'Hs', 
-		'Mus musculus' => 'Mm',
-		'Oryza sativa' => 'Oj',
-		'Pan troglodytes' => 'Pt',
-		'Rattus norvegicus' => 'Rn', 
-		'Saccharomyces cerevisiae' => 'Sc',
-		'Xenopus tropicalis' => 'Xt',
-	);
-	private static $spCode2Name; //TODO: complete species
 	
 	private static $fileTypes = array(
 				FILETYPE_IMG => FILETYPE_IMG, 
@@ -250,12 +229,10 @@ class Pathway {
 	 Convert a species code to a species name (e.g. Hs to Human)
 	*/	
 	public static function speciesFromCode($code) {
-		if(!Pathway::$spCode2Name) {
-			foreach(array_keys(Pathway::$spName2Code) as $name) {
-				Pathway::$spCode2Name[Pathway::$spName2Code[$name]] = $name;
-			}
+		$org = Organism::getByCode($code);
+		if($org) {
+			return $org->getLatinName();
 		}
-		return Pathway::$spCode2Name[$code];
 	}
 	
 	public static function getAllPathways($species = false) {
@@ -292,7 +269,10 @@ class Pathway {
 	 Convert a species name to species code (e.g. Human to Hs)
 	*/
 	public static function codeFromSpecies($species) {
-		return Pathway::$spName2Code[$species];
+		$org = Organism::getByLatinName($species);
+		if($org) {
+			return $org->getCode();
+		}
 	}
 	
 	/**
@@ -366,7 +346,7 @@ class Pathway {
 	 * Returns a list of species
 	 */
 	public static function getAvailableSpecies() {
-		return array_keys(Pathway::$spName2Code);
+		return array_keys(Organism::listOrganisms());
 	}
 
 	/**
@@ -494,7 +474,10 @@ class Pathway {
 	 * Get the species code (abbrevated species name, e.g. Hs for Human)
 	 */
 	public function getSpeciesCode() {
-		return Pathway::$spName2Code[$this->getSpecies()];
+		$org = Organism::getByLatinName($this->getSpecies());
+		if($org) {
+			return $org->getCode();
+		}
 	}
 
 	/**
@@ -829,7 +812,8 @@ class Pathway {
 	
 	static $gpmlSchemas = array(
 		"http://genmapp.org/GPML/2007" => "GPML2007.xsd",
-		"http://genmapp.org/GPML/2008a" => "GPML.xsd",
+		"http://genmapp.org/GPML/2008a" => "GPML2008a.xsd",
+		"http://genmapp.org/GPML/2010a" => "GPML.xsd"
 	);
 	
 	/**
@@ -892,6 +876,9 @@ class Pathway {
 		global $wgUser, $wgLang;
 		$rev = Revision::newFromId($oldId);
 		$gpml = $rev->getText();
+		if(self::isDeletedMark($gpml)) {
+			throw new Exception("You are trying to revert to a deleted version of the pathway. Please choose another version to revert to.");
+		}
 		if($gpml) {
 			$usr = $wgUser->getSkin()->userLink($wgUser->getId(), $wgUser->getName());
 			$date = $wgLang->timeanddate( $rev->getTimestamp(), true );
@@ -924,8 +911,15 @@ class Pathway {
 		} else {
 			if(!$revision) $revision = $this->getLatestRevision();
 			$text = Revision::newFromId($revision)->getText();
-			return substr($text, 0, 9) == "{{deleted";
+			return self::isDeletedMark($text);
 		}
+	}
+	
+	/**
+	 * Check if the given text marks the pathway as deleted.
+	 */
+	public static function isDeletedMark($text) {
+		return substr($text, 0, 9) == "{{deleted";
 	}
 	
 	/**
@@ -1106,16 +1100,16 @@ class Pathway {
 	 * output file extension.
 	 */
 	public static function convert($gpmlFile, $outFile) {
+		global $wgMaxShellMemory;
+		
 		$gpmlFile = realpath($gpmlFile);
 		
 		$basePath = WPI_SCRIPT_PATH;
-		$cmd = "java -jar $basePath/bin/pathvisio_core.jar '$gpmlFile' '$outFile' 2>&1";
+		$maxMemoryM = intval($wgMaxShellMemory / 1024); //Max script memory on java program in megabytes
+		$cmd = "java -Xmx{$maxMemoryM}M -jar $basePath/bin/pathvisio_core.jar \"$gpmlFile\" \"$outFile\" 2>&1";
 		wfDebug("CONVERTER: $cmd\n");
-		exec($cmd, $output, $status);
+		$msg = wfJavaExec($cmd, $status);
 		
-		foreach ($output as $line) {
-			$msg .= $line . "\n";
-		}
 		if($status != 0 ) {
 			//Not needed anymore, since we now use a unique file name for
 			//each revision, so it's guaranteed to update.
@@ -1163,5 +1157,4 @@ class Pathway {
 		wfDebug("PNG CACHE SAVED: $output, $ex;\n");
 	}
 }
-
 ?>
