@@ -694,7 +694,8 @@ function getColoredPathway($pwId, $revision, $graphId, $color, $fileType) {
  * @param string $type The type of relation for the score has to be fetched (optional).
  * @param string $pwId_1 The id of the Pathway for the relation has to be fetched (optional).
  * @param string $pwId_2 The id of the second Pathway for the relation has to be fetched (optional).
- * @param int $minScore The minimum score for which the relations are fetched (optional).
+ * @param float $minScore The minimum score for which the relations are fetched (optional).
+ * @param string $species Limit the query by species.
  * @param string $species Limit the query by species.
  * @return array of object WSRelation $relations The Relations
  **/
@@ -1032,7 +1033,7 @@ class WSCurationTagHistory {
                     );
 		}
                 $this->type = $result->type;
-                $this->score = (int)$result->score;
+                $this->score = (float)$result->score;
 	}
 
 	/**
@@ -1051,7 +1052,7 @@ class WSCurationTagHistory {
 	public $type;
 
 	/**
-	 *@var int $score The degree of relativeness(score) between the pair of pathways
+	 *@var float $score The degree of relativeness(score) between the pair of pathways
 	 */
 	public $score;
 }

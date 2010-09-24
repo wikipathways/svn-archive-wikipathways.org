@@ -178,7 +178,7 @@ class Relations
     {
         $dbr =& wfGetDB(DB_SLAVE);
         $query = "SELECT * FROM " . self::$_relationsTable ;
-        $minScore = (int)$minScore;
+        $minScore = (float)$minScore;
         $conditions = array();
         
         if($type != '')
@@ -205,8 +205,6 @@ class Relations
             $cons = implode (" AND ", $conditions);
             $query .= " Where $cons";
         }
-
-
 
         $res = $dbr->query($query);
         while($row = $dbr->fetchObject($res))
