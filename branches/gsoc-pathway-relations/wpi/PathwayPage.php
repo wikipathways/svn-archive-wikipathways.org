@@ -78,6 +78,7 @@ class PathwayPage {
 {{Template:PathwayPage:Top}}
 {$this->curationTags()}
 {$this->descriptionText()}
+{$this->ontologyTags()}
 {$this->bibliographyText()}
 {$this->categoryText()}
 {{Template:PathwayPage:Bottom}}
@@ -150,6 +151,17 @@ TEXT;
 		return $description;
 	}
 	
+
+	function ontologyTags() {
+		global $wpiEnableOtag;
+		if($wpiEnableOtag) {
+			$otags = "== Ontology Tags ==\n" .
+				"<OntologyTags></OntologyTags>";
+			return $otags;
+		}
+	}
+
+
 	function bibliographyText() {
 		global $wgUser;
 		
