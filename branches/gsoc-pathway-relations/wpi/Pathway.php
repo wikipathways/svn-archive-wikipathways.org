@@ -120,12 +120,12 @@ class Pathway {
 	 * revision. Set another revision number to retrieve older
 	 * versions of this pathway.
 	 */
-	public function setActiveRevision($revision, $updateCache = false) {
+	public function setActiveRevision($revision) {
 		if($this->revision != $revision) {
 			$this->revision = $revision;
 			$this->pwData = null; //Invalidate loaded pathway data
 			$this->pwCategories = null; //Invalidate category data
-			if($updateCache) $this->updateCache(); //Make sure the cache for this revision is up to date	
+			$this->updateCache(); //Make sure the cache for this revision is up to date	
 		}
 	}
 	
@@ -762,6 +762,8 @@ class Pathway {
 			$this->invalidateMetaDataCache();
 			//Update category links
 			$this->updateCategories();
+			//Update file cache
+			$this->updateCache();
 		} else {
 			throw new Exception("Unable to save GPML, are you logged in?");
 		}

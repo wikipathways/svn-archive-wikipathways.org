@@ -79,7 +79,6 @@ class RecentChangesBox {
 			"SELECT rc_title, max(rc_timestamp) as rc_timestamp
 			FROM recentchanges
 			WHERE rc_namespace = {$this->namespace}
-			AND rc_deleted = '0'
 			GROUP BY rc_title
 			ORDER BY rc_timestamp DESC
 			LIMIT 0 , {$query_limit}"
@@ -90,11 +89,10 @@ class RecentChangesBox {
 		while($row = $dbr->fetchObject( $res )) {
 			if($i >= $this->limit) break;
 			
-			$rc_title_quotesafe = str_replace("'", "''", $row->rc_title);
 			$title_res = $dbr->query(
 				"SELECT rc_title, rc_timestamp, rc_user, rc_comment, rc_new
 				FROM recentchanges
-				WHERE rc_title = '{$rc_title_quotesafe}' AND rc_namespace = {$this->namespace} 
+				WHERE rc_title = '{$row->rc_title}' AND rc_namespace = {$this->namespace} 
 				AND rc_timestamp = '{$row->rc_timestamp}'
 				"
 			);

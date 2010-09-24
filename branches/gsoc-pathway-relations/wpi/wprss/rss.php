@@ -1,25 +1,27 @@
 <?php
    require_once('../wpi.php');
    
-	function getThumb($pathway, $width = 200) {
-		$pathway->updateCache(FILETYPE_IMG);
-		$img = new Image($pathway->getFileTitle(FILETYPE_IMG));
-		$img->loadFromFile();
-		return $img->getThumbnail( $width, -1 );
-	}
-	
-   function getRecentChanges() {
+   function getRecentChanges($timestamp)
+{
+        //check safety of $timestamp, must be exactly 14 digits and nothing else.
+        if (!preg_match ("/^\d{14}$/", $timestamp))
+        {
+                throw new WSFault("Sender", "Invalid timestamp " . htmlentities ($timestamp));
+        }
+
         $dbr =& wfGetDB( DB_SLAVE );
         $forceclause = $dbr->useIndexClause("rc_timestamp");
         $recentchanges = $dbr->tableName( 'recentchanges');
 
         $sql = "SELECT  
                                 rc_namespace, 
-                                rc_title,
-                                rc_this_oldid
+                                rc_title, 
+                                MAX(rc_timestamp)
                         FROM $recentchanges $forceclause
                         WHERE 
                                 rc_namespace = " . NS_PATHWAY . "
+                                AND
+                                rc_timestamp > '$timestamp'
                         GROUP BY rc_title
                         ORDER BY rc_timestamp DESC
                 ";
@@ -34,7 +36,6 @@
                 try {
                                 $ts = $row['rc_title'];
                         $p = Pathway::newFromTitle($ts);
-                        $p->setActiveRevision($row['rc_this_oldid']);
                         if(!$p->getTitleObject()->isRedirect() && $p->isReadable()) {
                                 $objects[] = $p;
                         }
@@ -63,34 +64,20 @@ $channel_element = $dom->createElement('channel');
 $channel = $rss->appendChild($channel_element);
 
 //Add Wikipathways main info
-$mainTitleElement = $dom->createElement('title', 'WikiPathways');
-$mainLinkElement = $dom->createElement('link', SITE_URL);
+$mainTitleElement = $dom->createElement('title', 'WikiPathways-test');
+$mainLinkElement = $dom->createElement('link', 'http://www.wikipathways.org');
 $mainDescriptionElement = $dom->createElement('description', 'Wikipathways: Pathways for the people');
-$mainImageElement = $dom->createElement('image');
-$imageUrl = $dom->createElement('url', $wgLogo);
-$imageCaption = $dom->createElement('title', 'WikiPathways');
-$imageLink = $dom->createElement('link', SITE_URL);
-$mainImageElement->appendChild($imageUrl);
-$mainImageElement->appendChild($imageCaption);
-$mainImageElement->appendChild($imageLink);
-
 $channel->appendChild($mainTitleElement);
 $channel->appendChild($mainLinkElement);
 $channel->appendChild($mainDescriptionElement);
-$channel->appendChild($mainImageElement);
 
 //Add items
 
-   $changedPathways = getRecentChanges();
+   $changedPathways = getRecentChanges('20090820121212');
    //var_dump($changedPathways); /*
-   $GetTags = $_GET["tags"];
-   if($GetTags) $GetTags = explode(",", $GetTags);
-   else $GetTags = array();
-   
+   $GetTags = explode(",", $_GET["tags"]);
    $printItem = false;
    foreach ($changedPathways["pathways"] as $p){
-		if(!$p->isReadable()) continue; //Skip private pathways
-		
       $mwtitle = $p->getTitleObject();
 
         $pageid = $mwtitle->getArticleID();
@@ -100,7 +87,7 @@ $channel->appendChild($mainImageElement);
            $pathwayTags[]=substr($tag->getName(), 9);
         }
         $intersectedTagArray = array_intersect($GetTags, $pathwayTags);
-        if (!$GetTags || (count($intersectedTagArray)>0)){
+        if ((count($GetTags)== 0) || (count($intersectedTagArray)>0)){
             $printItem = true;
         }
         else $printItem = false;
@@ -121,6 +108,8 @@ $channel->appendChild($mainImageElement);
       $item->appendChild($itemLinkElement);
       $item->appendChild($itemPubDate);
 
+
+
       $mwtitle = $p->getTitleObject();
 	
 	$pageid = $mwtitle->getArticleID();
@@ -135,19 +124,7 @@ $channel->appendChild($mainImageElement);
       $latest_user = $latestRev->getUser();
       
       $itemAuthorElement = $dom->createElement('author', User::newFromId($latest_user)->getName());
-      
-      $itemDescriptionElement = $dom->createElement('description');
-      
-      $description = $edit_description;
-      //Add thumbnail to description
-        if(!$p->isDeleted()) {
-            $thumb = getThumb($p);
-            $url = SITE_URL . $thumb->getUrl();
-            $description = "<img src='${url}' align='left' border='0'> ${description}";
-        }
-        $descriptionCdata = $dom->createCDATASection($description);
-        $itemDescriptionElement->appendChild($descriptionCdata);
-        
+      $itemDescriptionElement = $dom->createElement('description', $edit_description);
       $item->appendChild($itemAuthorElement);
       $item->appendChild($itemDescriptionElement);
 }}
