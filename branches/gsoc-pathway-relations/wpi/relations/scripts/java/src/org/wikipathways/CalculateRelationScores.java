@@ -42,9 +42,10 @@ public class CalculateRelationScores {
 	 * @param mapped1	The mapped xrefs of the first pathway (used to lookup shared xrefs by taking into account identifier mapping)
 	 * @param pathway2	The identifier of the second pathway
 	 * @param xrefs2	The original (unmapped) xrefs on the first pathway
+	 * @param mapped2	The mapped xrefs of the second pathway (used to lookup shared xrefs by taking into account identifier mapping)
 	 * @return
 	 */
-	public static RelationScore getScore(String pathway1, Set<Xref> xrefs1, Set<Xref> mapped1, String pathway2, Set<Xref> xrefs2) {
+	public static RelationScore getScore(String pathway1, Set<Xref> xrefs1, Set<Xref> mapped1, String pathway2, Set<Xref> xrefs2, Set<Xref> mapped2) {
 		log.fine("Finding relation scores for " + pathway1 + " - " + pathway2);
 		
 		RelationScore s = new RelationScore();
@@ -53,8 +54,19 @@ public class CalculateRelationScores {
 		s.pathway1 = pathway1;
 		s.pathway2 = pathway2;
 		
-		for(Xref x : xrefs2) {
-			if(mapped1.contains(x)) s.sharedXrefs++;
+		//Use the smallest pathway as reference and largest as mapped
+		Set<Xref> mapped = null;
+		Set<Xref> unmapped = null;
+		if(xrefs1.size() > xrefs2.size()) {
+			mapped = mapped1;
+			unmapped = xrefs2;
+		} else {
+			mapped = mapped2;
+			unmapped = xrefs1;
+		}
+		
+		for(Xref x : unmapped) {
+			if(mapped.contains(x)) s.sharedXrefs++;
 		}
 		
 		Set<Xref> totalXrefs = new HashSet<Xref>(xrefs1);
@@ -183,8 +195,9 @@ public class CalculateRelationScores {
 					for(int j = i + 1; j < pws.size(); j++) {
 						String pathway2 = pws.get(j).getId();
 						Set<Xref> xrefs2 = index.getOriginalXrefs(pathway2);
-						
-						scores.add(getScore(pathway1, xrefs1, all1, pathway2, xrefs2));
+						Set<Xref> all2 = new HashSet<Xref>();
+						if(xrefs2.size() > xrefs2.size()) index.getAllXrefs(pathway2);
+						scores.add(getScore(pathway1, xrefs1, all1, pathway2, xrefs2, all2));
 					}
 				}
 			}
@@ -259,3 +272,4 @@ public class CalculateRelationScores {
 		int sharedXrefs;
 	}
 }
+
