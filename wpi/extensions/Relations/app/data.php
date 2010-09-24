@@ -27,8 +27,13 @@ else
 
         case "info":
             $pw = new Pathway($_GET['pwId']);
-//            echo getPathwayImageUrl($pw);
-            echo getPathwayThumbnail($pw);
+            $pwInfo = array(
+                            'pwId' => $_GET['pwId'],
+                            'name' => $pw->getName(),
+                            'pwImageUrl' => getPathwayThumbnail($pw),
+                            'pwUrl' => $pw->getFullURL()
+                        );
+            echo json_encode($pwInfo);
             break;
 
         case "save":
@@ -50,13 +55,7 @@ else
                 die("error");
             }
             break;
-
     }
-}
-
-function getPathwayImageUrl($pathway, $type = "png")
-{
-    return $pathway->getFileURL($type);
 }
 
 function getPathwayThumbnail( $pathway, $width = 700, $height = 450 ) {
