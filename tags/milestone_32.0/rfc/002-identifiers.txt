@@ -1,0 +1,54 @@
+= RFC 002: Identifiers =
+Pathways need a stable, unmodified identifier that is determined at creation time.
+We cannot use the internal mediawiki identifier from the current pathway pages, since this will change when we rename the page. Therefore we need to make sure that there is no information in the title that may be changed (name, species). So we need to change the pagename in a meaningless, stable identifier. This identifier is fixed and will not be removed. When we delete or merge a pathway, we can mark the identifier deprecated and redirect to another page.
+
+So in summary:
+- The pathway names will be changed to stable identifiers (e.g. WP00001)
+- The pathway name, species and other metadata (e.g. tissue type) will be stored in GPML
+- The pathway page renderer will be responsible to display these metadata to the user
+
+The identifier will never be removed and change only when:
+- the pathway is deleted -> mark deprecated
+- the pathway is merged -> mark deprecated, redirect
+
+== Implementation ==
+MediaWiki changes:
+* Modifications to the scripts (other modifications may follow due to dependencies):
+	* wpi.php:
+		Probably not a lot of changes, pathway constructor will still accept title object
+	* wpi_rpc.php:
+		Modify XML-RPC API to work with identifier
+	* Pathway.php:
+		* Add constructor using identifier
+			__construct($id)
+		* Modify internals to work with id instead of name
+		* Modify updatePathway, to update species category when changing species
+	* PathwayPage.php:
+		Modify rendering so that title/species is obtained from GPML
+
+* Create maintenance script to rename all pathway pages to the identifier
+	* MediaWiki will redirect all old pages automatically
+
+Applet changes:
+* Adapt parameters to work with identifier instead of name/species.
+* Make it more easy to change the pathway name/species. Maybe a seperate applet (like the description applet), so users don't have to start the editor and look for the mappinfo object / property editor.
+
+GPML changes:
+GPML already contains the information that is currently in the name.
+
+== Comments ==
+AP: To summarize some of the main points:
+	1. We want pathways to be organized according to structured terms (when possible) to identify species, tissue, condition, biological process (GO), and version.    These can all be stored as attributes in the GPML and displayed/edited on the wiki.
+    2. We want the pathway to have an intuitive name that may not be unique. This name may change over time.  This should be the displayed name, also stored in the GPML.
+    3. We want an immutable id for each pathway (e.g., WP00001). This is ideal for pathway identifiers and urls that are guaranteed to be unique and unchanging, but is not human readable.
+    4. We want to minimize redirects stored processed by the wiki. This argues for using immutable ids.
+
+AP: Some issues I'm not you've addressed in the implementation have to do with Search and Browse.  
+Titles will no longer be a targetable field to search, correct?  And all the browse pages 
+(including most_edited, most_viewed, etc) will have to dig into GPML to get pathway names?  
+And some of those won't be unique?  Perhaps these could be made unique using Kristina's trick of 
+having the ID appended to the end of the pathway name?
+
+COMMENT Martijn: I really don't like the idea of adding pathway ID's and names together, you then get the worst of both worlds: both instable and non-intuitive. 
+
+Titles will still be stored in GPML, so they will still be searchable. Indeed, the browse pages will have to dig into the GPML, a solution would be to cache this in a separate database table. The human readable name should really be unique as well (within the species), the pathway creation and renaming functions should check for this.
