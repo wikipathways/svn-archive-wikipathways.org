@@ -435,6 +435,24 @@ ant install-wpi \
 	scp release/wikipathways_client_bin-1.1-rXXXX.tar.gz wikipathways@137.120.14.13:/home/wikipathways/wikipathways-bots/wikipathways
 	ssh wikipathways@137.120.14.13 'cd /home/wikipathways/wikipathways-bots/wikipathways & tar -xf wikipathways_client_bin-1.1-rXXXX.tar.gz --strip=1' #Extract on other server
 
+## Update NCBI Linkout Code 
+## perform for every new release of WP and/or BridgeDb
+
+cd /var/www/wikipathways/wpi/linkouts/
+
+## Run script to update dependencies
+./dependencies.sh  
+
+## Rebuild linkout.jar 
+ant clean dist
+
+## Manually run link out using syntax from cron job:
+cd dist
+java -Djava.util.logging.config.file=../logging.props -cp linkout.jar GenerateRSSM -baseUrl http://www.wikipathways.org -cache /home/wikipathways/cache/ -idmConfig /home/wikipathways/code/bridgedb/gdb.config -out ../wikipathways.rssm.xml
+
+## Check output file for consistency and completeness
+../wikipathways.rssm.xml
+
 # (If needed): update and restart indexer service
 	cd ~/code/pathvisio/tags/milestone_10.0/tools/lucene-indexer
 	ant dist
