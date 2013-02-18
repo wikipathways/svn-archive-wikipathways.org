@@ -49,8 +49,7 @@ public class GenerateLinkOut {
 	private String[] filterTags = new String[] {
 		"Curation:ProposedDeletion",
 		"Curation:Tutorial",
-		"Curation:UnderConstruction",
-		"Curation:Stub"
+		"Curation:UnderConstruction"
 	};
 	
 	WikiPathwaysCache cache;

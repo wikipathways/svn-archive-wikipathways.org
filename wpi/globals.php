@@ -17,11 +17,10 @@ $wpiTmpName = 'tmp'; //temp path name
 $wpiCacheName = 'cache'; //cache path name
 $wpiScriptFile = 'wpi.php';
 
-$host = isset( $_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : "wikipathways.org";
 $wpiScriptPath = realpath(dirname(__FILE__));
 $wpiScript = "$wpiScriptPath/$wpiScriptFile"; 
 $wpiTmpPath = "$wpiScriptPath/$wpiTmpName";
-$siteURL = "http://$host/$wgScriptPath";
+$siteURL = "http://{$_SERVER['HTTP_HOST']}/$wgScriptPath";
 $wpiURL = "$siteURL/$wpiPathName";
 $wpiCachePath = "$wpiScriptPath/$wpiCacheName";
 
