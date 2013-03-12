@@ -68,12 +68,12 @@ $wgDBserver         = "localhost";
 $wgDBport           = "5432";
 $wgDBprefix         = "";
 
-if(!$wpiJavascriptSnippets) $wpiJavascriptSnippets = array();
-if(!$wpiJavascriptSources) $wpiJavascriptSources = array();
+if(!isset( $wpiJavascriptSnippets ) || !$wpiJavascriptSnippets ) $wpiJavascriptSnippets = array();
+if(!isset( $wpiJavascriptSources ) || !$wpiJavascriptSources ) $wpiJavascriptSources = array();
 
 # Load organism registry
 require_once('wpi/Organism.php');
-# Load passwords/usernames
+# Load passwords/usernames, captcha keyphrase & Google Analytics key
 require('pass.php');
 # Load globals
 require_once('wpi/globals.php');
@@ -214,7 +214,7 @@ $wgExtraNamespaces =
 			NS_WISHLIST => "Wishlist", NS_WISHLIST_TALK => "Wishlist_Talk",
 			NS_PORTAL => "Portal", NS_PORTAL_TALK => "Portal_Talk"
 		);
-$wgNamespacesToBeSearchedDefault += 
+$wgNamespacesToBeSearchedDefault +=
 	array( 	NS_PATHWAY => true, NS_PATHWAY_TALK => true,
 			100 => false, 100 => false); //Old namespace
 $wgContentNamespaces += array(NS_PATHWAY, NS_PATHWAY_TALK);
@@ -346,22 +346,19 @@ require_once( "extensions/ConfirmEdit/FancyCaptcha.php" );
 $wgCaptchaClass = 'FancyCaptcha';
 $wgCaptchaDirectory = "captcha";
 
-//Load captcha keyphrase
-require("pass.php");
-
 require_once( "wpi/extensions/ContributionScores/ContributionScores.php" );
 $contribScoreIgnoreBots = true;  //Set to true if you want to exclude Bots from the reporting - Can be omitted.
- 
+
 //Each array defines a report - 7,50 is "past 7 days" and "LIMIT 50" - Can be omitted.
 $contribScoreReports = array(
-    array(7,50),
-    array(30,50),
-    array(0,50));
+	array(7,50),
+	array(30,50),
+	array(0,50));
 
 /* Biblio extension
 Isbndb account: thomas.kelder@bigcat.unimaas.nl / BigC0w~wiki
 */
-$isbndb_access_key = 'BR5539IJ'; 
+$isbndb_access_key = 'BR5539IJ';
 require_once('extensions/Biblio.php');
 
 //Interwiki extension
@@ -391,4 +388,3 @@ $wgRCMaxAge = 60 * 24 * 3600;
 
 //Lastly, include javascripts (that may have been added by other extensions)
 require_once('wpi/Javascript.php');
-?>
