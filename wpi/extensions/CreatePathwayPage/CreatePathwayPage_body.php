@@ -11,22 +11,29 @@ class CreatePathwayPage extends SpecialPage {
 	}
 
 	function execute( $par ) {
-		global $wgRequest, $wgOut, $wpiScriptURL, $wgUser;
+		global $wgRequest, $wgOut, $wpiScriptURL, $wgUser, $wgParser;
 		$this->setHeaders();
 		$this->this_url = SITE_URL . '/index.php';
-		$this->create_priv_msg = wfMsg('create_private') ;
+
+		$wgParser->clearState();
+		$wgParser->mStripState = new StripState;
+		$wgParser->mOptions = new ParserOptions;
+		$wgParser->mTitle = Title::newFromText( wfMsg( 'createpathwaypage' ) );
+
+		$this->create_priv_msg = $wgParser->recursiveTagParse( wfMsg('create_private') );
+		$wgParser->replaceLinkHolders( $this->create_priv_msg );
 
 		if(wfReadOnly()) {
 			$wgOut->readOnlyPage( "" );
 		}
 
 		if( !$wgUser->isAllowed( 'createpathway' ) ) {
-                    if( !$wgUser->isLoggedIn() ) { /* Two different messages so we can keep the old error */
+					if( !$wgUser->isLoggedIn() ) { /* Two different messages so we can keep the old error */
 			$wgOut->showPermissionsErrorPage( array( 'wpi-createpage-not-logged-in' ) );
-                    } else {
+					} else {
 			$wgOut->showPermissionsErrorPage( array( 'wpi-createpage-permission' ) );
-                    }
-                    return;
+					}
+					return;
 		}
 
 		$pwName = $wgRequest->getVal('pwName');
