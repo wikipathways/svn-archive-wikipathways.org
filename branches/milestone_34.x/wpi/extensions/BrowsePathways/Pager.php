@@ -7,18 +7,6 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 	protected $ns = NS_PATHWAY;
 	protected $nsName;
 
-	public function hasRecentEdit( $title ) {
-		global $wgPathwayRecentSinceDays;
-		$article = new Article( $title );
-
-		$ts = wfTimeStamp( TS_UNIX, $article->getTimestamp() );
-		$prev = date_create( "now" );
-		$prev->modify( "-$wgPathwayRecentSinceDays days" );
-		$date = date_create( "@$ts" ); /* @ indicates we have a unix timestmp */
-
-		return $date > $prev;
-	}
-
 	public function getOffset( ) {
 		global $wgRequest;
 		return $wgRequest->getText( 'offset' );
@@ -112,10 +100,9 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 			)
 		);
 		if( $this->species !== '---' ) {
-			$species = preg_replace( "/_/", " ", $this->species );
-			$q['tables'][] = 'tag as t2';
-			$q['join_conds']['tag as t2'] = array( 'JOIN', 't2.page_id = page.page_id' );
-			$q['conds']['t2.tag_text'] = $species;
+			$q['tables'][] = 'categorylinks';
+			$q['join_conds']['categorylinks'] = array( 'JOIN', 'page.page_id=cl_from' );
+			$q['conds']['cl_to'] = $this->species;
 		}
 
 		return $q;
@@ -317,20 +304,13 @@ class ListPathwaysPager extends BasePathwaysPager {
 		}
 		$this->columnItemCount++;
 
-		$endRow = "</li>";
-		$row .= "<li>";
-		if( $this->hasRecentEdit( $title ) ) {
-			$row .= "<b>";
-			$endRow = "</b></li>";
-		}
-
-		$row .= '<a href="' . $title->getFullURL() . '">' . $pathway->getName();
+		$row .= '<li><a href="' . $title->getFullURL() . '">' . $pathway->getName();
 
 		if( $this->species === '---' ) {
 			$row .= " (". $pathway->getSpeciesAbbr() . ")";
 		}
 
-		return  "$row</a>" . $this->formatTags( $title ) . $endRow;
+		return  "$row</a>" . $this->formatTags( $title ) . "</li>";
 	}
 }
 
@@ -347,14 +327,7 @@ class ThumbPathwaysPager extends BasePathwaysPager {
 		$title = Title::newFromDBkey( $this->nsName .":". $row->page_title );
 		$pathway = Pathway::newFromTitle( $title );
 
-		$endRow = "";
-		$row = "";
-		if( $this->hasRecentEdit( $title ) ) {
-			$row = "<b>";
-			$endRow = "</b>";
-		}
-
-		return $row.$this->getThumb( $pathway, $this->formatTags( $title ) ).$endRow;
+		return $this->getThumb( $pathway, $this->formatTags( $title ) );
 	}
 }
 
