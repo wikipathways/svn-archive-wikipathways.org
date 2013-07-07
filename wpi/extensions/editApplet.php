@@ -62,7 +62,7 @@ function createApplet( &$parser, $idClick = 'direct', $idReplace = 'pwThumb', $n
 	try {
 		if($new) { //Pathway title contains species:name
 			$editApplet = new EditApplet(null, $main, $idReplace, $idClick, $width, $height, $noresize, $param);
-			$title = explode(':', $pwTitle);
+			$title = split(':', $pwTitle);
 			$editApplet->setPathwaySpecies(array_pop($title));
 			$editApplet->setPathwayName(array_pop($title));
 		} else {
@@ -163,18 +163,10 @@ class EditApplet {
 		//Read cache jars and update version
 		$jardir = WPI_SCRIPT_PATH . '/applet';
 		if(!file_exists("$jardir/cache_version")) {
-			if( touch("$jardir/cache_version") === false ) {
-				throw new Exception( "The path $jardir isn't writable!" );
-			}
+			touch("$jardir/cache_version");
 		}
-
-		$cache_archive = file_get_contents("$jardir/cache_archive");
-		$version_file = file_get_contents("$jardir/cache_version");
-		if( $version_file === false || $cache_archive === false ) {
-			throw new Exception( "cache_archive or cache_version in $jardir wasn't readable." );
-		}
-		$cache_archive = explode( ' ', $cache_archive );
-		$version_file = explode( "\n", $version_file );
+		$cache_archive = explode(' ', file_get_contents("$jardir/cache_archive"));
+		$version_file = explode("\n", file_get_contents("$jardir/cache_version"));
 		$cache_version = array();
 		if($version_file) {
 			foreach($version_file as $ver) {
@@ -187,24 +179,19 @@ class EditApplet {
 		self::$archive_string = "";
 		self::$version_string = "";
 		foreach($cache_archive as $jar) {
-			$jarfile = "$jardir/$jar";
-			if( is_readable( $jarfile ) ) {
-				$mod = filemtime( $jarfile );
-				if($ver = $cache_version[$jar]) {
-					if($ver['mod'] < $mod) {
-						$realversion = increase_version($ver['ver']);
-					} else {
-						$realversion = $ver['ver'];
-					}
+			$mod = filemtime("$jardir/$jar");
+			if($ver = $cache_version[$jar]) {
+				if($ver['mod'] < $mod) {
+					$realversion = increase_version($ver['ver']);
 				} else {
-					$realversion = '0.0.0.0';
+					$realversion = $ver['ver'];
 				}
-				$cache_version[$jar] = array('ver'=>$realversion, 'mod'=>$mod);
-				self::$archive_string .= $jar . ', ';
-				self::$version_string .= $realversion . ', ';
 			} else {
-				throw new Exception( "Jar file isn't readable: $jarfile" );
+				$realversion = '0.0.0.0';
 			}
+			$cache_version[$jar] = array('ver'=>$realversion, 'mod'=>$mod);
+			self::$archive_string .= $jar . ', ';
+			self::$version_string .= $realversion . ', ';
 		}
 		self::$version_string = substr(self::$version_string, 0, -2);
 		self::$archive_string = substr(self::$archive_string, 0, -2);
