@@ -22,10 +22,10 @@ function renderPathwayImage( &$parser, $pwTitleEncoded, $width = 0, $align = '',
 		if($revision) {
 			$pathway->setActiveRevision($revision);
 		}
-		$img = new LocalFile($pathway->getFileTitle(FILETYPE_IMG), RepoGroup::singleton()->getLocalRepo());
+		$img = new Image($pathway->getFileTitle(FILETYPE_IMG));
 		switch($href) {
 			case 'svg':
-				$href = wfLocalFile($pathway->getFileTitle(FILETYPE_IMG)->getPartialURL())->getURL();
+				$href = Image::imageUrl($pathway->getFileTitle(FILETYPE_IMG)->getPartialURL());
 				break;
 			case 'pathway':
 				$href = $pathway->getFullURL();
@@ -43,8 +43,8 @@ function renderPathwayImage( &$parser, $pwTitleEncoded, $width = 0, $align = '',
 				break;
 			default:
 				$caption = html_entity_decode($caption);        //This can be quite dangerous (injection),
-																//we would rather parse wikitext, let me know if
-																//you know a way to do that (TK)
+				                                                //we would rather parse wikitext, let me know if
+                                                 				//you know a way to do that (TK)
 		}
 
 		$output = makeThumbLinkObj($pathway, $caption, $href, $tooltip, $align, $id, $width);
@@ -97,7 +97,10 @@ function createEditCaption($pathway) {
 function makeThumbLinkObj( $pathway, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 180, $boxheight=false, $framed=false ) {
 	global $wgStylePath, $wgContLang;
 
-	$img = $pathway->getImage();
+	$pathway->updateCache(FILETYPE_IMG);
+	$img = new Image($pathway->getFileTitle(FILETYPE_IMG));
+	$img->loadFromFile();
+
 	$imgURL = $img->getURL();
 
 	$thumbUrl = '';

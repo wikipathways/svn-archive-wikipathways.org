@@ -1,4 +1,9 @@
 <?php
+require_once("search.php");
+
+$wgAjaxExportList[] = "SearchPathwaysAjax::doSearch";
+$wgAjaxExportList[] = "SearchPathwaysAjax::getResults";
+
 class SearchPathwaysAjax {
 	public static function parToXref($ids, $codes) {
 		$ids = explode(',', $ids);
@@ -12,10 +17,10 @@ class SearchPathwaysAjax {
 		}
 		return($xrefs);
 	}
-
+	
 	public static function doSearch($query, $species, $ids, $codes, $type) {
 		if (!$type || $type == '') $type = 'query';
-				if ((!$query || $query =='') && $type == 'query') $query = 'glucose';
+                if ((!$query || $query =='') && $type == 'query') $query = 'glucose';
 		if ($species == 'ALL SPECIES') $species = '';
 		if($type == 'query') {
 			$results = PathwayIndex::searchByText($query, $species);
@@ -41,7 +46,7 @@ class SearchPathwaysAjax {
 		$resp->setContentType("text/xml");
 		return($resp);
 	}
-
+	
 	public static function getResults($pathwayTitles, $searchId) {
 		$html = "";
 		foreach(explode(",", $pathwayTitles) as $t) {
@@ -60,7 +65,7 @@ class SearchPathwaysAjax {
 			$output = "<div class='thumbholder'>$output</div>";
 			$html .= "\n" . $output;
 		}
-
+		
 		$doc = new DOMDocument();
 		$root = $doc->createElement("results");
 		$doc->appendChild($root);
@@ -68,13 +73,14 @@ class SearchPathwaysAjax {
 		$ni = $doc->createElement("searchid");
 		$ni->appendChild($doc->createTextNode($searchId));
 		$root->appendChild($ni);
-
+		
 		$nh = $doc->createElement("htmlcontent");
 		$nh->appendChild($doc->createTextNode($html));
 		$root->appendChild($nh);
-
+		
 		$resp = new AjaxResponse(trim($doc->saveXML()));
 		$resp->setContentType("text/xml");
 		return($resp);
 	}
 }
+?>

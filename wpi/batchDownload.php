@@ -59,7 +59,7 @@ class BatchDownloader {
 		$this->stats = $displayStats;
 	}
 
-	static function createDownloadLinks($input, $argv, $parser) {
+	static function createDownloadLinks($input, $argv, &$parser) {
 		$fileType     = isset( $argv['filetype'] ) ? $argv['filetype'] : "";
 		$listPage     = isset( $argv['listpage'] ) ? $argv['listpage'] : "";
 
@@ -72,11 +72,7 @@ class BatchDownloader {
 			$listParam = '&listPage=' . $listPage;
 			$listedPathways = Pathway::parsePathwayListPage($listPage);
 			foreach ($listedPathways as $pw) {
-				if( isset( $countPerSpecies[$pw->getSpecies()] ) ) {
-					$countPerSpecies[$pw->getSpecies()] += 1;
-				} else {
-					$countPerSpecies[$pw->getSpecies()] = 1;
-				}
+				$countPerSpecies[$pw->getSpecies()] += 1;
 			}
 		}
 
@@ -198,14 +194,7 @@ class BatchDownloader {
 		$files = "";
 		$tmpLinks = array();
 		$tmpDir = WPI_TMP_PATH . "/" . wfTimestamp(TS_UNIX);
-		if( !file_exists( $tmpDir ) ) {
-			if( !mkdir($tmpDir) ) {
-				$e = error_get_last();
-				throw new Exception( "Couldn't create directory. ". $e['message'] . " for $tmpDir." );
-			}
-		} elseif( !is_dir( $tmpDir ) ) {
-			throw new Exception( "$tmpDir exists but isn't a directory" );
-		}
+		mkdir($tmpDir);
 		foreach($pathways as $pw) {
 			$link = $tmpDir . "/" . $pw->getFilePrefix() . "_" . $pw->getIdentifier() . "_"
 				. $pw->getActiveRevision() . "." . $this->fileType;
@@ -218,14 +207,8 @@ class BatchDownloader {
 		$output = wfShellExec($cmd, $status);
 
 		//Remove the tmp files
-		foreach($tmpLinks as $l) {
-			if( file_exists( $tmpDir ) ) {
-				unlink($l);
-			}
-		}
-		if( file_exists( $tmpDir ) && is_dir( $tmpDir ) ) {
-			rmdir($tmpDir);
-		}
+		foreach($tmpLinks as $l) unlink($l);
+		rmdir($tmpDir);
 
 		if($status != 0) {
 			throw new Exception("'''Unable process download:''' $output");

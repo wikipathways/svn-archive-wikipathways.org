@@ -1,13 +1,11 @@
 <?php
-    require_once('../wpi.php');
+   require_once('../wpi.php');
 
 	function getThumb($pathway, $width = 200) {
-		$img = $pathway->getImage();
-		if( $img->exists() ) {
-			return $img->getThumbnail( $width, -1 );
-		} else {
-			return "no thumbnail";
-		}
+		$pathway->updateCache(FILETYPE_IMG);
+		$img = new Image($pathway->getFileTitle(FILETYPE_IMG));
+		$img->loadFromFile();
+		return $img->getThumbnail( $width, -1 );
 	}
 
    function getRecentChanges() {

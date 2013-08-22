@@ -573,7 +573,7 @@ class Pathway {
 		if($updateCache) {
 			$this->updateCache($fileType);
 		}
-		return "http://" . $_SERVER['HTTP_HOST'] . wfLocalFile($this->getFileName($fileType))->getUrl();
+		return "http://" . $_SERVER['HTTP_HOST'] . Image::imageURL($this->getFileName($fileType));
 	}
 
 	/**
@@ -854,10 +854,6 @@ class Pathway {
 			return "Error: no valid XML provided\n$gpml";
 		}
 
-		if( !method_exists( $xml->firstChild, "getAttribute" ) ) {
-			return "Not valid GPML!";
-		}
-
 		$ns = $xml->firstChild->getAttribute('xmlns');
 		$schema = self::$gpmlSchemas[$ns];
 		if(!$schema) {
@@ -1041,19 +1037,6 @@ class Pathway {
 		}
 	}
 
-	public function getImage() {
-		$repo = RepoGroup::singleton()->getLocalRepo();
-		$img = new LocalFile($this->getFileTitle(FILETYPE_IMG), $repo);
-		$img->loadFromFile();
-
-		if ( !$img->exists() ) { /* Avoid calling this unless we need to */
-			$this->updateCache(FILETYPE_IMG);
-			$img->loadFromFile();
-		}
-
-		return $img;
-	}
-
 	/**
 	 * Clear all cached files
 	 * \param fileType The file type to remove the cache for (one of FILETYPE_* constants)
@@ -1114,12 +1097,9 @@ class Pathway {
 	private function saveConvertedCache($fileType) {
 		# Convert gpml to fileType
 		$gpmlFile = realpath($this->getFileLocation(FILETYPE_GPML));
-		wfDebug( "Saving $gpmlFile to $fileType" );
 		$conFile = $this->getFileLocation($fileType, false);
 		$dir = dirname($conFile);
-		if ( !is_dir( $dir ) && !wfMkdirParents( $dir ) ) {
-			throw new MWException( "Couldn't make directory: $dir" );
-		}
+		if ( !is_dir( $dir ) ) wfMkdirParents( $dir );
 		self::convert($gpmlFile, $conFile);
 		return $conFile;
 	}
@@ -1156,7 +1136,6 @@ class Pathway {
 		if($gpml) { //Only write cache if there is GPML
 			$file = $this->getFileLocation(FILETYPE_GPML, false);
 			writeFile($file, $gpml);
-			wfDebug( "GPML CACHE SAVED: $file" );
 		}
 	}
 

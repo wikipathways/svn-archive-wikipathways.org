@@ -7,34 +7,6 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 	protected $ns = NS_PATHWAY;
 	protected $nsName;
 
-	public function thumbToData( $thumb ) {
-		$data = "";
-		/* FIXME: magic nums for file size and width */
-		$suffix = $thumb->thumbName( array( "width" => 180 ) );
-		$thumbnail = $thumb->getThumbPath( $suffix );
-
-		if( $thumb->isLocal() && file_exists( $thumbnail )
-			&& filesize( $thumbnail ) < 20480 ) { /* 20k is probably too much */
-			$c = file_get_contents( $thumbnail );
-			list( $thumbExt, $thumbMime ) = $thumb->handler->getThumbType( $thumb->getExtension(), $thumb->getMimeType() );
-			return "data:" . $thumbMime . ";base64," . base64_encode( $c );
-		}
-		return $thumb->getThumbUrl( $suffix );
-	}
-
-	public function imgToData( $img ) {
-		$data = "";
-		/* FIXME: magic nums for file size */
-		$path = $img->getPath( );
-
-		if( $img->isLocal() && file_exists( $path )
-			&& filesize( $path ) < 20480 ) { /* 20k is probably too much */
-			$c = file_get_contents( $path );
-			return "data:" . $img->getMimeType() . ";base64," . base64_encode( $c );
-		}
-		return $thumb->getThumbUrl( $suffix );
-	}
-
 	public function hasRecentEdit( $title ) {
 		global $wgPathwayRecentSinceDays;
 		$article = new Article( $title );
@@ -68,7 +40,7 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 		return $wgRequest->getVal( 'order' );
 	}
 
-	public function __construct( $species = "---", $tag = "---", $sortOrder = 0 ) {
+	public function __construct($species, $tag, $sortOrder) {
 		global $wgCanonicalNamespaceNames;
 
 		if ( ! isset( $wgCanonicalNamespaceNames[ $this->ns ] ) ) {
@@ -155,11 +127,11 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 	}
 
 	function getTopNavigationBar() {
-		return $this->getNavigationBar();
+		return parent::getNavigationBar();
 	}
 
 	function getBottomNavigationBar() {
-		return $this->getNavigationBar();
+		return parent::getNavigationBar();
 	}
 
 	function getGPMLlink( $pathway ) {
@@ -174,28 +146,30 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 	function getThumb( $pathway, $icons, $boxwidth = 180, $withText = true ) {
 		global $wgStylePath, $wgContLang;
 
-		$label = $pathway->name() . '<br/>';
+		$label = $pathway->name() . '<br>';
 		if( $this->species === '---' ) {
-			$label .= "(" . $pathway->species() . ")<br/>";
+			$label .= "(" . $pathway->species() . ")<br>";
 		}
 		$label .= $icons;
 
 		$boxheight=-1;
 		$framed=false;
 		$href = $pathway->getFullURL();
-		$class = "browsePathways infinite-item";
+		$class = "browsePathways";
 		$id = $pathway->getTitleObject();
 		$textalign = $wgContLang->isRTL() ? ' style="text-align:right"' : '';
 		$oboxwidth = $boxwidth + 2;
 		$s = "<div id=\"{$id}\" class=\"{$class}\"><div class=\"thumbinner\" style=\"width:{$oboxwidth}px;\">".
 			'<a href="'.$href.'" class="internal">';
 
+		$img = new Image($pathway->getFileTitle(FILETYPE_IMG));
+		$img->loadFromFile();
 		$link = "";
-		$img = $pathway->getImage();
 
 		if ( !$img->exists() ) {
 			$s .= "Image does not exist";
 		} else {
+			$pathway->updateCache(FILETYPE_IMG);
 			$imgURL = $img->getURL();
 
 			$thumbUrl = '';
@@ -206,7 +180,7 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 
 			$thumb = $img->getThumbnail( $boxwidth, $boxheight );
 			if ( $thumb ) {
-				$thumbUrl = $this->thumbToData($img);
+				$thumbUrl = $thumb->getUrl();
 				$boxwidth = $thumb->width;
 				$boxheight = $thumb->height;
 			} else {
@@ -247,7 +221,7 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 		$tagLabel = "<span class='tag-icons'>";
 		foreach( $tags as $label => $attr ) {
 			$img = wfLocalFile( $attr['img'] );
-			$imgLink = Xml::element('img', array( 'src' => $this->imgToData( $img ), "title" => $label ));
+			$imgLink = Xml::element('img', array( 'src' => $img->getURL(), "title" => $label ));
 			$href = $wgRequest->appendQueryArray( array( "tag" => $attr['tag'] ) );
 			$tagLabel .= Xml::element('a', array( 'href' => $href ), null ) . $imgLink . "</a>";
 		}
@@ -301,51 +275,37 @@ class ListPathwaysPager extends BasePathwaysPager {
 	}
 
 	function getEndBody() {
-		return "</ul></li> <!-- end of column --></ul> <!-- getEndBody -->";
+		return "</ul>";
 	}
 
-	function getNavigationBar() {
+	function getTopNavigationBar() {
+		return "";
+	}
+
+	function getBottomNavigationBar() {
 		global $wgLang;
 
+		/* Using http://imakewebthings.com/jquery-waypoints/shortcuts/infinite-scroll/ */
 		$link = "";
 		$queries = $this->getPagingQueries();
 		$opts = array( 'parsemag', 'escapenoentities' );
 
-		if( isset( $queries['prev'] ) && $queries['prev'] ) {
-			$link .= $this->getSkin()->makeKnownLinkObj( $this->getTitle(),
-				wfMsgExt( 'prevn', $opts, $wgLang->formatNum( $this->mLimit ) ),
-				wfArrayToCGI( $queries['prev'], $this->getDefaultQuery() ), '', '',
-				"style='float: left;'" );
-		}
-
 		if( isset( $queries['next'] ) && $queries['next'] ) {
-			$link .= $this->getSkin()->makeKnownLinkObj( $this->getTitle(),
+			$link = $this->getSkin()->makeKnownLinkObj( $this->getTitle(),
 				wfMsgExt( 'nextn', $opts, $wgLang->formatNum( $this->mLimit ) ),
 				wfArrayToCGI( $queries['next'], $this->getDefaultQuery() ), '', '',
-				"style='float: right;'" );
+				"class='infinite-more-link'" );
 		}
-
 		return $link;
 	}
 
-	function getTopNavigationBar() {
-		$bar = $this->getNavigationBar();
-
-		return "<div class='listNavBar top'>$bar</div>";
-	}
-
-	function getBottomNavigationBar() {
-		$bar = $this->getNavigationBar();
-
-		return "<div class='listNavBar bottom'>$bar</div>";
-	}
 
 	function formatRow( $row ) {
 		$title = Title::newFromDBkey( $this->nsName .":". $row->page_title );
 		$pathway = Pathway::newFromTitle( $title );
 
 		if( $this->columnItemCount === $this->columnSize ) {
-			$row = '</ul></li> <!-- end of column -->';
+			$row = '</ul></li>';
 			$this->columnItemCount = 0;
 			$this->columnIndex++;
 		} else {
@@ -353,7 +313,7 @@ class ListPathwaysPager extends BasePathwaysPager {
 		}
 
 		if( $this->columnItemCount === 0 ) {
-			$row .= '<li><ul> <!-- start of column -->';
+			$row .= '<li class="infinite-item"><ul>';
 		}
 		$this->columnItemCount++;
 
@@ -375,48 +335,13 @@ class ListPathwaysPager extends BasePathwaysPager {
 }
 
 class ThumbPathwaysPager extends BasePathwaysPager {
-
-	function __construct( $species, $tag, $sortOrder ) {
-		parent::__construct( $species, $tag, $sortOrder );
-
-		$this->mLimit = 10;
-	}
-
 	function getStartBody() {
-		return "<div class='infinite-container'>";
+		return "<br clear='both'>";
 	}
 
 	function getEndBody() {
-		return "</div>";
+		return "<br clear='both'>";
 	}
-
-	function getNavigationBar() {
-		global $wgLang;
-
-		/* Link to nowhere by default */
-		$link = "<a class='infinite-more-link' href='data:'></a>";
-
-		$queries = $this->getPagingQueries();
-		$opts = array( 'parsemag', 'escapenoentities' );
-
-		if( isset( $queries['next'] ) && $queries['next'] ) {
-			$link = $this->getSkin()->makeKnownLinkObj( $this->getTitle(),
-				wfMsgExt( 'nextn', $opts, $wgLang->formatNum( $this->mLimit ) ),
-				wfArrayToCGI( $queries['next'], $this->getDefaultQuery() ), '', '',
-				"class='infinite-more-link'" );
-		}
-
-		return $link;;
-	}
-
-	function getTopNavigationBar() {
-		return "";
-	}
-
-	function getBottomNavigationBar() {
-		return $this->getNavigationBar();
-	}
-
 	/* From getDownloadURL in PathwayPage */
 	function formatRow( $row ) {
 		$title = Title::newFromDBkey( $this->nsName .":". $row->page_title );

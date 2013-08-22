@@ -34,12 +34,6 @@ function wfSiteStats_Magic( &$magicWords, $langCode ) {
 function getSiteStats( &$parser, $tableAttr ) {
 	$nrPathways = StatisticsCache::howManyPathways('total');
 	$output = "* There are '''{$nrPathways}''' pathways";
-
-	if( ! is_dir( WPI_CACHE_PATH ) && ! wfMkdirParents( WPI_CACHE_PATH ) ) {
-		wfDebug( "Can't create: " . WPI_CACHE_PATH );
-		throw new Exception( "Can't create WPI_CACHE_PATH!" );
-	}
-
 	$table = <<<EOD
 
 * Number of '''pathways''' ''(and unique genes)'' per species:
@@ -71,3 +65,5 @@ EOD;
 function getSpecies() {
 	return Pathway::getAvailableSpecies();
 }
+
+?>

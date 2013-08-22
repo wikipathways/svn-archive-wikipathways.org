@@ -108,7 +108,6 @@ define ('USER_SNOOP', 0);
 
 #add our special page to the list
 $wgSpecialPages['UserSnoop'] = 'UserSnoop';
-$wgSpecialPageGroups['UserSnoop'] = "users";
 $wgHooks['LoadAllMessages'][] = 'UserSnoop::loadAllMessages';
 $wgHooks['LanguageGetSpecialPageAliases'][] = 'UserSnoop::loadLocalizedName';
 $wgExtensionCredits['specialpage'][] = array(
@@ -123,15 +122,12 @@ require_once("$IP/includes/SpecialPage.php");
 #our special page class
 class UserSnoop extends SpecialPage
 {
-	protected $uid;
-
 	#constructor
 	function __construct() {
 		#add message to message cache
 		global $wgMessageCache;
 		self::loadAllMessages();
 
-		$this->uid = null;
 		#create new special page with the 'usersnoop' permission required
 		SpecialPage::SpecialPage('UserSnoop', 'usersnoop');
 	}

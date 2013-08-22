@@ -19,20 +19,15 @@ try {
 	require_once( 'MimeTypes.php' );
 	//Parse HTTP request (only if script is directly called!)
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(__FILE__)) {
-		if( !isset( $_GET['action'] ) ) {
-			throw new Exception("No action given!");
-		}
 		$action = $_GET['action'];
-		if( !isset( $_GET['pwTitle'] ) ) {
-			throw new Exception("No pwTitle given!");
-		}
 		$pwTitle = $_GET['pwTitle'];
-		if( !isset( $_GET['oldId'] ) && $action !== "downloadFile" && $action !== "delete" ) {
-			throw new Exception("No oldId given!");
-		}
 		$oldId = $_GET['oldid'];
 
 		switch($action) {
+			case 'launchPathVisio':
+				$ignore = $_GET['ignoreWarning'];
+				launchPathVisio(createPathwayObject($pwTitle, $oldId), $ignore);
+				break;
 			case 'launchCytoscape':
 				launchCytoscape(createPathwayObject($pwTitle, $oldId));
 				break;
@@ -40,9 +35,6 @@ try {
 				launchGenMappConverter(createPathwayObject($pwTitle, $oldId));
 				break;
 			case 'downloadFile':
-				if( !isset( $_GET['type'] ) ) {
-					throw new Exception("No type given!");
-				}
 				downloadFile($_GET['type'], $pwTitle);
 				break;
 			case 'revert':
@@ -51,8 +43,6 @@ try {
 			case 'delete':
 				delete($pwTitle);
 				break;
-			default:
-				throw new Exception("'$action' isn't implemented");
 		}
 	}
 } catch(Exception $e) {
@@ -203,10 +193,7 @@ function toGlobalLink($localLink) {
 function writeFile($filename, $data) {
 	$dir = dirname($filename);
 	if(!file_exists($dir)) {
-		wfDebug( "Making $dir for $filename.\n" );
-		if( !wfMkdirParents( $dir ) ) {
-			throw new Exception( "Couldn't make directory for pathway!" );
-		}
+		mkdir(dirname($filename), 0777, true); //Make sure the directory exists
 	}
 	$handle = fopen($filename, 'w');
 	if(!$handle) {
