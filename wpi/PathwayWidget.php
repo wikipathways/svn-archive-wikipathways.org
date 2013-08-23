@@ -85,7 +85,7 @@ echo <<<SCRIPT
 		svgUrl: "$svg",
 		gpmlUrl: "$gpml",
 		start: true,
-		width: '100%',
+		width: '50%',
 		height: '100%'
 	}));
 	$search
