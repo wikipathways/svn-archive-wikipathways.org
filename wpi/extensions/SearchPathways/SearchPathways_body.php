@@ -5,12 +5,6 @@ class SearchPathways extends SpecialPage
 
 	function __construct( $empty = null ) {
 		parent::__construct("SearchPathways");
-		self::initMsg();
-	}
-
-	static function initMsg( ) {
-		# Need this called in hook early on so messages load... maybe a bug in old MW?
-		wfLoadExtensionMessages( 'SearchPathways' );
 	}
 
 	function execute( $par ) {
@@ -18,7 +12,7 @@ class SearchPathways extends SpecialPage
 
 		$this->setHeaders();
 		$this->this_url = SITE_URL . '/index.php';
-		$wgOut->setPagetitle( wfMsg( "searchpathways" ) );
+		$wgOut->setPagetitle( wfMessage( "searchpathways" )->text() );
 
 		$query   = isset( $_GET['query'] ) ?   $_GET['query']   : null;
 		$species = isset( $_GET['species'] ) ? $_GET['species'] : null;
@@ -125,8 +119,6 @@ class SearchPathways extends SpecialPage
 
 		try {
 			$pathway->getImage();
-			$img = new Image($pathway->getFileTitle(FILETYPE_IMG));
-			$img->loadFromFile();
 			$imgURL = $img->getURL();
 		} catch (Exception $e) {
 			$blank = "<div id=\"{$id}\" class=\"thumb t{$align}\"><div class=\"thumbinner\" style=\"width:200px;\">";
@@ -167,7 +159,7 @@ class SearchPathways extends SpecialPage
 		}
 		$oboxwidth = $boxwidth + 2;
 
-		$more = htmlspecialchars( wfMsg( 'thumbnail-more' ) );
+		$more = htmlspecialchars( wfMessage( 'thumbnail-more' )->text() );
 		$magnifyalign = $wgContLang->isRTL() ? 'left' : 'right';
 		$textalign = $wgContLang->isRTL() ? ' style="text-align:right"' : '';
 

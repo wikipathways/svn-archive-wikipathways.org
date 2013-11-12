@@ -1,7 +1,4 @@
 <?php
-require_once('Organism.php');
-require_once('PathwayData.php');
-require_once('MetaDataCache.php');
 
 /**
 Class that represents a Pathway on WikiPathways
@@ -183,8 +180,6 @@ class Pathway {
 	 * Find out if the current user has permissions to view this pathway
 	 */
 	public function isReadable() {
-		return $this->getTitleObject()->userCanRead();
-		// After MW 1.19, this form should be used, but in earlier MW it is buggy.
 		return $this->getTitleObject()->userCan('read');
 	}
 
@@ -245,8 +240,7 @@ class Pathway {
 				$pathway = Pathway::newFromTitle($row[0]);
 				if($pathway->isDeleted()) continue; //Skip deleted pathways
 				if($species && $pathway->getSpecies() != $species) continue; //Filter by organism
-				if(!$pathway->getTitleObject()->userCanRead()) continue; //delete this one post 1.19
-				//if(!$pathway->getTitleObject()->userCan('read')) continue; //Skip hidden pathways
+				if(!$pathway->getTitleObject()->userCan('read')) continue; //Skip hidden pathways
 				$allPathways[
 					$pathway->getIdentifier()] = $pathway;
 			} catch(Exception $e) {
@@ -543,12 +537,29 @@ class Pathway {
 		return in_array($fileType, array_keys(self::$fileTypes));
 	}
 
+
+	private function getPath( $fileType ) {
+		/* Duplication, ugh! */
+		$repo = RepoGroup::singleton()->getLocalRepo();
+		$img = LocalFile::newFromTitle( $this->getFileTitle( $fileType ), $repo );
+
+		return $img->getPath();
+	}
+
 	/**
 	 * Get the filename of a cached file following the naming conventions
 	 * \param the file type to get the name for (one of the FILETYPE_* constants)
 	 */
 	public function getFileName($fileType) {
-		return $this->getFileTitle($fileType)->getDBKey();
+		/* Duplication, ugh! */
+		$repo = RepoGroup::singleton()->getLocalRepo();
+		$img = LocalFile::newFromTitle( $this->getFileTitle( $fileType ), $repo );
+		$path = $img->getPath();
+
+		if( $img->isLocal() && $repo->fileExists( $path ) ) {
+			return $repo->getLocalReference( $path )->getPath();
+		}
+		return null;
 	}
 
 	/**
@@ -561,7 +572,7 @@ class Pathway {
 			$this->updateCache($fileType);
 		}
 		$fn = $this->getFileName($fileType);
-		return wfLocalFile( $fn )->getPath();
+		return $fn;
 	}
 
 	/**
@@ -596,8 +607,9 @@ class Pathway {
 		if($this->revision) {
 			$rev_stuffix = "_" . $this->revision;
 		}
-		$title = Title::newFromText( "{$this->getIdentifier()}{$rev_stuffix}." . $fileType, NS_IMAGE );
-		if(!$title) {
+		$fileName = "{$this->getIdentifier()}{$rev_stuffix}." . $fileType;
+		$title = Title::newFromText( $fileName, NS_IMAGE );
+		if(!$title || !$fileType ) {
 			throw new Exception("Invalid file title for pathway " . $fileName);
 		}
 		return $title;
@@ -904,7 +916,7 @@ class Pathway {
 			throw new Exception("You are trying to revert to a deleted version of the pathway. Please choose another version to revert to.");
 		}
 		if($gpml) {
-			$usr = $wgUser->getSkin()->userLink($wgUser->getId(), $wgUser->getName());
+			$usr = RequestContext::getMain()->getSkin()->userLink($wgUser->getId(), $wgUser->getName());
 			$date = $wgLang->timeanddate( $rev->getTimestamp(), true );
 			$this->updatePathway($gpml, "Reverted to version '$date' by $usr");
 		} else {
@@ -928,7 +940,7 @@ class Pathway {
 			$deprev = $this->getMetaDataCache()->getValue(MetaDataCache::$FIELD_DELETED);
 			if($deprev) {
 				$rev = $this->getActiveRevision();
-				if($rev == 0 || $rev == $deprev) return true;
+				if($rev == 0 || $rev == $deprev->getPageRevision()) return true;
 			}
 
 			return false;
@@ -1065,9 +1077,9 @@ class Pathway {
 			$this->clearCache(FILETYPE_GPML);
 			$this->clearCache(FILETYPE_IMG);
 		} else {
-			$file = $this->getFileLocation($fileType, false);
-			if(file_exists($file)) {
-				unlink($file); //Delete the cached file
+			$file = $this->getFileName($fileType, false);
+			if( $file ) {
+				$repo->delete( $file, "archive" );
 			}
 		}
 	}
@@ -1084,10 +1096,11 @@ class Pathway {
 			$gpmlDate = -1;
 		}
 
-		$file = $this->getFileLocation($fileType, false);
+		$path = $this->getPath( $fileType );
+		$repo = RepoGroup::singleton()->getLocalRepo();
 
-		if(file_exists($file)) {
-			$fmt = wfTimestamp(TS_MW, filemtime($file));
+		if( $repo->fileExists( $path ) ) {
+			$fmt = $repo->getFileTimestamp( $path );
 			wfDebug("\tFile exists, cache: $fmt, gpml: $gpmlDate\n");
 			return  $fmt < $gpmlDate;
 		} else { //No cached version yet, so definitely out of date
@@ -1113,13 +1126,18 @@ class Pathway {
 	 */
 	private function saveConvertedCache($fileType) {
 		# Convert gpml to fileType
-		$gpmlFile = realpath($this->getFileLocation(FILETYPE_GPML));
-		wfDebug( "Saving $gpmlFile to $fileType" );
-		$conFile = $this->getFileLocation($fileType, false);
-		$dir = dirname($conFile);
-		if ( !is_dir( $dir ) && !wfMkdirParents( $dir ) ) {
-			throw new MWException( "Couldn't make directory: $dir" );
+		$gpmlFile = $this->getFileLocation(FILETYPE_GPML);
+		if( !file_exists( $gpmlFile ) ) {
+			throw new MWException( "File does not exist: $gpmlFile" );
 		}
+		$gpmlFile = realpath( $gpmlFile );
+		$conFile = $this->getFileLocation($fileType, false);
+		$outFile = basename( $gpmlFile, FILETYPE_GPML );
+
+		if ( $conFile === null ) {
+			$conFile = wfTempDir() . "/$outFile$fileType";
+		}
+		wfDebug( "Saving $gpmlFile to $fileType in $conFile\n" );
 		self::convert($gpmlFile, $conFile);
 		return $conFile;
 	}
@@ -1131,12 +1149,13 @@ class Pathway {
 	 */
 	public static function convert($gpmlFile, $outFile) {
 		global $wgMaxShellMemory;
-
-		$gpmlFile = realpath($gpmlFile);
+		$gpmlFile = realpath( $gpmlFile );
+		$baseName = basename( $outFile );
+		$final = wfTempDir() . "/$baseName";
 
 		$basePath = WPI_SCRIPT_PATH;
 		$maxMemoryM = intval($wgMaxShellMemory / 1024); //Max script memory on java program in megabytes
-		$cmd = "java -Xmx{$maxMemoryM}M -jar $basePath/bin/pathvisio_core.jar \"$gpmlFile\" \"$outFile\" 2>&1";
+		$cmd = "java -Xmx{$maxMemoryM}M -jar $basePath/bin/pathvisio_core.jar \"$gpmlFile\" \"{$final}\" 2>&1";
 		wfDebug("CONVERTER: $cmd\n");
 		$msg = wfJavaExec($cmd, $status);
 
@@ -1145,18 +1164,28 @@ class Pathway {
 			//each revision, so it's guaranteed to update.
 			////Remove cached GPML file
 			//unlink($gpmlFile);
-			throw new Exception("Unable to convert to $outFile:\n<BR>Status:$status\n<BR>Message:$msg\n<BR>Command:$cmd<BR>");
 			wfDebug("Unable to convert to $outFile:\n<BR>Status:$status\n<BR>Message:$msg\n<BR>Command:$cmd<BR>");
+			throw new Exception("Unable to convert to $outFile:\n<BR>Status:$status\n<BR>Message:$msg\n<BR>Command:$cmd<BR>");
 		}
+		$repo = RepoGroup::singleton()->getLocalRepo();
+		$img = new LocalFile( $baseName, $repo );
+		wfDebug("moving into place $baseName\n");
+		$comment = $pageText = "";
+		$status = $img->upload( $final, $comment, $pageText );
+		if( !$status->isOk() ) {
+			throw new MWException( "Error while uploading from $final: "  . $status->getHTML() );
+		}
+		wfDebug("moved into place $baseName\n");
 		return true;
 	}
 
 	private function saveGpmlCache() {
 		$gpml = $this->getGpml();
+		/* FIXME -- THIS writes multiple times per request */
 		if($gpml) { //Only write cache if there is GPML
 			$file = $this->getFileLocation(FILETYPE_GPML, false);
 			writeFile($file, $gpml);
-			wfDebug( "GPML CACHE SAVED: $file" );
+			wfDebug( "GPML CACHE SAVED: $file\n" );
 		}
 	}
 

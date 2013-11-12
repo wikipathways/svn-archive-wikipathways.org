@@ -1,39 +1,42 @@
 <?php
+/**
+ * Hungarian (magyar) specific code.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
+ * @ingroup Language
+ */
 
-/** Hungarian localisation for MediaWiki
+/**
+ * Hungarian localisation for MediaWiki
  *
  * @ingroup Language
  */
 class LanguageHu extends Language {
+
+	/**
+	 * @param $word string
+	 * @param $case
+	 * @return string
+	 */
 	function convertGrammar( $word, $case ) {
 		global $wgGrammarForms;
-		if ( isset($wgGrammarForms[$this->getCode()][$case][$word]) ) {
+		if ( isset( $wgGrammarForms[$this->getCode()][$case][$word] ) ) {
 			return $wgGrammarForms[$this->getCode()][$case][$word];
-		}
-
-		static $localForms = array(
-			'rol' => array(
-				'Wikipédia'   => 'Wikipédiáról',
-				'Wikidézet'   => 'Wikidézetről',
-				'Wikiszótár'  => 'Wikiszótárról',
-				'Wikikönyvek' => 'Wikikönyvekről',
-			),
-			'ba' => array(
-				'Wikipédia'   => 'Wikipédiába',
-				'Wikidézet'   => 'Wikidézetbe',
-				'Wikiszótár'  => 'Wikiszótárba',
-				'Wikikönyvek' => 'Wikikönyvekbe',
-			),
-			'k' => array(
-				'Wikipédia'   => 'Wikipédiák',
-				'Wikidézet'   => 'Wikidézetek',
-				'Wikiszótár'  => 'Wikiszótárak',
-				'Wikikönyvek' => 'Wikikönyvek',
-			)
-		);
-
-		if ( isset( $localForms[$case][$word] ) ) {
-			return $localForms[$case][$word];
 		}
 
 		switch ( $case ) {
@@ -44,7 +47,6 @@ class LanguageHu extends Language {
 			case 'k':
 				return $word . 'k';
 		}
+		return '';
 	}
 }
-
-

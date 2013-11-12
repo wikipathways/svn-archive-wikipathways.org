@@ -101,7 +101,7 @@ class deleteRow extends tableRow {
 			$row = "row".$this->action;
 		}
 		return parent::format( $row )."<td>".( $this->action !== false ?
-			$this->deleteButton( $row ) : wfMsg( "wpict-too-new" ) );
+			$this->deleteButton( $row ) : wfMessage( "wpict-too-new" )->text() );
 	}
 }
 
@@ -151,7 +151,7 @@ class SpecialCurationTags extends SpecialPage {
 
 						$tag = new MetaTag($tagName, $pageId);
 						$umod = User::newFromId($tag->getUserMod());
-						$data[] = $wgUser->getSkin()->userLink( $umod->getId(), $umod->getName() );
+						$data[] = RequestContext::getMain()->getSkin()->userLink( $umod->getId(), $umod->getName() );
 						$data[] = "<i style='display: none'>{$tag->getTimeMod()}</i>".
 							$wgLang->timeanddate( $tag->getTimeMod(), true );
 

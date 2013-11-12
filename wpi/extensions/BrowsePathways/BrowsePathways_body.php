@@ -27,8 +27,10 @@ class BrowsePathways extends SpecialPage {
 	}
 
 	static function initMsg( ) {
-		# Need this called in hook early on so messages load... maybe a bug in old MW?
-		wfLoadExtensionMessages( 'BrowsePathways' );
+		if( function_exists( 'wfLoadExtensionMessages' ) ) {
+			# Need this called in hook early on so messages load... maybe a bug in old MW?
+			wfLoadExtensionMessages( 'BrowsePathways' );
+		}
 	}
 
 	protected $species;
@@ -71,9 +73,9 @@ class BrowsePathways extends SpecialPage {
 	protected function getSpeciesSelectionList( ) {
 		$arr = Pathway::getAvailableSpecies();
 		asort($arr);
-		$all = wfMsg('browsepathways-all-species');
+		$all = wfMessage( 'browsepathways-all-species' )->text();
 		$arr[] = $all;
-		/* $arr[] = wfMsg('browsepathways-uncategorized-species'); Don't look for uncategorized species */
+		/* $arr[] = wfMessage( 'browsepathways-uncategorized-species' )->text(); Don't look for uncategorized species */
 
 		$sel = "\n<select onchange='this.form.submit()' name='browse' class='namespaceselector'>\n";
 		foreach ($arr as $label) {
@@ -142,17 +144,17 @@ class BrowsePathways extends SpecialPage {
 		$out .= "
 <table id='nsselect' class='allpages'>
 	<tr>
-		<td align='right'>". wfMsg("browsepathways-select-species") ."</td>
+		<td align='right'>". wfMessage( "browsepathways-select-species" )->text() ."</td>
 		<td align='left'>$speciesSelect</td>
-		<td align='right'>". wfMsg("browsepathways-select-collection") ."</td>
+		<td align='right'>". wfMessage( "browsepathways-select-collection" )->text() ."</td>
 		<td align='left'>$tagSelect</td>
-		<td align='right'>". wfMsg("browsepathways-select-view") ."</td>
+		<td align='right'>". wfMessage( "browsepathways-select-view" )->text() ."</td>
 		<td align='left'>$viewSelect</td>
 		<td>$submitbutton</td>
 	</tr>
 </table>
 ";
-		/* <td align='right'>". wfMsg("browsepathways-select-sort") ."</td> */
+		/* <td align='right'>". wfMessage( "browsepathways-select-sort" )->text() ."</td> */
 		/* <td align='left'>$sortSelect</td> */
 
 		$out .= '</form>';

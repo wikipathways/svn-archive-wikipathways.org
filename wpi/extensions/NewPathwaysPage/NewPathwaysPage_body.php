@@ -4,7 +4,6 @@ require_once("QueryPage.php");
 class NewPathwaysPage extends SpecialPage {
 	function NewPathwaysPage() {
 		SpecialPage::SpecialPage("NewPathwaysPage");
-		self::loadMessages();
 	}
 
 	function execute( $par ) {
@@ -19,18 +18,6 @@ class NewPathwaysPage extends SpecialPage {
 		return $rcp->doQuery( $offset, $limit );
 	}
 
-	static function loadMessages() {
-		static $messagesLoaded = false;
-		global $wgMessageCache;
-		if ( $messagesLoaded ) return true;
-		$messagesLoaded = true;
-
-		require( dirname( __FILE__ ) . '/NewPathwaysPage.i18n.php' );
-		foreach ( $allMessages as $lang => $langMessages ) {
-			$wgMessageCache->addMessages( $langMessages, $lang );
-		}
-		return true;
-	}
 }
 
 class RCQueryPage extends QueryPage {
@@ -77,7 +64,7 @@ class RCQueryPage extends QueryPage {
 		$title = Title::makeTitle( $result->namespace, $titleName );
 		$id = Title::makeTitle( $result->namespace, $result->title );
 		$link = $skin->makeKnownLinkObj( $id, htmlspecialchars( $wgContLang->convert( $title->getBaseText() ) ) );
-		$nv = "<b>". $wgLang->date($result->value) . "</b> by <b>" . $wgUser->getSkin()->userlink($result->user_id, $result->utext) ."</b>";
+		$nv = "<b>". $wgLang->date($result->value) . "</b> by <b>" . RequestContext::getMain()->getSkin()->userlink($result->user_id, $result->utext) ."</b>";
 		return wfSpecialList($link, $nv);
 	}
 }

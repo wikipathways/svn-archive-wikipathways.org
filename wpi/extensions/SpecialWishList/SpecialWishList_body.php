@@ -1,7 +1,4 @@
 <?php
-require_once("wpi/wpi.php");
-require_once("PathwayWishList.php");
-
 class SpecialWishList extends SpecialPage {
 	private $wishlist;
 
@@ -9,7 +6,6 @@ class SpecialWishList extends SpecialPage {
 
 	function SpecialWishList() {
 		SpecialPage::SpecialPage("SpecialWishList");
-		self::loadMessages();
 	}
 
 	function execute( $par ) {
@@ -131,7 +127,7 @@ class SpecialWishList extends SpecialPage {
 		$wish = new Wish($id);
 		$title = $wish->getTitle()->getText();
 		$user = $wish->getRequestUser();
-		$user = $wgUser->getSkin()->userLink( $user->getId(), $user->getName());
+		$user = RequestContext::getMain()->getSkin()->userLink( $user->getId(), $user->getName());
 		$date = self::getSortTimeDate($wish->getRequestDate());
 		$fullComment = str_replace('"', "'", $wish->getComments());
 		$comment = $this->truncateComment($wish, 75); //Cutoff comment at 20 chars
@@ -326,12 +322,12 @@ HELP;
 		global $wgOut, $wgLang, $wgUser, $wgScriptPath;
 		$title = $wish->getTitle()->getText();
 		$user = $wish->getRequestUser();
-		$user = $wgUser->getSkin()->userLink( $user->getId(), $user->getName());
+		$user = RequestContext::getMain()->getSkin()->userLink( $user->getId(), $user->getName());
 		$pathway = $wish->getResolvedPathway();
 		if($pathway->exists()) {
 			$rev = $pathway->getFirstRevision();
 			$pwDate = self::getSortTimeDate($rev->getTimestamp());
-			$resUser = $wgUser->getSkin()->userLink( $rev->getUser(), $rev->getUserText() );
+			$resUser = RequestContext::getMain()->getSkin()->userLink( $rev->getUser(), $rev->getUserText() );
 		}
 		$resDate = self::getSortTimeDate($wish->getResolvedDate());
 		if($wish->isResolved()) {
@@ -353,7 +349,7 @@ HELP;
 		$url = $wish->getTitle()->getFullURL();
 		$title = $wish->getTitle()->getText();
 		$user = $wish->getRequestUser();
-		$user = $wgUser->getSkin()->userLink( $user->getId(), $user->getName());
+		$user = RequestContext::getMain()->getSkin()->userLink( $user->getId(), $user->getName());
 		$date = self::getSortTimeDate($wish->getRequestDate());
 		$watching = $wish->userIsWatching() ? "CHECKED" : "";
 		$votes = (int)$wish->countVotes();
@@ -414,17 +410,4 @@ HELP;
 		return "<a href='{$this->this_url}&wishaction=$action&id=$id' title='$title'>$label</a>";
 	}
 
-
-	static function loadMessages() {
-		static $messagesLoaded = false;
-		global $wgMessageCache;
-		if ( $messagesLoaded ) return true;
-		$messagesLoaded = true;
-
-		require( dirname( __FILE__ ) . '/SpecialWishList.i18n.php' );
-		foreach ( $allMessages as $lang => $langMessages ) {
-			$wgMessageCache->addMessages( $langMessages, $lang );
-		}
-		return true;
-	}
 }

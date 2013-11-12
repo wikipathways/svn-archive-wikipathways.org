@@ -107,14 +107,14 @@ class Inputbox {
 	function getSearchForm() {
 		global $wgUser, $wgContLang;
 		
-		$sk=$wgUser->getSkin();
+		$sk=RequestContext::getMain()->getSkin();
 		$searchpath = $sk->escapeSearchLink();		
 		/*EDIT
 		if(!$this->buttonlabel) {
-			$this->buttonlabel = wfMsgHtml( 'tryexact' );
+			$this->buttonlabel = wfMessage( 'tryexact' )->escaped();
 		}*/
 		if(!$this->searchbuttonlabel) {
-			$this->searchbuttonlabel = wfMsgHtml( 'searchfulltext' );
+			$this->searchbuttonlabel = wfMessage( 'searchfulltext' )->escaped();
 		}
 
 
@@ -177,10 +177,10 @@ ENDFORM2;
 	function getSearchForm2() {
 		global $wgUser;
 		
-		$sk=$wgUser->getSkin();
+		$sk=RequestContext::getMain()->getSkin();
 		$searchpath = $sk->escapeSearchLink();		
 		if(!$this->buttonlabel) {
-			$this->buttonlabel = wfMsgHtml( 'tryexact' );
+			$this->buttonlabel = wfMessage( 'tryexact' )->escaped();
 		}
 
 		$output = $this->parser->parse( $this->labeltext,
@@ -210,12 +210,12 @@ ENDFORM;
 		if($this->type=="comment") {
 			$comment='<input type="hidden" name="section" value="new" />';
 			if(!$this->buttonlabel) {
-				$this->buttonlabel = wfMsgHtml( "postcomment" );
+				$this->buttonlabel = wfMessage( "postcomment" )->escaped();
 			}
 		} else {
 			$comment='';
 			if(!$this->buttonlabel) {			
-				$this->buttonlabel = wfMsgHtml( "createarticle" );
+				$this->buttonlabel = wfMessage( "createarticle" )->escaped();
 			}
 		}		
 		$type = $this->hidden ? 'hidden' : 'text';

@@ -12,11 +12,8 @@ try {
 	putenv( "MW_INSTALL_PATH=$IP" );
 	require_once( "WebStart.php" );
 	require_once( "Wiki.php" );
-
-	require_once( 'MwUtils.php' );
 	require_once( 'globals.php' );
-	require_once( "$IP/wpi/extensions/Pathways/Pathway.php" );
-	require_once( 'MimeTypes.php' );
+
 	//Parse HTTP request (only if script is directly called!)
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(__FILE__)) {
 		if( !isset( $_GET['action'] ) ) {
@@ -27,7 +24,7 @@ try {
 			throw new Exception("No pwTitle given!");
 		}
 		$pwTitle = $_GET['pwTitle'];
-		if( !isset( $_GET['oldid'] ) && $action !== "downloadFile" && $action !== "delete" ) {
+		if( !isset( $_GET['oldId'] ) && $action !== "downloadFile" && $action !== "delete" && $action !== "display" ) {
 			throw new Exception("No oldId given!");
 		}
 		$oldId = $_GET['oldid'];
@@ -45,6 +42,12 @@ try {
 				}
 				downloadFile($_GET['type'], $pwTitle);
 				break;
+			case 'display':
+				if( !isset( $_GET['type'] ) ) {
+					throw new Exception("No type given!");
+				}
+				displayFile($_GET['type'], $pwTitle);
+				break;
 			case 'revert':
 				revert($pwTitle, $oldId);
 				break;
@@ -58,7 +61,9 @@ try {
 } catch(Exception $e) {
 	//Redirect to special page that reports the error
 	ob_clean();
-	header("Location: " . SITE_URL . "/index.php?title=Special:ShowError&error=" . urlencode($e->getMessage()));
+	echo "<pre>";
+	echo $e->getMessage();
+	#header("Location: " . SITE_URL . "/index.php?title=Special:ShowError&error=" . urlencode($e->getMessage()));
 	exit;
 }
 
@@ -148,7 +153,7 @@ function createJnlpArg($flag, $value) {
 	return "<argument>" . htmlspecialchars($flag) . "</argument>\n<argument>" . htmlspecialchars($value) . "</argument>\n";
 }
 
-function downloadFile($fileType, $pwTitle) {
+function getFilename( $fileType, $pwTitle ) {
 	$pathway = Pathway::newFromTitle($pwTitle);
 	if(!$pathway->isReadable()) {
 		throw new Exception("You don't have permissions to view this pathway");
@@ -171,9 +176,24 @@ function downloadFile($fileType, $pwTitle) {
 	if(!$mime) $mime = "text/plain";
 
 	ob_clean();
+	return array($file, $fn, $mime);
+}
+
+function downloadFile($fileType, $pwTitle) {
+	list($file, $fn, $mime) = getFilename( $fileType, $pwTitle );
 	header("Content-type: $mime");
 	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 	header("Content-Disposition: attachment; filename=\"$fn\"");
+	//header("Content-Length: " . filesize($file));
+	set_time_limit(0);
+	@readfile($file);
+	exit();
+}
+
+function displayFile($fileType, $pwTitle) {
+	list($file, $fn, $mime) = getFilename( $fileType, $pwTitle );
+	header("Content-type: $mime");
+	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 	//header("Content-Length: " . filesize($file));
 	set_time_limit(0);
 	@readfile($file);
@@ -201,22 +221,33 @@ function toGlobalLink($localLink) {
 }
 
 function writeFile($filename, $data) {
-	$dir = dirname($filename);
-	if(!file_exists($dir)) {
-		wfDebug( "Making $dir for $filename.\n" );
-		if( !wfMkdirParents( $dir ) ) {
-			throw new Exception( "Couldn't make directory for pathway!" );
-		}
+	if( $filename === null ) {
+		throw new MWException( "Need a filename, got null!" );
 	}
+	if( is_object( $filename ) ) {
+		throw new MWException( "Don't know what to do with objects!" );
+	}
+	if( substr( $filename, 0, 10 ) === "mwstore://" ) {
+		throw new MWException( "Don't know what to do with mwstore paths!" );
+	}
+
+	$dir = dirname( $filename );
+	if( !is_dir( $dir ) && file_exists( $dir ) ) {
+		mkdir( $dir, 0777, true );
+	}
+	if( !is_writable( $dir ) ) {
+		throw new MWException( "Can't write to $dir." );
+	}
+
 	$handle = fopen($filename, 'w');
 	if(!$handle) {
-		throw new Exception ("Couldn't open file $filename");
+		throw new MWException ("Couldn't open file $filename");
 	}
 	if(fwrite($handle, $data) === FALSE) {
-		throw new Exception ("Couldn't write file $filename");
+		throw new MWException ("Couldn't write file $filename");
 	}
 	if(fclose($handle) === FALSE) {
-		throw new Exception ("Couln't close file $filename");
+		throw new MWException ("Couln't close file $filename");
 	}
 }
 
@@ -268,5 +299,19 @@ function wfJavaExec( $cmd, &$retval=null ) {
 	$output = ob_get_contents();
 	ob_end_clean();
 	return $output;
+}
 
+function wpiGetThumb( $img, $w, $h = false ) {
+	if( !$h && $h !== 0 ) {
+		$h = -1;
+	}
+
+	$thumb = $img->transform
+		( array( 'width' => $w, 'height' => $h ) );
+	if( is_null( $thumb ) ) {
+		throw new MWException( "Unknown failure in thumbnail" );
+	} elseif( $thumb->isError() ) {
+		throw new MWException( $thumb->getHtmlMsg() );
+	}
+	return array( $thumb, $thumb->getUrl(), $thumb->width, $thumb->height );
 }

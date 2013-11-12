@@ -1,205 +1,278 @@
 <?php
 /**
- * MediaWiki is the to-be base class for this whole project
+ * Helper class for the index.php entry point.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
+ */
+
+/**
+ * The MediaWiki class is the helper class for the index.php entry point.
+ *
+ * @internal documentation reviewed 15 Mar 2010
  */
 class MediaWiki {
 
-	var $GET; /* Stores the $_GET variables at time of creation, can be changed */
-	var $params = array();
+	/**
+	 * TODO: fold $output, etc, into this
+	 * @var IContextSource
+	 */
+	private $context;
 
-	/** Constructor. It just save the $_GET variable */
-	function __construct() {
-		$this->GET = $_GET;
+	/**
+	 * @param $x null|WebRequest
+	 * @return WebRequest
+	 */
+	public function request( WebRequest $x = null ) {
+		$old = $this->context->getRequest();
+		$this->context->setRequest( $x );
+		return $old;
 	}
 
 	/**
-	 * Stores key/value pairs to circumvent global variables
-	 * Note that keys are case-insensitive!
-	 *
-	 * @param $key String: key to store
-	 * @param $value Mixed: value to put for the key
+	 * @param $x null|OutputPage
+	 * @return OutputPage
 	 */
-	function setVal( $key, &$value ) {
-		$key = strtolower( $key );
-		$this->params[$key] =& $value;
+	public function output( OutputPage $x = null ) {
+		$old = $this->context->getOutput();
+		$this->context->setOutput( $x );
+		return $old;
 	}
 
 	/**
-	 * Retrieves key/value pairs to circumvent global variables
-	 * Note that keys are case-insensitive!
-	 *
-	 * @param $key String: key to get
-	 * @param $default Mixed: default value if if the key doesn't exist
+	 * @param IContextSource|null $context
 	 */
-	function getVal( $key, $default = '' ) {
-		$key = strtolower( $key );
-		if( isset( $this->params[$key] ) ) {
-			return $this->params[$key];
+	public function __construct( IContextSource $context = null ) {
+		if ( !$context ) {
+			$context = RequestContext::getMain();
 		}
-		return $default;
+
+		$this->context = $context;
 	}
 
 	/**
-	 * Initialization of ... everything
-	 * Performs the request too
+	 * Parse the request to get the Title object
 	 *
-	 * @param $title Title ($wgTitle)
-	 * @param $article Article
-	 * @param $output OutputPage
-	 * @param $user User
-	 * @param $request WebRequest
-	 */
-	function initialize( &$title, &$article, &$output, &$user, $request ) {
-		wfProfileIn( __METHOD__ );
-		$this->preliminaryChecks( $title, $output, $request ) ;
-		if ( !$this->initializeSpecialCases( $title, $output, $request ) ) {
-			$new_article = $this->initializeArticle( $title, $request );
-			if( is_object( $new_article ) ) {
-				$article = $new_article;
-				$this->performAction( $output, $article, $title, $user, $request );
-			} elseif( is_string( $new_article ) ) {
-				$output->redirect( $new_article );
-			} else {
-				throw new MWException( "Shouldn't happen: MediaWiki::initializeArticle() returned neither an object nor a URL" );
-			}
-		}
-		wfProfileOut( __METHOD__ );
-	}
-
-	/**
-	 * Check if the maximum lag of database slaves is higher that $maxLag, and
-	 * if it's the case, output an error message
-	 *
-	 * @param $maxLag int: maximum lag allowed for the request, as supplied by
-	 *                the client
-	 * @return bool true if the request can continue
-	 */
-	function checkMaxLag( $maxLag ) {
-		list( $host, $lag ) = wfGetLB()->getMaxLag();
-		if ( $lag > $maxLag ) {
-			wfMaxlagError( $host, $lag, $maxLag );
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-
-	/**
-	 * Checks some initial queries
-	 * Note that $title here is *not* a Title object, but a string!
-	 *
-	 * @param $title String
-	 * @param $action String
 	 * @return Title object to be $wgTitle
 	 */
-	function checkInitialQueries( $title, $action ) {
-		global $wgOut, $wgRequest, $wgContLang;
-		if( $wgRequest->getVal( 'printable' ) == 'yes' ){
-			$wgOut->setPrintable();
-		}
+	private function parseTitle() {
+		global $wgContLang;
 
-		$ret = NULL;
+		$request = $this->context->getRequest();
+		$curid = $request->getInt( 'curid' );
+		$title = $request->getVal( 'title' );
+		$action = $request->getVal( 'action', 'view' );
 
-		if ( '' == $title && 'delete' != $action ) {
-			$ret = Title::newMainPage();
-		} elseif ( $curid = $wgRequest->getInt( 'curid' ) ) {
-			# URLs like this are generated by RC, because rc_title isn't always accurate
+		if ( $request->getCheck( 'search' ) ) {
+			// Compatibility with old search URLs which didn't use Special:Search
+			// Just check for presence here, so blank requests still
+			// show the search page when using ugly URLs (bug 8054).
+			$ret = SpecialPage::getTitleFor( 'Search' );
+		} elseif ( $curid ) {
+			// URLs like this are generated by RC, because rc_title isn't always accurate
 			$ret = Title::newFromID( $curid );
 		} else {
 			$ret = Title::newFromURL( $title );
-			// check variant links so that interwiki links don't have to worry
+			// Alias NS_MEDIA page URLs to NS_FILE...we only use NS_MEDIA
+			// in wikitext links to tell Parser to make a direct file link
+			if ( !is_null( $ret ) && $ret->getNamespace() == NS_MEDIA ) {
+				$ret = Title::makeTitle( NS_FILE, $ret->getDBkey() );
+			}
+			// Check variant links so that interwiki links don't have to worry
 			// about the possible different language variants
-			if( count( $wgContLang->getVariants() ) > 1 && !is_null( $ret ) && $ret->getArticleID() == 0 )
+			if ( count( $wgContLang->getVariants() ) > 1
+				&& !is_null( $ret ) && $ret->getArticleID() == 0 )
+			{
 				$wgContLang->findVariantLink( $title, $ret );
-
-		}
-		if ( ( $oldid = $wgRequest->getInt( 'oldid' ) )
-			&& ( is_null( $ret ) || $ret->getNamespace() != NS_SPECIAL ) ) {
-			// Allow oldid to override a changed or missing title.
-			$rev = Revision::newFromId( $oldid );
-			if( $rev ) {
-				$ret = $rev->getTitle();
 			}
 		}
+
+		// If title is not provided, always allow oldid and diff to set the title.
+		// If title is provided, allow oldid and diff to override the title, unless
+		// we are talking about a special page which might use these parameters for
+		// other purposes.
+		if ( $ret === null || !$ret->isSpecialPage() ) {
+			// We can have urls with just ?diff=,?oldid= or even just ?diff=
+			$oldid = $request->getInt( 'oldid' );
+			$oldid = $oldid ? $oldid : $request->getInt( 'diff' );
+			// Allow oldid to override a changed or missing title
+			if ( $oldid ) {
+				$rev = Revision::newFromId( $oldid );
+				$ret = $rev ? $rev->getTitle() : $ret;
+			}
+		}
+
+		// Use the main page as default title if nothing else has been provided
+		if ( $ret === null && strval( $title ) === '' && $action !== 'delete' ) {
+			$ret = Title::newMainPage();
+		}
+
+		if ( $ret === null || ( $ret->getDBkey() == '' && $ret->getInterwiki() == '' ) ) {
+			$ret = SpecialPage::getTitleFor( 'Badtitle' );
+		}
+
 		return $ret;
 	}
 
 	/**
-	 * Checks for search query and anon-cannot-read case
-	 *
-	 * @param $title Title
-	 * @param $output OutputPage
-	 * @param $request WebRequest
+	 * Get the Title object that we'll be acting on, as specified in the WebRequest
+	 * @return Title
 	 */
-	function preliminaryChecks( &$title, &$output, $request ) {
-
-		if( $request->getCheck( 'search' ) ) {
-			// Compatibility with old search URLs which didn't use Special:Search
-			// Just check for presence here, so blank requests still
-			// show the search page when using ugly URLs (bug 8054).
-
-			// Do this above the read whitelist check for security...
-			$title = SpecialPage::getTitleFor( 'Search' );
+	public function getTitle() {
+		if ( $this->context->getTitle() === null ) {
+			$this->context->setTitle( $this->parseTitle() );
 		}
-
-		# If the user is not logged in, the Namespace:title of the article must be in
-		# the Read array in order for the user to see it. (We have to check here to
-		# catch special pages etc. We check again in Article::view())
-		if ( !is_null( $title ) && !$title->userCanRead() ) {
-			$output->loginToUse();
-			$output->output();
-			exit;
-		}
-
+		return $this->context->getTitle();
 	}
 
 	/**
-	 * Initialize some special cases:
+	 * Returns the name of the action that will be executed.
+	 *
+	 * @return string: action
+	 */
+	public function getAction() {
+		static $action = null;
+
+		if ( $action === null ) {
+			$action = Action::getActionName( $this->context );
+		}
+
+		return $action;
+	}
+
+	/**
+	 * Create an Article object of the appropriate class for the given page.
+	 *
+	 * @deprecated in 1.18; use Article::newFromTitle() instead
+	 * @param $title Title
+	 * @param $context IContextSource
+	 * @return Article object
+	 */
+	public static function articleFromTitle( $title, IContextSource $context ) {
+		wfDeprecated( __METHOD__, '1.18' );
+		return Article::newFromTitle( $title, $context );
+	}
+
+	/**
+	 * Performs the request.
 	 * - bad titles
+	 * - read restriction
 	 * - local interwiki redirects
 	 * - redirect loop
 	 * - special pages
+	 * - normal pages
 	 *
-	 * @param $title Title
-	 * @param $output OutputPage
-	 * @param $request WebRequest
-	 * @return bool true if the request is already executed
+	 * @throws MWException|PermissionsError|BadTitleError|HttpError
+	 * @return void
 	 */
-	function initializeSpecialCases( &$title, &$output, $request ) {
+	private function performRequest() {
+		global $wgServer, $wgUsePathInfo, $wgTitle;
+
 		wfProfileIn( __METHOD__ );
 
-		$action = $this->getVal( 'Action' );
-		if( !$title || $title->getDBkey() == '' ) {
-			$title = SpecialPage::getTitleFor( 'Badtitle' );
-			# Die now before we mess up $wgArticle and the skin stops working
-			throw new ErrorPageError( 'badtitle', 'badtitletext' );
-		} else if ( $title->getInterwiki() != '' ) {
-			if( $rdfrom = $request->getVal( 'rdfrom' ) ) {
-				$url = $title->getFullURL( 'rdfrom=' . urlencode( $rdfrom ) );
-			} else {
-				$url = $title->getFullURL();
-			}
-			/* Check for a redirect loop */
-			if ( !preg_match( '/^' . preg_quote( $this->getVal('Server'), '/' ) . '/', $url ) && $title->isLocal() ) {
-				$output->redirect( $url );
-			} else {
-				$title = SpecialPage::getTitleFor( 'Badtitle' );
-				throw new ErrorPageError( 'badtitle', 'badtitletext' );
-			}
-		} else if ( ( $action == 'view' ) && !$request->wasPosted() &&
-			(!isset( $this->GET['title'] ) || $title->getPrefixedDBKey() != $this->GET['title'] ) &&
-			!count( array_diff( array_keys( $this->GET ), array( 'action', 'title' ) ) ) )
+		$request = $this->context->getRequest();
+		$requestTitle = $title = $this->context->getTitle();
+		$output = $this->context->getOutput();
+		$user = $this->context->getUser();
+
+		if ( $request->getVal( 'printable' ) === 'yes' ) {
+			$output->setPrintable();
+		}
+
+		$unused = null; // To pass it by reference
+		wfRunHooks( 'BeforeInitialize', array( &$title, &$unused, &$output, &$user, $request, $this ) );
+
+		// Invalid titles. Bug 21776: The interwikis must redirect even if the page name is empty.
+		if ( is_null( $title ) || ( $title->getDBkey() == '' && $title->getInterwiki() == '' ) ||
+			$title->isSpecial( 'Badtitle' ) )
 		{
-			$targetUrl = $title->getFullURL();
+			$this->context->setTitle( SpecialPage::getTitleFor( 'Badtitle' ) );
+			wfProfileOut( __METHOD__ );
+			throw new BadTitleError();
+		}
+
+		// Check user's permissions to read this page.
+		// We have to check here to catch special pages etc.
+		// We will check again in Article::view().
+		$permErrors = $title->getUserPermissionsErrors( 'read', $user );
+		if ( count( $permErrors ) ) {
+			// Bug 32276: allowing the skin to generate output with $wgTitle or
+			// $this->context->title set to the input title would allow anonymous users to
+			// determine whether a page exists, potentially leaking private data. In fact, the
+			// curid and oldid request  parameters would allow page titles to be enumerated even
+			// when they are not guessable. So we reset the title to Special:Badtitle before the
+			// permissions error is displayed.
+			//
+			// The skin mostly uses $this->context->getTitle() these days, but some extensions
+			// still use $wgTitle.
+
+			$badTitle = SpecialPage::getTitleFor( 'Badtitle' );
+			$this->context->setTitle( $badTitle );
+			$wgTitle = $badTitle;
+
+			wfProfileOut( __METHOD__ );
+			throw new PermissionsError( 'read', $permErrors );
+		}
+
+		$pageView = false; // was an article or special page viewed?
+
+		// Interwiki redirects
+		if ( $title->getInterwiki() != '' ) {
+			$rdfrom = $request->getVal( 'rdfrom' );
+			if ( $rdfrom ) {
+				$url = $title->getFullURL( array( 'rdfrom' => $rdfrom ) );
+			} else {
+				$query = $request->getValues();
+				unset( $query['title'] );
+				$url = $title->getFullURL( $query );
+			}
+			// Check for a redirect loop
+			if ( !preg_match( '/^' . preg_quote( $wgServer, '/' ) . '/', $url )
+				&& $title->isLocal() )
+			{
+				// 301 so google et al report the target as the actual url.
+				$output->redirect( $url, 301 );
+			} else {
+				$this->context->setTitle( SpecialPage::getTitleFor( 'Badtitle' ) );
+				wfProfileOut( __METHOD__ );
+				throw new BadTitleError();
+			}
+		// Redirect loops, no title in URL, $wgUsePathInfo URLs, and URLs with a variant
+		} elseif ( $request->getVal( 'action', 'view' ) == 'view' && !$request->wasPosted()
+			&& ( $request->getVal( 'title' ) === null ||
+				$title->getPrefixedDBkey() != $request->getVal( 'title' ) )
+			&& !count( $request->getValueNames( array( 'action', 'title' ) ) )
+			&& wfRunHooks( 'TestCanonicalRedirect', array( $request, $title, $output ) ) )
+		{
+			if ( $title->isSpecialPage() ) {
+				list( $name, $subpage ) = SpecialPageFactory::resolveAlias( $title->getDBkey() );
+				if ( $name ) {
+					$title = SpecialPage::getTitleFor( $name, $subpage );
+				}
+			}
+			$targetUrl = wfExpandUrl( $title->getFullURL(), PROTO_CURRENT );
 			// Redirect to canonical url, make it a 301 to allow caching
-			if( $targetUrl == $request->getFullRequestURL() ) {
+			if ( $targetUrl == $request->getFullRequestURL() ) {
 				$message = "Redirect loop detected!\n\n" .
 					"This means the wiki got confused about what page was " .
 					"requested; this sometimes happens when moving a wiki " .
 					"to a new server or changing the server configuration.\n\n";
 
-				if( $this->getVal( 'UsePathInfo' ) ) {
+				if ( $wgUsePathInfo ) {
 					$message .= "The wiki is trying to interpret the page " .
 						"title from the URL path portion (PATH_INFO), which " .
 						"sometimes fails depending on the web server. Try " .
@@ -213,308 +286,409 @@ class MediaWiki {
 						"\$wgArticlePath setting and/or toggle \$wgUsePathInfo " .
 						"to true.";
 				}
-				wfHttpError( 500, "Internal error", $message );
-				return false;
+				throw new HttpError( 500, $message );
 			} else {
 				$output->setSquidMaxage( 1200 );
 				$output->redirect( $targetUrl, '301' );
 			}
-		} else if ( NS_SPECIAL == $title->getNamespace() ) {
-			/* actions that need to be made when we have a special pages */
-			SpecialPage::executePath( $title );
+		// Special pages
+		} elseif ( NS_SPECIAL == $title->getNamespace() ) {
+			$pageView = true;
+			// Actions that need to be made when we have a special pages
+			SpecialPageFactory::executePath( $title, $this->context );
 		} else {
-			/* No match to special cases */
-			wfProfileOut( __METHOD__ );
-			return false;
+			// ...otherwise treat it as an article view. The article
+			// may be a redirect to another article or URL.
+			$article = $this->initializeArticle();
+			if ( is_object( $article ) ) {
+				$pageView = true;
+				/**
+				 * $wgArticle is deprecated, do not use it.
+				 * @deprecated since 1.18
+				 */
+				global $wgArticle;
+				$wgArticle = new DeprecatedGlobal( 'wgArticle', $article, '1.18' );
+
+				$this->performAction( $article, $requestTitle );
+			} elseif ( is_string( $article ) ) {
+				$output->redirect( $article );
+			} else {
+				wfProfileOut( __METHOD__ );
+				throw new MWException( "Shouldn't happen: MediaWiki::initializeArticle()"
+					. " returned neither an object nor a URL" );
+			}
 		}
-		/* Did match a special case */
+
+		if ( $pageView ) {
+			// Promote user to any groups they meet the criteria for
+			$user->addAutopromoteOnceGroups( 'onView' );
+		}
+
 		wfProfileOut( __METHOD__ );
-		return true;
 	}
 
 	/**
-	 * Create an Article object of the appropriate class for the given page.
+	 * Initialize the main Article object for "standard" actions (view, etc)
+	 * Create an Article object for the page, following redirects if needed.
 	 *
-	 * @param $title Title
-	 * @return Article object
+	 * @return mixed an Article, or a string to redirect to another URL
 	 */
-	static function articleFromTitle( &$title ) {
-		if( NS_MEDIA == $title->getNamespace() ) {
-			// FIXME: where should this go?
-			$title = Title::makeTitle( NS_IMAGE, $title->getDBkey() );
+	private function initializeArticle() {
+		global $wgDisableHardRedirects;
+
+		wfProfileIn( __METHOD__ );
+
+		$title = $this->context->getTitle();
+		if ( $this->context->canUseWikiPage() ) {
+			// Try to use request context wiki page, as there
+			// is already data from db saved in per process
+			// cache there from this->getAction() call.
+			$page = $this->context->getWikiPage();
+			$article = Article::newFromWikiPage( $page, $this->context );
+		} else {
+			// This case should not happen, but just in case.
+			$article = Article::newFromTitle( $title, $this->context );
+			$this->context->setWikiPage( $article->getPage() );
 		}
 
-		$article = null;
-		wfRunHooks( 'ArticleFromTitle', array( &$title, &$article ) );
-		if( $article ) {
+		// NS_MEDIAWIKI has no redirects.
+		// It is also used for CSS/JS, so performance matters here...
+		if ( $title->getNamespace() == NS_MEDIAWIKI ) {
+			wfProfileOut( __METHOD__ );
 			return $article;
 		}
 
-		switch( $title->getNamespace() ) {
-		case NS_IMAGE:
-			return new ImagePage( $title );
-		case NS_CATEGORY:
-			return new CategoryPage( $title );
-		default:
-			return new Article( $title );
-		}
-	}
+		$request = $this->context->getRequest();
 
-	/**
-	 * Initialize the object to be known as $wgArticle for "standard" actions
-	 * Create an Article object for the page, following redirects if needed.
-	 *
-	 * @param $title Title ($wgTitle)
-	 * @param $request WebRequest
-	 * @return mixed an Article, or a string to redirect to another URL
-	 */
-	function initializeArticle( &$title, $request ) {
-		wfProfileIn( __METHOD__ );
-
-		$action = $this->getVal( 'action' );
-		$article = self::articleFromTitle( $title );
-		
-		wfDebug("Article: ".$title->getPrefixedText()."\n");
-		
 		// Namespace might change when using redirects
 		// Check for redirects ...
-		$file = $title->getNamespace() == NS_IMAGE ? $article->getFile() : null;
-		if( ( $action == 'view' || $action == 'render' ) 	// ... for actions that show content
-					&& !$request->getVal( 'oldid' ) &&    // ... and are not old revisions
-					$request->getVal( 'redirect' ) != 'no' &&	// ... unless explicitly told not to
-					// ... and the article is not a non-redirect image page with associated file
-					!( is_object( $file ) && $file->exists() && !$file->getRedirected() ) ) {
-
-			# Give extensions a change to ignore/handle redirects as needed
+		$action = $request->getVal( 'action', 'view' );
+		$file = ( $title->getNamespace() == NS_FILE ) ? $article->getFile() : null;
+		if ( ( $action == 'view' || $action == 'render' ) // ... for actions that show content
+			&& !$request->getVal( 'oldid' ) && // ... and are not old revisions
+			!$request->getVal( 'diff' ) && // ... and not when showing diff
+			$request->getVal( 'redirect' ) != 'no' && // ... unless explicitly told not to
+			// ... and the article is not a non-redirect image page with associated file
+			!( is_object( $file ) && $file->exists() && !$file->getRedirected() ) )
+		{
+			// Give extensions a change to ignore/handle redirects as needed
 			$ignoreRedirect = $target = false;
-			wfRunHooks( 'InitializeArticleMaybeRedirect', array( &$title, &$request, &$ignoreRedirect, &$target ) );
 
-			$dbr = wfGetDB( DB_SLAVE );
-			$article->loadPageData( $article->pageDataFromTitle( $dbr, $title ) );
+			wfRunHooks( 'InitializeArticleMaybeRedirect',
+				array( &$title, &$request, &$ignoreRedirect, &$target, &$article ) );
 
-			// Follow redirects only for... redirects
-			if( !$ignoreRedirect && $article->isRedirect() ) {
-				# Is the target already set by an extension?
+			// Follow redirects only for... redirects.
+			// If $target is set, then a hook wanted to redirect.
+			if ( !$ignoreRedirect && ( $target || $article->isRedirect() ) ) {
+				// Is the target already set by an extension?
 				$target = $target ? $target : $article->followRedirect();
-				if( is_string( $target ) ) {
-					if( !$this->getVal( 'DisableHardRedirects' ) ) {
+				if ( is_string( $target ) ) {
+					if ( !$wgDisableHardRedirects ) {
 						// we'll need to redirect
+						wfProfileOut( __METHOD__ );
 						return $target;
 					}
 				}
-				
-				if( is_object( $target ) ) {
+				if ( is_object( $target ) ) {
 					// Rewrite environment to redirected article
-					$rarticle = self::articleFromTitle( $target );
-					$rarticle->loadPageData( $rarticle->pageDataFromTitle( $dbr, $target ) );
+					$rarticle = Article::newFromTitle( $target, $this->context );
+					$rarticle->loadPageData();
 					if ( $rarticle->exists() || ( is_object( $file ) && !$file->isLocal() ) ) {
 						$rarticle->setRedirectedFrom( $title );
 						$article = $rarticle;
-						$title = $target;
+						$this->context->setTitle( $target );
+						$this->context->setWikiPage( $article->getPage() );
 					}
 				}
 			} else {
-				$title = $article->getTitle();
+				$this->context->setTitle( $article->getTitle() );
+				$this->context->setWikiPage( $article->getPage() );
 			}
 		}
+
 		wfProfileOut( __METHOD__ );
 		return $article;
 	}
 
 	/**
-	 * Cleaning up by doing deferred updates, calling LBFactory and doing the output
+	 * Perform one of the "standard" actions
 	 *
-	 * @param $deferredUpdates array of updates to do
-	 * @param $output OutputPage
+	 * @param $page Page
+	 * @param $requestTitle The original title, before any redirects were applied
 	 */
-	function finalCleanup ( &$deferredUpdates, &$output ) {
-		wfProfileIn( __METHOD__ );
-		$this->doUpdates( $deferredUpdates );
-		$this->doJobs();
-		# Now commit any transactions, so that unreported errors after output() don't roll back the whole thing
-		$factory = wfGetLBFactory();
-		$factory->shutdown();
-		$output->output();
-		wfProfileOut( __METHOD__ );
-	}
+	private function performAction( Page $page, Title $requestTitle ) {
+		global $wgUseSquid, $wgSquidMaxage;
 
-	/**
-	 * Deferred updates aren't really deferred anymore. It's important to report
-	 * errors to the user, and that means doing this before OutputPage::output().
-	 * Note that for page saves, the client will wait until the script exits
-	 * anyway before following the redirect.
-	 *
-	 * @param $updates array of objects that hold an update to do
-	 */
-	function doUpdates( &$updates ) {
 		wfProfileIn( __METHOD__ );
-		/* No need to get master connections in case of empty updates array */
-		if (!$updates) {
+
+		$request = $this->context->getRequest();
+		$output = $this->context->getOutput();
+		$title = $this->context->getTitle();
+		$user = $this->context->getUser();
+
+		if ( !wfRunHooks( 'MediaWikiPerformAction',
+			array( $output, $page, $title, $user, $request, $this ) ) )
+		{
 			wfProfileOut( __METHOD__ );
 			return;
 		}
 
-		$dbw = wfGetDB( DB_MASTER );
-		foreach( $updates as $up ) {
-			$up->doUpdate();
+		$act = $this->getAction();
 
-			# Commit after every update to prevent lock contention
-			if ( $dbw->trxLevel() ) {
-				$dbw->commit();
+		$action = Action::factory( $act, $page, $this->context );
+
+		if ( $action instanceof Action ) {
+			# Let Squid cache things if we can purge them.
+			if ( $wgUseSquid &&
+				in_array( $request->getFullRequestURL(), $requestTitle->getSquidURLs() )
+			) {
+				$output->setSquidMaxage( $wgSquidMaxage );
 			}
+
+			$action->show();
+			wfProfileOut( __METHOD__ );
+			return;
 		}
+
+		if ( wfRunHooks( 'UnknownAction', array( $request->getVal( 'action', 'view' ), $page ) ) ) {
+			$output->showErrorPage( 'nosuchaction', 'nosuchactiontext' );
+		}
+
 		wfProfileOut( __METHOD__ );
 	}
 
 	/**
-	 * Do a job from the job queue
+	 * Run the current MediaWiki instance
+	 * index.php just calls this
 	 */
-	function doJobs() {
-		$jobRunRate = $this->getVal( 'JobRunRate' );
+	public function run() {
+		try {
+			$this->checkMaxLag();
+			$this->main();
+			$this->restInPeace();
+		} catch ( Exception $e ) {
+			MWExceptionHandler::handle( $e );
+		}
+	}
 
-		if ( $jobRunRate <= 0 || wfReadOnly() ) {
+	/**
+	 * Checks if the request should abort due to a lagged server,
+	 * for given maxlag parameter.
+	 * @return bool
+	 */
+	private function checkMaxLag() {
+		global $wgShowHostnames;
+
+		wfProfileIn( __METHOD__ );
+		$maxLag = $this->context->getRequest()->getVal( 'maxlag' );
+		if ( !is_null( $maxLag ) ) {
+			list( $host, $lag ) = wfGetLB()->getMaxLag();
+			if ( $lag > $maxLag ) {
+				$resp = $this->context->getRequest()->response();
+				$resp->header( 'HTTP/1.1 503 Service Unavailable' );
+				$resp->header( 'Retry-After: ' . max( intval( $maxLag ), 5 ) );
+				$resp->header( 'X-Database-Lag: ' . intval( $lag ) );
+				$resp->header( 'Content-Type: text/plain' );
+				if ( $wgShowHostnames ) {
+					echo "Waiting for $host: $lag seconds lagged\n";
+				} else {
+					echo "Waiting for a database server: $lag seconds lagged\n";
+				}
+
+				wfProfileOut( __METHOD__ );
+
+				exit;
+			}
+		}
+		wfProfileOut( __METHOD__ );
+		return true;
+	}
+
+	private function main() {
+		global $wgUseFileCache, $wgTitle, $wgUseAjax;
+
+		wfProfileIn( __METHOD__ );
+
+		$request = $this->context->getRequest();
+
+		// Send Ajax requests to the Ajax dispatcher.
+		if ( $wgUseAjax && $request->getVal( 'action', 'view' ) == 'ajax' ) {
+
+			// Set a dummy title, because $wgTitle == null might break things
+			$title = Title::makeTitle( NS_MAIN, 'AJAX' );
+			$this->context->setTitle( $title );
+			$wgTitle = $title;
+
+			$dispatcher = new AjaxDispatcher();
+			$dispatcher->performAction();
+			wfProfileOut( __METHOD__ );
 			return;
 		}
-		if ( $jobRunRate < 1 ) {
-			$max = mt_getrandmax();
-			if ( mt_rand( 0, $max ) > $max * $jobRunRate ) {
-				return;
+
+		// Get title from request parameters,
+		// is set on the fly by parseTitle the first time.
+		$title = $this->getTitle();
+		$action = $this->getAction();
+		$wgTitle = $title;
+
+		// If the user has forceHTTPS set to true, or if the user
+		// is in a group requiring HTTPS, or if they have the HTTPS
+		// preference set, redirect them to HTTPS.
+		// Note: Do this after $wgTitle is setup, otherwise the hooks run from
+		// isLoggedIn() will do all sorts of weird stuff.
+		if (
+			(
+				$request->getCookie( 'forceHTTPS', '' ) ||
+				// check for prefixed version for currently logged in users
+				$request->getCookie( 'forceHTTPS' ) ||
+				// Avoid checking the user and groups unless it's enabled.
+				(
+					$this->context->getUser()->isLoggedIn()
+					&& $this->context->getUser()->requiresHTTPS()
+				)
+			) &&
+			$request->detectProtocol() == 'http'
+		) {
+			$oldUrl = $request->getFullRequestURL();
+			$redirUrl = str_replace( 'http://', 'https://', $oldUrl );
+
+			if ( $request->wasPosted() ) {
+				// This is weird and we'd hope it almost never happens. This
+				// means that a POST came in via HTTP and policy requires us
+				// redirecting to HTTPS. It's likely such a request is going
+				// to fail due to post data being lost, but let's try anyway
+				// and just log the instance.
+				//
+				// @todo @fixme See if we could issue a 307 or 308 here, need
+				// to see how clients (automated & browser) behave when we do
+				wfDebugLog( 'RedirectedPosts', "Redirected from HTTP to HTTPS: $oldUrl" );
 			}
-			$n = 1;
-		} else {
-			$n = intval( $jobRunRate );
+
+			// Setup dummy Title, otherwise OutputPage::redirect will fail
+			$title = Title::newFromText( NS_MAIN, 'REDIR' );
+			$this->context->setTitle( $title );
+			$output = $this->context->getOutput();
+			// Since we only do this redir to change proto, always send a vary header
+			$output->addVaryHeader( 'X-Forwarded-Proto' );
+			$output->redirect( $redirUrl );
+			$output->output();
+			wfProfileOut( __METHOD__ );
+			return;
 		}
 
-		while ( $n-- && false != ( $job = Job::pop() ) ) {
-			$output = $job->toString() . "\n";
-			$t = -wfTime();
-			$success = $job->run();
-			$t += wfTime();
-			$t = round( $t*1000 );
-			if ( !$success ) {
-				$output .= "Error: " . $job->getLastError() . ", Time: $t ms\n";
-			} else {
-				$output .= "Success, Time: $t ms\n";
+		if ( $wgUseFileCache && $title->getNamespace() >= 0 ) {
+			wfProfileIn( 'main-try-filecache' );
+			if ( HTMLFileCache::useFileCache( $this->context ) ) {
+				// Try low-level file cache hit
+				$cache = HTMLFileCache::newFromTitle( $title, $action );
+				if ( $cache->isCacheGood( /* Assume up to date */ ) ) {
+					// Check incoming headers to see if client has this cached
+					$timestamp = $cache->cacheTimestamp();
+					if ( !$this->context->getOutput()->checkLastModified( $timestamp ) ) {
+						$cache->loadFromFileCache( $this->context );
+					}
+					// Do any stats increment/watchlist stuff
+					$this->context->getWikiPage()->doViewUpdates( $this->context->getUser() );
+					// Tell OutputPage that output is taken care of
+					$this->context->getOutput()->disable();
+					wfProfileOut( 'main-try-filecache' );
+					wfProfileOut( __METHOD__ );
+					return;
+				}
 			}
-			wfDebugLog( 'jobqueue', $output );
+			wfProfileOut( 'main-try-filecache' );
 		}
+
+		$this->performRequest();
+
+		// Now commit any transactions, so that unreported errors after
+		// output() don't roll back the whole DB transaction
+		wfGetLBFactory()->commitMasterChanges();
+
+		// Output everything!
+		$this->context->getOutput()->output();
+
+		wfProfileOut( __METHOD__ );
 	}
 
 	/**
 	 * Ends this task peacefully
 	 */
-	function restInPeace() {
+	public function restInPeace() {
+		// Do any deferred jobs
+		DeferredUpdates::doUpdates( 'commit' );
+
+		// Execute a job from the queue
+		$this->doJobs();
+
+		// Log profiling data, e.g. in the database or UDP
 		wfLogProfilingData();
+
+		// Commit and close up!
+		$factory = wfGetLBFactory();
+		$factory->commitMasterChanges();
+		$factory->shutdown();
+
 		wfDebug( "Request ended normally\n" );
 	}
 
 	/**
-	 * Perform one of the "standard" actions
-	 *
-	 * @param $output OutputPage
-	 * @param $article Article
-	 * @param $title Title
-	 * @param $user User
-	 * @param $request WebRequest
+	 * Do a job from the job queue
 	 */
-	function performAction( &$output, &$article, &$title, &$user, &$request ) {
-		wfProfileIn( __METHOD__ );
+	private function doJobs() {
+		global $wgJobRunRate, $wgPhpCli, $IP;
 
-		if ( !wfRunHooks( 'MediaWikiPerformAction', array( $output, $article, $title, $user, $request, $this ) ) ) {
-			wfProfileOut( __METHOD__ );
+		if ( $wgJobRunRate <= 0 || wfReadOnly() ) {
 			return;
 		}
 
-		$action = $this->getVal( 'Action' );
-		if( in_array( $action, $this->getVal( 'DisabledActions', array() ) ) ) {
-			/* No such action; this will switch to the default case */
-			$action = 'nosuchaction';
+		if ( $wgJobRunRate < 1 ) {
+			$max = mt_getrandmax();
+			if ( mt_rand( 0, $max ) > $max * $wgJobRunRate ) {
+				return; // the higher $wgJobRunRate, the less likely we return here
+			}
+			$n = 1;
+		} else {
+			$n = intval( $wgJobRunRate );
 		}
 
-		switch( $action ) {
-			case 'view':
-				$output->setSquidMaxage( $this->getVal( 'SquidMaxage' ) );
-				$article->view();
-				break;
-			case 'watch':
-			case 'unwatch':
-			case 'delete':
-			case 'revert':
-			case 'rollback':
-			case 'protect':
-			case 'unprotect':
-			case 'info':
-			case 'markpatrolled':
-			case 'render':
-			case 'deletetrackback':
-			case 'purge':
-				$article->$action();
-				break;
-			case 'print':
-				$article->view();
-				break;
-			case 'dublincore':
-				if( !$this->getVal( 'EnableDublinCoreRdf' ) ) {
-					wfHttpError( 403, 'Forbidden', wfMsg( 'nodublincore' ) );
-				} else {
-					require_once( 'includes/Metadata.php' );
-					wfDublinCoreRdf( $article );
-				}
-				break;
-			case 'creativecommons':
-				if( !$this->getVal( 'EnableCreativeCommonsRdf' ) ) {
-					wfHttpError( 403, 'Forbidden', wfMsg( 'nocreativecommons' ) );
-				} else {
-					require_once( 'includes/Metadata.php' );
-					wfCreativeCommonsRdf( $article );
-				}
-				break;
-			case 'credits':
-				require_once( 'includes/Credits.php' );
-				showCreditsPage( $article );
-				break;
-			case 'submit':
-				if( session_id() == '' ) {
-					/* Send a cookie so anons get talk message notifications */
-					wfSetupSession();
-				}
-				/* Continue... */
-			case 'edit':
-			case 'editredlink':
-				if( wfRunHooks( 'CustomEditor', array( $article, $user ) ) ) {
-					$internal = $request->getVal( 'internaledit' );
-					$external = $request->getVal( 'externaledit' );
-					$section = $request->getVal( 'section' );
-					$oldid = $request->getVal( 'oldid' );
-					if( !$this->getVal( 'UseExternalEditor' ) || $action=='submit' || $internal ||
-					   $section || $oldid || ( !$user->getOption( 'externaleditor' ) && !$external ) ) {
-						$editor = new EditPage( $article );
-						$editor->submit();
-					} elseif( $this->getVal( 'UseExternalEditor' ) && ( $external || $user->getOption( 'externaleditor' ) ) ) {
-						$mode = $request->getVal( 'mode' );
-						$extedit = new ExternalEdit( $article, $mode );
-						$extedit->edit();
+		if ( !wfShellExecDisabled() && is_executable( $wgPhpCli ) ) {
+			// Start a background process to run some of the jobs.
+			// This will be asynchronous on *nix though not on Windows.
+			wfProfileIn( __METHOD__ . '-exec' );
+			$retVal = 1;
+			$cmd = wfShellWikiCmd( "$IP/maintenance/runJobs.php", array( '--maxjobs', $n ) );
+			wfShellExec( "$cmd &", $retVal );
+			wfProfileOut( __METHOD__ . '-exec' );
+		} else {
+			try {
+				// Fallback to running the jobs here while the user waits
+				$group = JobQueueGroup::singleton();
+				do {
+					$job = $group->pop( JobQueueGroup::USE_CACHE ); // job from any queue
+					if ( $job ) {
+						$output = $job->toString() . "\n";
+						$t = - microtime( true );
+						wfProfileIn( __METHOD__ . '-' . get_class( $job ) );
+						$success = $job->run();
+						wfProfileOut( __METHOD__ . '-' . get_class( $job ) );
+						$group->ack( $job ); // done
+						$t += microtime( true );
+						$t = round( $t * 1000 );
+						if ( $success === false ) {
+							$output .= "Error: " . $job->getLastError() . ", Time: $t ms\n";
+						} else {
+							$output .= "Success, Time: $t ms\n";
+						}
+						wfDebugLog( 'jobqueue', $output );
 					}
-				}
-				break;
-			case 'history':
-				if( $request->getFullRequestURL() == $title->getInternalURL( 'action=history' ) ) {
-					$output->setSquidMaxage( $this->getVal( 'SquidMaxage' ) );
-				}
-				$history = new PageHistory( $article );
-				$history->history();
-				break;
-			case 'raw':
-				$raw = new RawPage( $article );
-				$raw->view();
-				break;
-			default:
-				if( wfRunHooks( 'UnknownAction', array( $action, $article ) ) ) {
-					$output->showErrorPage( 'nosuchaction', 'nosuchactiontext' );
-				}
+				} while ( --$n && $job );
+			} catch ( MWException $e ) {
+				// We don't want exceptions thrown during job execution to
+				// be reported to the user since the output is already sent.
+				// Instead we just log them.
+				MWExceptionHandler::logException( $e );
+			}
 		}
-		wfProfileOut( __METHOD__ );
-
 	}
-
-}; /* End of class MediaWiki */
+}

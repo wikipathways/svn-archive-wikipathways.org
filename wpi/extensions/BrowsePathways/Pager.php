@@ -25,14 +25,16 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 	public function imgToData( $img ) {
 		$data = "";
 		/* FIXME: magic nums for file size */
+		$suffix = $img->thumbName( array( "width" => 180 ) );
 		$path = $img->getPath( );
 
-		if( $img->isLocal() && file_exists( $path )
-			&& filesize( $path ) < 20480 ) { /* 20k is probably too much */
-			$c = file_get_contents( $path );
+		$repo = RepoGroup::singleton()->getLocalRepo();
+		if( $img->isLocal() && $repo->fileExists( $path )
+			&& $repo->getFileSize( $path ) < 20480 ) { /* 20k is probably too much */
+			$c = file_get_contents( $repo->getLocalReference( $path )->getPath() );
 			return "data:" . $img->getMimeType() . ";base64," . base64_encode( $c );
 		}
-		return $thumb->getThumbUrl( $suffix );
+		return $img->getThumbUrl( $suffix );
 	}
 
 	public function hasRecentEdit( $title ) {
@@ -81,7 +83,7 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 			$this->tag = $tag;
 		} else {
 			$label = CurationTag::getUserVisibleTagNames();
-			$this->tag = $label[ wfMsg('browsepathways-all-tags') ];
+			$this->tag = $label[ wfMessage( 'browsepathways-all-tags' )->text() ];
 		}
 
 		// Follwing bit copy-pasta from Pager's IndexPager with some bits replace
@@ -150,7 +152,7 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 	}
 
 	function getIndexField() {
-		return 't1.tag_text';
+		return 'tag_text';
 		# This should look at $this->sortOrder for the field to sort on.
 	}
 
@@ -204,13 +206,11 @@ abstract class BasePathwaysPager extends AlphabeticPager {
 			$width  = $img->getWidth();
 			$height = $img->getHeight();
 
-			$thumb = $img->getThumbnail( $boxwidth, $boxheight );
-			if ( $thumb ) {
-				$thumbUrl = $this->thumbToData($img);
-				$boxwidth = $thumb->width;
-				$boxheight = $thumb->height;
-			} else {
-				$error = $img->getLastError();
+			try {
+				list( $thumb, $thumUrl, $boxwidth, $boxheight )
+					= wpiGetThumb( $img, $boxwidth, $boxheight );
+			} catch ( MWException $e ) {
+				$error = $e->getMessage();
 			}
 
 			if( $thumbUrl == '' ) {
@@ -379,6 +379,7 @@ class ThumbPathwaysPager extends BasePathwaysPager {
 	function __construct( $species, $tag, $sortOrder ) {
 		parent::__construct( $species, $tag, $sortOrder );
 
+		$this->mExtraSortFields = array();
 		$this->mLimit = 10;
 	}
 
