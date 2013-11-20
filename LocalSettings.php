@@ -41,6 +41,8 @@ $wgSitename         = "WikiPathways";
 ## defaults for all runtime URL paths are based off of this.
 $wgScriptPath       = '';
 
+$wgThumbnailScriptPath = "$wgScriptPath/thumb.php";
+
 ## For more information on customizing the URLs please see:
 ## http://www.mediawiki.org/wiki/Manual:Short_URL
 
@@ -323,7 +325,13 @@ $wgHooks['AbortNewAccount'][] = 'abortOnBadDomain';
 
 ##Debug
 $wgDebugLogFile = WPI_SCRIPT_PATH . '/tmp/wikipathwaysdebug.txt';
-//$wgProfiling = true; //Set to true for debugging info
+/* $wgProfiling = true; //Set to true for debugging info */
+
+// Uncommenting the following will give you a separate debug log file
+// for each request.
+if ( !defined( "STDIN" ) ) {
+ 	$wgDebugLogFile .= "-" . $_SERVER['REQUEST_METHOD'] . "-" . urlencode( $_SERVER['REQUEST_URI'] );
+}
 
 ##New Autoloads
 $wgAutoloadClasses['LegacySpecialPage'] = dirname(__FILE__) . '/wpi/LegacySpecialPage.php';
@@ -332,68 +340,14 @@ $wgAutoloadClasses['LegacySpecialPage'] = dirname(__FILE__) . '/wpi/LegacySpecia
 require_once('extensions/GoogleAnalytics/googleAnalytics.php'); //Google Analytics support
 require_once('extensions/inputbox.php');
 require_once('extensions/GoogleGroups.php');
-require_once('wpi/extensions/PathwayOfTheDay.php');
 require_once("$IP/extensions/LocalHooks.php");
-require_once('wpi/extensions/siteStats.php');
-require_once('wpi/extensions/pathwayInfo.php');
-require_once('wpi/extensions/imageSize.php');
-require_once('wpi/extensions/magicWords.php');
 require_once('extensions/EmbedVideo.php');
-require_once('wpi/extensions/PopularPathwaysPage2/PopularPathwaysPage.php');
-require_once('wpi/extensions/MostEditedPathwaysPage/MostEditedPathwaysPage.php');
-require_once('wpi/extensions/NewPathwaysPage/NewPathwaysPage.php');
-require_once('wpi/extensions/CreatePathwayPage/CreatePathwayPage.php');
-require_once('wpi/extensions/pathwayHistory.php');
-require_once('wpi/extensions/LabeledSectionTransclusion/compat.php');
-require_once('wpi/extensions/LabeledSectionTransclusion/lst.php');
-require_once('wpi/extensions/LabeledSectionTransclusion/lsth.php');
-require_once('wpi/extensions/SearchPathways/SearchPathways.php');
-require_once('wpi/extensions/SearchPathways/searchPathwaysBox.php');
-require_once('wpi/extensions/button.php');
-require_once('wpi/extensions/imageLink.php');
-require_once('wpi/extensions/BrowsePathways/BrowsePathways.php');
-require_once('wpi/extensions/editApplet.php');
-require_once('wpi/extensions/listPathways.php');
-require_once('wpi/extensions/movePathway.php');
-require_once('wpi/extensions/deletePathway.php');
-require_once('wpi/batchDownload.php');
-require_once('wpi/extensions/Pathways/PathwayPage.php');
-require_once('wpi/extensions/SpecialWishList/SpecialWishList.php');
-require_once('wpi/extensions/SpecialWishList/TopWishes.php');
-require_once('wpi/extensions/DiffAppletPage/DiffAppletPage.php');
-require_once('wpi/extensions/RecentPathwayChanges/RecentPathwayChanges.php');
-require_once('wpi/extensions/ParserFunctions/ParserFunctions.php' );
-require_once('wpi/extensions/CheckGpmlOnSave.php' );
-require_once('wpi/extensions/CreateUserPage.php' );
-require_once('wpi/extensions/CurationTags/CurationTags.php');
-require_once('wpi/extensions/UserSnoop.php');
-require_once('wpi/extensions/AuthorInfo/AuthorInfo.php');
-require_once('wpi/extensions/CurationTags/SpecialCurationTags/SpecialCurationTags.php');
-require_once('wpi/extensions/UserLoginLog/UserLoginLog.php');
 require_once('extensions/LiquidThreads/LiquidThreads.php');
 require_once('extensions/SocialRewarding/SocialRewarding.php');
-require_once('wpi/extensions/DeletePathway/DeletePathway.php');
-require_once('wpi/extensions/ShowError/ShowError.php');
-require_once('wpi/extensions/pathwayParserFunctions.php');
 require_once('extensions/UserMerge/UserMerge.php');
 require_once('extensions/parseViewRedirect.php');
-require_once('wpi/extensions/PrivatePathways/PrivatePathways.php' );
-require_once('wpi/extensions/PrivatePathways/ListPrivatePathways.php' );
-require_once('wpi/extensions/PrivatePathways/PrivateContributions.php' );
-require_once('wpi/extensions/recentChangesBox.php');
-require_once('wpi/extensions/pathwayBibliography.php');
-require_once('wpi/extensions/otag/otags_main.php');
-require_once('wpi/extensions/ontologyindex/ontologyindex.php');
-require_once('wpi/extensions/PathwayViewer/PathwayViewer.php');
-require_once('wpi/extensions/StubManager/StubManager.php');
-require_once('wpi/extensions/ParserFunctionsHelper/ParserFunctionsHelper.php');
-require_once('wpi/extensions/SecureHTML/SecureHTML.php');
-require_once('wpi/extensions/RSS/rss.php');
-require_once('wpi/extensions/XrefPanel.php');
-require_once('wpi/statistics/StatisticsHook.php');
-require_once('wpi/extensions/PageEditor/PageEditor.php');
+require_once( "$IP/wpi/autoload-setup.php" );
 
-require_once( "wpi/extensions/ContributionScores/ContributionScores.php" );
 $contribScoreIgnoreBots = true;  //Set to true if you want to exclude Bots from the reporting - Can be omitted.
 
 //Each array defines a report - 7,50 is "past 7 days" and "LIMIT 50" - Can be omitted.
@@ -468,8 +422,10 @@ $wgCaptchaTriggers['create'] = false;
 $wgGroupPermissions[ 'sysop'      ][ 'skipcaptcha'    ] = true;
 $wgGroupPermissions[ 'bureaucrat' ][ 'skipcaptcha'    ] = true;
 
+$wgGroupPermissions[ 'curator'    ][ 'skipcaptcha'    ] = true;
+
+$wgGroupPermissions[ 'curator'    ][ 'autocurate'     ] = true;
+
 // If a pathway has been editted within this number of days, it will
 // be highlighted on the browse page
 $wgPathwayRecentSinceDays = 30;
-
-$wgDebugLogFile= "$IP/wpi/tmp/wikipathwaysdebug.txt";
