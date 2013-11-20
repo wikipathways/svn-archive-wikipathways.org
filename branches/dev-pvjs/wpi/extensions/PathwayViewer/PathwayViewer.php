@@ -40,7 +40,7 @@ function displayPathwayViewer(&$parser, $pwId, $imgId) {
 		}
 		$gpml = $pathway->getFileURL(FILETYPE_GPML);
 
-		$script = "<script type=\"{$wgJsMimeType}\">window.onload = function() {pathvisiojs.load({target: '#pwImage', data: \"$gpml\", hiddenElements: ['find','wikipathways-link']});} </script>
+		$script = "<script type=\"{$wgJsMimeType}\">window.onload = function() {pathvisiojs.load({target: '#pwViewer', data: \"$gpml\", hiddenElements: ['find','wikipathways-link']});} </script>
 			<link rel=\"stylesheet\" href=\"http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css\" media=\"screen\" type=\"text/css\" />
 			<link rel=\"stylesheet\" href=\"http://wikipathways.github.io/pathvisiojs/src/css/pathvisio-js.css\" media=\"screen\" type=\"text/css\" />
   			<link rel=\"stylesheet\" href=\"http://wikipathways.github.io/pathvisiojs/src/css/annotation.css\" media=\"screen\" type=\"text/css\" />
@@ -58,6 +58,8 @@ class PathwayViewer {
 		global $wgScriptPath; 
 
                 $scripts = array(   
+			"$wgScriptPath/wpi/js/jquery/plugins/jquery.mousewheel.js",
+                        "$wgScriptPath/wpi/js/jquery/plugins/jquery.layout.min-1.3.0.js",
                         "$wgScriptPath/wpi/lib/js/rgb-color.min.js",    
                         "$wgScriptPath/wpi/lib/js/case-converter.min.js", 
                         "$wgScriptPath/wpi/lib/js/async.js",
