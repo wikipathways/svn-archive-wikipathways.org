@@ -350,7 +350,6 @@ require_once('wpi/extensions/LabeledSectionTransclusion/lsth.php');
 require_once('wpi/extensions/SearchPathways/SearchPathways.php');
 require_once('wpi/extensions/SearchPathways/searchPathwaysBox.php');
 require_once('wpi/extensions/button.php');
-require_once('wpi/extensions/pathwayThumb.php');
 require_once('wpi/extensions/imageLink.php');
 require_once('wpi/extensions/BrowsePathways/BrowsePathways.php');
 require_once('wpi/extensions/editApplet.php');
