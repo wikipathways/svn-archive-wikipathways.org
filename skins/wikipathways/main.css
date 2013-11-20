@@ -464,6 +464,7 @@ div.thumb {
 	//border-style: solid;
 	//border-color: white;
 	width: auto;
+	height: 500px;
 }
 div.thumbinner {
 	border: 1px solid #ccc;
