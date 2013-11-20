@@ -191,8 +191,7 @@ PathwayViewer.prototype.startSVG = function() {
 			overflow: 'hidden',
 			'background-color': '#F9F9F9'
 		});
-                //COMMENTING OUT NEXT LINE TO FIX LOAD ISSUE (not sure why this fix works)
-		//that.showLoadProgress($layout);
+		that.showLoadProgress($layout);
 
 		//Add the SVG object to the center panel
 		var obj_id = that.info.imageId + PathwayViewer.idSvgObject;

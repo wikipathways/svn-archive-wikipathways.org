@@ -39,6 +39,7 @@ import org.jdom.output.XMLOutputter;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.pathvisio.core.biopax.BiopaxElement;
 import org.pathvisio.core.biopax.BiopaxNode;
 import org.pathvisio.core.biopax.PublicationXref;
 import org.pathvisio.core.model.ConverterException;
@@ -231,11 +232,13 @@ private static final Logger log = Logger.getLogger(GenerateLinkOut.class.getName
 	
 	private void addCitations(Element biosystem, Pathway p) {
 		Set<PublicationXref> refs = new HashSet<PublicationXref>();
+		
 		for(BiopaxNode bpe : p.getBiopax().getElements()) {
 			if(bpe instanceof PublicationXref) {
 				refs.add((PublicationXref)bpe);
 			}
 		}
+
 		if(refs.size() == 0) return;
 		
 		Element citations = new Element("citations");
