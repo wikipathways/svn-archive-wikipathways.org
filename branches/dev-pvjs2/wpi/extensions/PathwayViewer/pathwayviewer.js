@@ -1,13 +1,21 @@
-// mater variable for height of pvjs viewer
+/**
+ * JS code to hook into mediawiki divs already in place to 
+ * generate main pathway image, along with log in, edit, 
+ * and download controls. This code does everything right 
+ * up to the point where pvjs is integrated, including the
+ * creation of the pwImage_pvjs div that pvjs targets.
+ */ 
+
+// mater variable for height of pvjs viewer container divs
 var viewer_height = '500px';
 var viewer_width = '800px';
 
 /**
- *  After page is ready:
+ *  When page is ready:
  *   1. Grab pwImage div; clean up <a>; remove <img>
  *   2. Prepare new divs inside thumbinner
- *   3. Animate window 
- *   4. load pvjs
+ *   3. Animate window, if supported 
+ *   4. Add final div for pvjs
  */
 $(window).ready(function() {
 
@@ -23,65 +31,56 @@ $(window).ready(function() {
 	}
 	var container = $('<div />')
 		.attr('id', 'pwImage_container')
-		.css({width: viewer_width, height: viewer_height});
+		.css({width: viewer_width, height: viewer_height, margin:'0 0 50px 0'}); //TODO: remove margin once pvjs typeahead div is fixed
 	var parent = img.parent();
 	img.after(container);
 	img.remove();
 
-//	var layout=$('<div/>')
-//		.attr('id', 'pwImage_layout')
-//		.css({width:'100%',height:'100%'});
-//	var viewer=$('<div/>')
-//		.addClass('ui-layout-center')
-//		.css({border:'1px solid #BBBBBB','background-color':'#FFFFFF'});
-//	layout.append(viewer);
-
-	var pvjs = $('<div/>')
-		.attr('id','pwImage_pvjs')
-		.css({width: viewer_width,height: viewer_height});
-	container.append(pvjs);
+        //Make room for the login/edit/download buttons at the bottom
+        parent.css({
+                padding: '3px 6px 80px 3px' //TODO: reduce bottom to 30px once pvjs typeahead div is fixed
+        });     
 
         if (ie) { //Animate gives problems in IE, just change style directly
                 parent.css({
-                	idth: viewer_width,
-                	eight: viewer_height
+                	width: viewer_width,
+                	height: viewer_height
                 });
-                afterAnimate();
+                afterAnimate(container);
         } else { //Animate for smooth transition
                 parent.animate({
                         width: viewer_width,
                         height: viewer_height
-                }, 300, afterAnimate);
+                }, 300, afterAnimate(container));
         }
-	parent.css({
-		padding: '3px 6px 30px 3px'
-	});
-	
-      	var afterAnimate = function() {
-		container.append(layout);
-        	var pvjs=$('<div/>')
-        		.attr('id','pwImage_pvjs');
-        	layout.append(pvjs);
 
-	};
 }); 
 
+/**
+ * Adds the final div and the future home of the pvjs code.
+ */
+var afterAnimate = function(c) {
+        var pvjs = $('<div/>')
+                .attr('id','pwImage_pvjs')
+                .css({width: viewer_width,height: viewer_height});
+        c.append(pvjs);
+};
 
-// ----------------------------------------------------------
-// A short snippet for detecting versions of IE in JavaScript
-// without resorting to user-agent sniffing
-// ----------------------------------------------------------
-// If you're not in IE (or IE version is less than 5) then:
-//     ie === undefined
-// If you're in IE (>=5) then you can determine which version:
-//     ie === 7; // IE7
-// Thus, to detect IE:
-//     if (ie) {}
-// And to detect the version:
-//     ie === 6 // IE6
-//     ie > 7 // IE8, IE9 ...
-//     ie < 9 // Anything less than IE9
-// ----------------------------------------------------------
+/** 
+ * A short snippet for detecting versions of IE in JavaScript
+ * without resorting to user-agent sniffing
+ * 
+ * If you're not in IE (or IE version is less than 5) then:
+ *     ie === undefined
+ * If you're in IE (>=5) then you can determine which version:
+ *     ie === 7;  // IE7
+ * Thus, to detect IE:
+ *     if (ie) {}
+ * And to detect the version:
+ *     ie === 6  // IE6
+ *     ie > 7  // IE8, IE9 ...
+ *     ie < 9 // Anything less than IE9
+ */
 
 var ie = (function(){
 
