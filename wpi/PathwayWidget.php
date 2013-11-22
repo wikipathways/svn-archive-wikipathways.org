@@ -88,7 +88,7 @@ echo "<script type=\"text/javascript\">window.onload = function() {pathvisiojs.l
 </head>
 <body>
 <div id="pathwayImage"><img src="" /></div>
-<div style="position:absolute;height:0px;overflow:visible;bottom:0;right:0;">
+<div style="position:absolute;height:0px;overflow:visible;bottom:0;right:15px;">
 	<div id="logolink">
 		<?php
 			echo "<a id='wplink' target='top' href='{$pathway->getFullUrl()}'>View at ";
