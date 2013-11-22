@@ -47,15 +47,19 @@ html, body {
 </style>
 <meta name="svg.render.forceflash" content="true">
 <?php
-	  echo '<link rel="stylesheet" href="' . $cssJQueryUI . '" type="text/css" />' . "\n";
-
+//	  echo '<link rel="stylesheet" href="' . $cssJQueryUI . '" type="text/css" />' . "\n";
+	 echo "<link rel=\"stylesheet\" href=\"http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css\" media=\"screen\" type=\"text/css\" />
+                        <link rel=\"stylesheet\" href=\"http://wikipathways.github.io/pathvisiojs/src/css/pathvisio-js.css\" media=\"screen\" type=\"text/css\" />
+                        <link rel=\"stylesheet\" href=\"http://wikipathways.github.io/pathvisiojs/src/css/annotation.css\" media=\"screen\" type=\"text/css\" />
+                        <link rel=\"stylesheet\" href=\"http://wikipathways.github.io/pathvisiojs/src/css/pan-zoom.css\" media=\"screen\" type=\"text/css\" />
+                        <link rel=\"stylesheet\" href=\"http://wikipathways.github.io/pathvisiojs/src/css/pathway-template.css\" media=\"screen\" type=\"text/css\" />\n";
 //Initialize javascript
-echo '<script type="text/javascript" src="' . $jsJQuery . '"></script>' . "\n";
+//echo '<script type="text/javascript" src="' . $jsJQuery . '"></script>' . "\n";
 
-$jsSnippets = XrefPanel::getJsSnippets();
-foreach($jsSnippets as $js) {
-	echo "<script type=\"text/javascript\">$js</script>\n";
-}
+//$jsSnippets = XrefPanel::getJsSnippets();
+//foreach($jsSnippets as $js) {
+//	echo "<script type=\"text/javascript\">$js</script>\n";
+//}
 
 $imgPath = "$wgServer/$wgScriptPath/skins/common/images/";
 echo "<script type=\"text/javascript\">XrefPanel_imgPath = '$imgPath';</script>";
@@ -77,21 +81,8 @@ if($rev) {
 $svg = $pathway->getFileURL(FILETYPE_IMG);
 $gpml = $pathway->getFileURL(FILETYPE_GPML);
 
-echo <<<SCRIPT
-<script type="text/javascript">
-	PathwayViewer_basePath = '$wfPathwayViewerPath/';
-	PathwayViewer_viewers.push(new PathwayViewer({
-		imageId: "pathwayImage",
-		svgUrl: "$svg",
-		gpmlUrl: "$gpml",
-		start: true,
-		width: '100%',
-		height: '100%'
-	}));
-	$search
-	$bridge
-</script>
-SCRIPT;
+echo "<script type=\"text/javascript\">window.onload = function() {pathvisiojs.load({target: '#pathwayImage', data: \"$gpml\"});}</script>";
+
 ?>
 <title>WikiPathways Pathway Viewer</title>
 </head>
