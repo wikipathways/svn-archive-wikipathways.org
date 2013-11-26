@@ -8,7 +8,9 @@
 
 // mater variable for height of pvjs viewer container divs
 var viewer_height = '500px';
-var viewer_width = '800px';
+var viewer_width = '100%';
+var viewer_min_width = '700px';
+var viewer_max_width = '1200px';
 
 /**
  *  When page is ready:
@@ -31,7 +33,12 @@ $(window).ready(function() {
 	}
 	var container = $('<div />')
 		.attr('id', 'pwImage_container')
-		.css({width: viewer_width, height: viewer_height, margin:'0 0 50px 0'}); //TODO: remove margin once pvjs typeahead div is fixed
+		.css({	width: viewer_width, 
+			'min-width': viewer_min_width, 
+			'max-width': viewer_max_width, 
+			height: viewer_height, 
+			margin:'0 0 50px 0' //TODO: remove margin once pvjs typeahead div is fixed
+		}); 
 	var parent = img.parent();
 	img.after(container);
 	img.remove();
@@ -44,12 +51,16 @@ $(window).ready(function() {
         if (ie) { //Animate gives problems in IE, just change style directly
                 parent.css({
                 	width: viewer_width,
-                	height: viewer_height
+                	'min-width': viewer_min_width, 
+                        'max-width': viewer_max_width, 
+                        height: viewer_height
                 });
                 afterAnimate(container);
         } else { //Animate for smooth transition
                 parent.animate({
                         width: viewer_width,
+			'min-width': viewer_min_width, 
+                        'max-width': viewer_max_width, 
                         height: viewer_height
                 }, 300, afterAnimate(container));
         }
@@ -62,7 +73,11 @@ $(window).ready(function() {
 var afterAnimate = function(c) {
         var pvjs = $('<div/>')
                 .attr('id','pwImage_pvjs')
-                .css({width: viewer_width,height: viewer_height});
+                .css({	width: viewer_width,
+			'min-width': viewer_min_width, 
+                        'max-width': viewer_max_width, 
+                        height: viewer_height
+		});
         c.append(pvjs);
 };
 
