@@ -256,7 +256,7 @@ XrefPanel.create = function(id, datasource, species, symbol){
         }
         dataSources.sort();
         
-        $accordion = $('<div />');
+        $accordion = $('<div class="ui-accordion-icons" />');
         for (var dsi in dataSources) {
             var ds = dataSources[dsi];
             var xrefHtml = '<table>';
