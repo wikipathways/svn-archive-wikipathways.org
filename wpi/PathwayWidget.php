@@ -55,7 +55,7 @@ html, body {
                         <link rel=\"stylesheet\" href=\"$wpScriptPath/wpi/lib/css/pathway-diagram.css\" media=\"screen\" type=\"text/css\" />
                         \n";
 //Initialize javascript
-//echo '<script type="text/javascript" src="' . $jsJQuery . '"></script>' . "\n";
+echo '<script type="text/javascript" src="' . $jsJQuery . '"></script>' . "\n";
 
 //Needed for xrefinfo buttons in External References section
 $jsSnippets = XrefPanel::getJsSnippets();
