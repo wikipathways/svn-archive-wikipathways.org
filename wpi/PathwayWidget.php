@@ -49,10 +49,8 @@ html, body {
 <meta name="svg.render.forceflash" content="true">
 <?php
 //	  echo '<link rel="stylesheet" href="' . $cssJQueryUI . '" type="text/css" />' . "\n";
-          echo "<link rel=\"stylesheet\" href=\"http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css\" media=\"screen\" type=\"text/css\" />
-                        <link rel=\"stylesheet\" href=\"$wpScriptPath/wpi/lib/css/pathvisiojs.css\" media=\"screen\" type=\"text/css\" />
-                        <link rel=\"stylesheet\" href=\"$wpScriptPath/wpi/lib/css/annotation.css\" media=\"screen\" type=\"text/css\" />
-                        <link rel=\"stylesheet\" href=\"$wpScriptPath/wpi/lib/css/pathway-diagram.css\" media=\"screen\" type=\"text/css\" />
+          echo "<link rel=\"stylesheet\" href=\"http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css\" media=\"screen\" type=\"text/css\">
+	  <link rel=\"stylesheet\" href=\"$wpScriptPath/wpi/lib/pathvisiojs/css/pathvisiojs.css\" media=\"screen\" type=\"text/css\" />
                         \n";
 //Initialize javascript
 echo '<script type="text/javascript" src="' . $jsJQuery . '"></script>' . "\n";
@@ -125,7 +123,7 @@ $svg = $pathway->getFileURL(FILETYPE_IMG);
 $png = $pathway->getFileURL(FILETYPE_PNG);                                                                                                        
 $gpml = $pathway->getFileURL(FILETYPE_GPML);                                                                                                      
                                                                                                                                                   
-echo "<script type=\"text/javascript\">window.onload = function() {pathvisiojs.load({container: '#pathwayImage',fitToContainer:'true', sourceData: [{uri:\"$gpml\",fileType:\"gpml\"},{uri:\"$png\", fileType:\"png\"}] $highlights });}</script>";
+echo "<script type=\"text/javascript\">window.onload = function() {var pathvisiojsInstance = Object.create(pathvisiojs); pathvisiojsInstances.load({container: '#pathwayImage',fitToContainer:'true', sourceData: [{uri:\"$gpml\",fileType:\"gpml\"},{uri:\"$png\", fileType:\"png\"}] $highlights });}</script>";
                                                                                                                                                   
 ?> 
 <title>WikiPathways Pathway Viewer</title>
