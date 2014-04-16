@@ -123,13 +123,20 @@ $svg = $pathway->getFileURL(FILETYPE_IMG);
 $png = $pathway->getFileURL(FILETYPE_PNG);                                                                                                        
 $gpml = $pathway->getFileURL(FILETYPE_GPML);                                                                                                      
                                                                                                                                                   
-echo "<script type=\"text/javascript\">window.onload = function() {var pathvisiojsInstance = Object.create(pathvisiojs); pathvisiojsInstances.load({container: '#pathwayImage',fitToContainer:'true', sourceData: [{uri:\"$gpml\",fileType:\"gpml\"},{uri:\"$png\", fileType:\"png\"}] $highlights });}</script>";
-                                                                                                                                                  
-?> 
+	if(!preg_match('/(?i)msie [6-9]/',$_SERVER['HTTP_USER_AGENT'])) {
+		echo "<script type=\"text/javascript\">window.onload = function() {var pathvisiojsInstance = Object.create(pathvisiojs); pathvisiojsInstance.load({container: '#pathwayImage',fitToContainer:'true', sourceData: [{uri:\"$gpml\",fileType:\"gpml\"},{uri:\"$png\", fileType:\"png\"}] $highlights });}</script>";
+	}
+?>
 <title>WikiPathways Pathway Viewer</title>
 </head>
 <body>
-<div id="pathwayImage"><img src="" /></div>
+<div id="pathwayImage">
+	<?php
+		if(preg_match('/(?i)msie [6-9]/',$_SERVER['HTTP_USER_AGENT'])) {
+			echo "<img src=\"$png\" alt='View SVG' width='600' height='420' class='thumbimage>";
+		}
+	?>
+</div>
 <div style="position:absolute;height:0px;overflow:visible;bottom:0;left:15px;">
 	<div id="logolink">
 		<?php
