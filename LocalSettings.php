@@ -429,3 +429,6 @@ $wgGroupPermissions[ 'curator'    ][ 'autocurate'     ] = true;
 // If a pathway has been editted within this number of days, it will
 // be highlighted on the browse page
 $wgPathwayRecentSinceDays = 30;
+
+// Do not display E_NOTICE PHP errors
+error_reporting(E_ALL ^ E_NOTICE);
