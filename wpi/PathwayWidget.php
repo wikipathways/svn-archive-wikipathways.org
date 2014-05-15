@@ -37,8 +37,10 @@ html, body {
 	width:100%;
 	height:100%;
 }
-#pathwayImage {
+#pwImage_pvjs {
+/*
 	position:fixed;
+//*/
 	top:0;
 	left:0;
 	font-size:12px;
@@ -46,11 +48,10 @@ html, body {
 	height:100%;
 }
 </style>
-<meta name="svg.render.forceflash" content="true">
 <?php
 //	  echo '<link rel="stylesheet" href="' . $cssJQueryUI . '" type="text/css" />' . "\n";
           echo "<link rel=\"stylesheet\" href=\"http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css\" media=\"screen\" type=\"text/css\">
-	  <link rel=\"stylesheet\" href=\"$wgScriptPath/wpi/lib/pathvisiojs/css/pathvisiojs.css\" media=\"screen\" type=\"text/css\" />
+	  <link rel=\"stylesheet\" href=\"$wgScriptPath/wpi/lib/pathvisiojs/css/pathvisiojs.bundle.css\" media=\"screen\" type=\"text/css\" />
                         \n";
 //Initialize javascript
 echo '<script type="text/javascript" src="' . $jsJQuery . '"></script>' . "\n";
@@ -121,18 +122,16 @@ if($rev) {
                                                                                                                                                   
 $svg = $pathway->getFileURL(FILETYPE_IMG);                                                                                                        
 $png = $pathway->getFileURL(FILETYPE_PNG);                                                                                                        
+echo "<script>pngFilePath = \"$png\"</script>";
 $gpml = $pathway->getFileURL(FILETYPE_GPML);                                                                                                      
-                                                                                                                                                  
-	if(!preg_match('/(?i)msie [6-9]/',$_SERVER['HTTP_USER_AGENT'])) {
-		echo "<script type=\"text/javascript\">window.onload = function() {var pathvisiojsInstance = Object.create(pathvisiojs); pathvisiojsInstance.load({container: '#pathwayImage',fitToContainer:'true', sourceData: [{uri:\"$gpml\",fileType:\"gpml\"},{uri:\"$png\", fileType:\"png\"}] $highlights });}</script>";
-	}
+echo "<script>gpmlFilePath = \"$gpml\"</script>";
 ?>
 <title>WikiPathways Pathway Viewer</title>
 </head>
 <body>
-<div id="pathwayImage">
+<div id="pwImage_pvjs">
 	<?php
-		if(preg_match('/(?i)msie [6-9]/',$_SERVER['HTTP_USER_AGENT'])) {
+		if(preg_match('/(?i)msie [6-8]/',$_SERVER['HTTP_USER_AGENT'])) {
 			echo "<img src=\"$png\" alt='View SVG' width='600' height='420' class='thumbimage>";
 		}
 	?>
@@ -145,5 +144,134 @@ $gpml = $pathway->getFileURL(FILETYPE_GPML);
 		?>
 	</div>
 </div>
+<script>
+if (Modernizr.inlinesvg) {
+  $(function(){
+
+    var colors;
+    if (!!queryStringParameters.colors) {
+      colors = queryStringParameters.colors.split(',');
+    }
+
+    var xrefs = queryStringParameters.xref;
+    if (!!xrefs && (typeof(xrefs) === 'string')) {
+      xrefs = [xrefs];
+    }
+    var xrefHighlights = [];
+    var xrefIndex = 0;
+    _.forEach(xrefs, function(xref) {
+      var xrefHighlight = {};
+      xrefHighlight.id = xref.split(',')[0];
+      xrefHighlight.color = colors[xrefIndex] || colors[0];
+      xrefHighlights.push(xrefHighlight);
+      xrefIndex += 1;
+    });
+
+    var labels = queryStringParameters.label;
+    if (!!labels && (typeof(labels) === 'string')) {
+      labels = [labels];
+    }
+    var labelIndex = 0;
+    var labelHighlights = [];
+    _.forEach(labels, function(label) {
+      var labelHighlight = {};
+      labelHighlight.id = label;
+      labelHighlight.color = colors[labelIndex] || colors[0];
+      labelHighlights.push(labelHighlight);
+      labelIndex += 1;
+    });
+
+    $('#pwImage_pvjs').pathvisiojs({
+      fitToContainer: true,
+      manualRender: true,
+      sourceData: [{uri:gpmlFilePath, fileType:'gpml'},{uri:pngFilePath, fileType:'png'}]
+    });
+
+    var pathInstance = $('#pwImage_pvjs').pathvisiojs('get').pop();
+
+    pathvisiojsNotifications(pathInstance, {displayErrors: true, displayWarnings: false});
+
+    pathInstance.on('rendered', function(){
+      var hi = pathvisiojsHighlighter(pathInstance);
+
+      if (!!labelHighlights && labelHighlights.length > 0) {
+        labelHighlights.forEach(function(labelHighlight) {
+          hi.highlight(labelHighlight.id, null, {fill: labelHighlight.color, stroke: labelHighlight.color});
+        });
+      }
+
+      if (!!xrefHighlights && xrefHighlights.length > 0) {
+        xrefHighlights.forEach(function(xrefHighlight) {
+          hi.highlight('xref:' + xrefHighlight.id, null, {fill: xrefHighlight.color, stroke: xrefHighlight.color});
+        });
+      }
+    });
+
+    pathInstance.render();
+  });
+}
+
+
+
+
+/*
+if (Modernizr.inlinesvg) {
+  $(function(){
+
+    var colors;
+    if (!!queryStringParameters.colors) {
+      colors = queryStringParameters.colors.split(',');
+    }
+    var xrefHighlights = [];
+    var xrefIndex = 0;
+    _.forEach(queryStringParameters.xref, function(xref) {
+      var xrefHighlight = {};
+      xrefHighlight.id = xref.split(',')[0];
+      xrefHighlight.color = colors[xrefIndex] || colors[0];
+      xrefHighlights.push(xrefHighlight);
+      xrefIndex += 1;
+    });
+
+    var labelIndex = 0;
+    var labelHighlights = [];
+    _.forEach(queryStringParameters.label, function(label) {
+      var labelHighlight = {};
+      labelHighlight.id = label;
+      labelHighlight.color = colors[labelIndex] || colors[0];
+      labelHighlights.push(labelHighlight);
+      labelIndex += 1;
+    });
+
+    $('#pwImage_pvjs').pathvisiojs({
+      fitToContainer: true,
+      manualRender: true,
+      sourceData: [{uri:gpmlFilePath, fileType:'gpml'},{uri:pngFilePath, fileType:'png'}]
+    });
+
+    var pathInstance = $('#pwImage_pvjs').pathvisiojs('get').pop();
+
+    pathvisiojsNotifications(pathInstance, {displayErrors: true, displayWarnings: true});
+
+    pathInstance.on('rendered', function(){
+      var hi = pathvisiojsHighlighter(pathInstance);
+
+      if (!!labelHighlights && labelHighlights.length > 0) {
+        labelHighlights.forEach(function(labelHighlight) {
+          hi.highlight(labelHighlight.id, null, {fill: labelHighlight.color, stroke: labelHighlight.color});
+        });
+      }
+
+      if (!!xrefHighlights && xrefHighlights.length > 0) {
+        xrefHighlights.forEach(function(xrefHighlight) {
+          hi.highlight('xref:' + xrefHighlight.id, null, {fill: xrefHighlight.color, stroke: xrefHighlight.color});
+        });
+      }
+    });
+
+    pathInstance.render();
+  });
+}
+//*/
+<script>
 </body>
 </html>
