@@ -42,15 +42,12 @@ function displayPathwayViewer(&$parser, $pwId, $imgId) {
                 $gpml = $pathway->getFileURL(FILETYPE_GPML);
 
 		// Option #1: do browser detection with PHP
-		if(!preg_match('/(?i)msie [6-9]/',$_SERVER['HTTP_USER_AGENT'])) {
+		if(!preg_match('/(?i)msie [6-8]/',$_SERVER['HTTP_USER_AGENT'])) {
 		    // if IE>8
-			$script = "<script type=\"{$wgJsMimeType}\">window.addEventListener('load', function() {var pathvisiojsInstance = Object.create(pathvisiojs); pathvisiojsInstance.load({container: '#pwImage_pvjs', sourceData: [{uri:\"$gpml\", fileType:\"gpml\"},{uri:\"$png\", fileType:\"png\"}],fitToContainer:'true'});}, false);</script>";
+			$script = "<script>var gpmlFilePath = \"$gpml\"; var pngFilePath = \"$png\";</script>";
 		}
-
-		// Option #2: do browser detection with JS
-                //$script = "<script type=\"{$wgJsMimeType}\">window.addEventListener('load', function() { var isIE = function() { var myNav = navigator.userAgent.toLowerCase(); return (myNav.indexOf('msie') != -1) ? parseInt(myNav.split('msie')[1], 10) : false; }; if (Modernizr.inlinesvg && (!pathvisiojs.utilities.isIE() || pathvisiojs.utilities.isIE() > 9)) { var pathvisiojsInstance = Object.create(pathvisiojs); pathvisiojsInstance.load({ container: '#pwImage_pvjs', sourceData: [{ uri: \"$gpml\", fileType: 'gpml' }, { uri: \"$png\", fileType: 'png' }], fitToContainer: 'true' }); } }, false);</script>";
 		$script = $script . "<link rel=\"stylesheet\" href=\"http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css\" media=\"screen\" type=\"text/css\">
-			<link rel=\"stylesheet\" href=\"$wgScriptPath/wpi/lib/pathvisiojs/css/pathvisiojs.css\" media=\"screen\" type=\"text/css\" />
+			<link rel=\"stylesheet\" href=\"$wgScriptPath/wpi/lib/pathvisiojs/css/pathvisiojs.bundle.css\" media=\"screen\" type=\"text/css\" />
 			\n";
 		return array($script, 'isHTML'=>1, 'noparse'=>1);
 	} catch(Exception $e) {
@@ -63,31 +60,26 @@ class PathwayViewer {
 	static function getJsDependencies() {
 		global $wgScriptPath; 
 
-		if(preg_match('/(?i)msie [6-9]/',$_SERVER['HTTP_USER_AGENT'])) {
+		if(preg_match('/(?i)msie [6-8]/',$_SERVER['HTTP_USER_AGENT'])) {
 		    // if IE<=8
 			$scripts = array(   
-/* It appears all of these are used for the pathway viewer. If pvjs won't render and we're just using the thumbnail, there's no need for them. -AR
-				"$wgScriptPath/wpi/extensions/PathwayViewer/pathwayviewer.js",
-				"$wgScriptPath/wpi/js/jquery/plugins/jquery.mousewheel.js",
-				"$wgScriptPath/wpi/js/jquery/plugins/jquery.layout.min-1.3.0.js",
-//*/
 			);  
 		}
 		else {
 		    // if IE>8
 			$scripts = array(   
+				"$wgScriptPath/wpi/js/querystring-parameters.js",
 				"$wgScriptPath/wpi/extensions/PathwayViewer/pathwayviewer.js",
 				"$wgScriptPath/wpi/js/jquery/plugins/jquery.mousewheel.js",
 				"$wgScriptPath/wpi/js/jquery/plugins/jquery.layout.min-1.3.0.js",
 				// pvjs libs
 				"//cdnjs.cloudflare.com/ajax/libs/async/0.7.0/async.js",
-				"$wgScriptPath/wpi/lib/he/js/he.js", 
-				"$wgScriptPath/wpi/lib/d3/js/d3-with-aight.min.js", 
-			//        "$wgScriptPath/wpi/lib/js/jquery.min.js", //NOTE: careful, this can cause conflicts and break xrefinfo and edit functions
+				"//cdnjs.cloudflare.com/ajax/libs/d3/3.4.6/d3.min.js", 
+				"//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js",
 				"//cdnjs.cloudflare.com/ajax/libs/modernizr/2.7.1/modernizr.min.js",   
-				"//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.9.3/typeahead.min.js",
+				"//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.10.2/typeahead.bundle.min.js",
 				// pvjs
-				"$wgScriptPath/wpi/lib/pathvisiojs/js/pathvisiojs.min.js",
+				"$wgScriptPath/wpi/lib/pathvisiojs/js/pathvisiojs.bundle.min.js",
 			);  
 		}
 
