@@ -1,0 +1,125 @@
+{"@context":{
+    "@vocab": "http://vocabularies.wikipathways.org/gpml#",
+    "dataSource": "biopax:dataSource",
+    "biopaxId": "biopax:id",
+    "biopaxDb": "biopax:db",
+    "smallMolecule":"biopax:SmallMolecule",
+    "dna":"biopax:Dna",
+    "gene":"biopax:Gene",
+    "rna":"biopax:Rna",
+    "protein":"biopax:Protein",
+    "pathway": "biopax:Pathway",
+    "group": {
+      "@container": "@list",
+      "@id": "gpml:Group"
+    },
+    "interaction": {
+      "@id": "biopax:Interaction",
+      "@type": "@id"
+    },
+    "interactionType": {
+      "@id": "biopax:InteractionType",
+      "@type": "@id"
+    },
+    "cellularLocation":{
+      "@id":"biopax:cellularLocation",
+      "@type":"@id"
+    },
+    "interactionGraph": "@graph",
+    "lastModified": "gpml:Last-Modified",
+    "points": {
+      "@container": "@list",
+      "@id": "gpml:Point"
+    },
+    "publicationXref": {
+      "@id":"biopax:PublicationXref",
+      "@type":"@id"
+    },
+    "unificationXref":{
+      "@id":"biopax:UnificationXref",
+      "@type":"@id"
+    },
+    "author": "schema:author",
+    "backgroundColor": "css2:colors.html#propdef-background-color",
+    "backgroundImage": "css2:colors.html#propdef-background-image",
+    "biopax": "http://www.biopax.org/release/biopax-level3.owl#",
+    "borderColor": "css2:box.html#propdef-border-color",
+    "borderStyle": "css2:box.html#propdef-border-style",
+    "borderWidth": "css2:box.html#propdef-border-width",
+    "boxSizing": {
+      "@id": "css3Ui:box-sizing",
+      "@value": "border-box"
+    },
+    "color": "css2:colors.html#propdef-color",
+    "css2": "http://www.w3.org/TR/CSS2/",
+    "css3Ui": "http://www.w3.org/TR/css3-ui/#",
+    "cssTransform": "http://www.w3.org/TR/css-transforms-1/#",
+    "gpmlDataNodeType": "gpml:Type",
+    "ex": "http://www.example.org/",
+    "fontFamily": "css2:fonts.html#font-family-prop",
+    "fontSize": "css2:fonts.html#propdef-font-size",
+    "fontStyle": "css2:fonts.html#propdef-font-style",
+    "fontWeight": "css2:fonts.html#propdef-font-weight",
+    "gpml": "http://vocabularies.wikipathways.org/gpml#",
+    "ncbigene": "http://identifiers.org/ncbigene/",
+    "HMDB": "http://identifiers.org/hmdb/HMDB",
+    "GO":"http://identifiers.org/go/GO:",
+    "ChEBI": "http://identifiers.org/chebi/CHEBI:",
+    "SBO":"http://identifiers.org/biomodels.sbo/SBO:",
+    "height": "css2:visudet.html#propdef-height",
+    "id": "@id",
+    "image": "schema:image",
+    "interactsWith": {
+      "@id": "wp:interactsWith",
+      "@type": "@id"
+    },
+    "dcterms": "http://purl.org/dc/terms/",
+    "isPartOf": {
+      "@id": "dcterms:isPartOf",
+      "@type": "@id"
+    },
+    "contains": {
+      "@reverse": "isPartOf",
+      "@type": "@id"
+    },
+    "references":{
+      "@id":"dcterms:references",
+      "@type":"@id"
+    },
+    "media": "http://www.w3.org/TR/mediaont-10/",
+    "name": "http://xmlns.com/foaf/0.1/name",
+    "organism": "biopax:organism",
+    "padding": "css2:box.html#propdef-padding",
+    "entities": {
+      "@container": "@list",
+      "@id": "biopax:Entity"
+    },
+    "markerStart":"svg:painting.html#MarkerStartProperty",
+    "markerEnd":"svg:painting.html#MarkerEndProperty",
+    "position": "css2:visuren.html#propdef-position",
+    "rotate": "cssTransform:funcdef-rotate",
+    "schema": "http://schema.org/",
+    "shapeLibrary": "http://shapelibrary.example.org/",
+    "shape": "shapeLibrary:shape",
+    "stroke": "svg:painting.html#StrokeProperty",
+    "strokeWidth": "svg:painting.html#StrokeWidthProperty",
+    "svg": "http://www.w3.org/TR/SVG11/",
+    "textAlign": "css2:text.html#propdef-text-align",
+    "verticalAlign": "css2:visudet.html#propdef-vertical-align",
+    "width": "css2:visudet.html#propdef-width",
+    "wp": "http://vocabularies.wikipathways.org/wp#",
+    "wpId": "http://identifiers.org/wikipathways/",
+    "x": {
+      "@id": "css2:visuren.html#propdef-left",
+      "@type": "xsd:integer"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "y": {
+      "@id": "css2:visuren.html#propdef-top",
+      "@type": "xsd:integer"
+    },
+    "zIndex": {
+      "@id": "css2:z-index",
+      "@type": "xsd:integer"
+    }
+}}
