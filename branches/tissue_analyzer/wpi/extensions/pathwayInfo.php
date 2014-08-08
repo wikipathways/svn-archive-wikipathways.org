@@ -49,10 +49,14 @@ require_once("Pathways/Pathway.php");
 /* Need autoloader here */
 class PathwayInfo extends PathwayData {
 	private $parser;
+	private $gpml;
+	private $name;
 
 	function __construct($parser, $pathway) {
-		parent::__construct($pathway);
+		parent::__construct ( $pathway );
 		$this->parser = $parser;
+		$this->name = $pathway->getName () ;
+		$this->gpml = $pathway->getFileName ( $pathway->getName () );
 	}
 
 	/**
@@ -169,5 +173,127 @@ class PathwayInfo extends PathwayData {
 			$table = "";
 		}
 		return $table;
+	}
+
+	// Add this function in the Template Pathways Bottom page
+	// 
+	// == Tissue Table == 
+	// {{CheckAvailable|data={{ #pathwayInfo: {{PAGENAME}}|tissueTable}}|msg=''No DataNodes''}}
+	//
+	// Create the Tissue Table
+	function tissueTable() {
+		$pieces = explode ( ".", $this->gpml );
+		$path_name = str_replace ( " ", '_',$this->name);
+		$filename = "wpi/data/TissueAnalyzer/Hs_$pieces[1]_$pieces[0].txt";
+		$filename2 = "wpi/data/TissueAnalyzer/".$path_name."_".$pieces[0].".txt";
+		$filename = (file_exists ( $filename )) ? $filename : $filename2;
+		
+		if (file_exists ( $filename )) {
+			
+			$file = fopen ( $filename, r );
+			$nrShow = 5;
+			$expand = "<b>View all...</b>";
+			$collapse = "<b>View first  $nrShow...</b>";
+			$id = "tissue";
+			//
+			$button = "<table><td width='51%'>
+					<div onClick='" . 'doToggle("' . $id . '", this, "' . $expand . '", "' . $collapse . '")' . "' style='cursor:pointer;color:#0000FF'>" . "$expand</div><td width='45%'></table>";
+			$tags = "				
+				<table id='tissue' class='wikitable sortable' >
+				<tr class='table-blue-tableheadings'>
+				<td class='table-blue-headercell'>Tissue name</td>
+				<td colspan=2>Median expression </td>
+				<td class='table-blue-headercell'>Mean expression</td>
+				<td class='table-blue-headercell'>Active gene measured (%)</td>
+				<td class='table-blue-headercell'>Ensembl active gene list ( data base link) </td></tr>";
+			
+			$url = array ();
+			$mean = array ();
+			$perc = array ();
+			$median = array ();
+			$active = array ();
+			while ( ! feof ( $file ) ) {
+				$line = fgets ( $file );
+				if ($line == false)
+					break;
+				$pieces = explode ( "\t", $line );
+				$name = str_replace ( " ", '+', $pieces [0] );
+				
+				$genes = explode ( ",", $pieces [4] );
+				$list_genes = "";
+				foreach ( $genes as $gene ) {
+					$info = explode ( ' ', $gene );
+					if (count ( $info ) > 1) {
+						$tmp = $info [2];
+						$tmp = trim ( $tmp );
+						$list_genes .= ' <a target="_blank"	href=' . $tmp . '>' . $info [1] . '</a> ';
+					}
+				}
+				$href = '<a target="_blank" 
+						href="http://test2.wikipathways.org/index.php/Special:TissueAnalyzer?select=' . $name . '&button=submit">' . $pieces [0] . '</a>';
+				array_push ( $url, $href );
+				array_push ( $median, $pieces [3] );
+				array_push ( $mean, $pieces [1] );
+				array_push ( $perc, $pieces [2] );
+				array_push ( $active, $list_genes );
+			}
+			
+			array_multisort ( $median, SORT_NUMERIC, SORT_DESC, 
+			$perc, SORT_NUMERIC, SORT_DESC, 
+			$mean, SORT_NUMERIC, SORT_DESC, 
+			$url, SORT_STRING, SORT_DESC, 
+			$active, SORT_STRING, SORT_DESC );
+			
+			for($i = 0; $i < count ( $mean ); ++ $i) {
+				
+				$r = 0;
+				$g = 0;
+				$b = 0;
+				
+				if ( $median[$i] < 1.5 ) {
+					$r = 170;
+					$g = 170;
+					$b = 170;
+				}
+				
+				elseif ( $median[$i] > 10) {
+					$color = 255;
+					$r = 0;
+					$g = 0;
+					$b = 255;
+				}
+				else {
+					$r = 170 - 2 *($median[$i]-1.5)/(10-1.5) * (255-170);
+					$g = 170 - 2 * ($median[$i]-1.5)/(10-1.5) * (255-170);
+					$b = 170 + ($median[$i]-1.5)/(10-1.5) * (255-170);
+				}
+				$rgb = array( $r, $g, $b );
+				
+				$hex = "#";
+				$hex .= str_pad(dechex($rgb[0]), 2, "0", STR_PAD_LEFT);
+				$hex .= str_pad(dechex($rgb[1]), 2, "0", STR_PAD_LEFT);
+				$hex .= str_pad(dechex($rgb[2]), 2, "0", STR_PAD_LEFT);
+				
+				if ($i < $nrShow)
+					$doShow = '';
+				else
+					$doShow = 'toggleMe';
+				
+				$tags .= "<tr class=$doShow>
+					<td class='table-blue-contentcell'>$url[$i]</td>
+					<td class='table-blue-contentcell' align='center'>$median[$i]</td>
+					<td bgcolor='$hex'> </td>
+					<td class='table-blue-contentcell' align='center'>$mean[$i]</td>
+					<td class='table-blue-contentcell' align='center'>$perc[$i]</td>
+					<td class='table-blue-contentcell'>" . $active [$i] . "</td></tr>";
+			}			
+			$tags .= "</table>";
+			fclose ( $file );
+		}		
+		return array (
+				$button . $tags,
+				'isHTML' => 1,
+				'noparse' => 1 
+		);
 	}
 }
