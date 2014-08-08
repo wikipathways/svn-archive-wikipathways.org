@@ -1,0 +1,27 @@
+adipose tissue	UBERON:0001013
+adrenal gland	CL:0000336
+animal ovary	EFO:0000973
+appendix	EFO:0000849
+bladder	UBERON:0001255
+bone marrow	UBERON:0002371
+cerebral cortex	UBERON:0000955
+colon	UBERON:0001155
+duodenum	UBERON:0002114
+endometrium	UBERON:0001295
+esophagus	UBERON:0001043
+gall bladder	UBERON:0002110
+heart	UBERON:0000948
+kidney	UBERON:0002113
+liver	UBERON:0002107
+lung	UBERON:0002048
+lymph node	UBERON:0000029
+pancreas	UBERON:0001264
+placenta	UBERON:0001987
+prostate	UBERON:0002367
+salivary gland	UBERON:0001044
+skin	EFO:0000962
+small intestine	UBERON:0002108
+spleen	UBERON:0002106
+stomach	UBERON:0000945
+testis	UBERON:0000473
+thyroid	UBERON:0002046
