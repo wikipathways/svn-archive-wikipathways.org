@@ -47,6 +47,7 @@ HTML;
 				<script language="JavaScript">
 					function tissue_viewer(id,genes){
 						console.log(genes);
+						$("#my-legend").attr("style","");
 						$("#path_viewer").attr("src",
 						"http://www.wikipathways.org/wpi/PathwayWidget.php?id="+id+genes);
 						$("#path_viewer").attr("style","overflow:hidden;");
@@ -139,7 +140,47 @@ HTML;
 			$button = "<table><td width='51%'><div onClick='".
 					'doToggle("tissueTable", this, "' . $expand . '", "' . $collapse . '")' .
 					"' style='cursor:pointer;color:#0000FF'>"."$expand<td width='45%'></table>";
-			$html = "$button
+			$html = "
+					<style type='text/css'>
+					  .my-scale .scale-title {
+					    text-align: left;
+					    margin-bottom: 8px;
+					    font-weight: bold;
+					    font-size: 90%;
+					    }
+					  .scale-labels {
+					    margin: 0;
+					    padding: 0;
+					    float: left;
+					    list-style: none;
+					    }
+					  .scale-labels li {
+					    display: block;
+					    float: left;
+					    width: 50px;
+					    margin-bottom: 6px;
+					    text-align: center;
+					    font-size: 80%;
+					    list-style: none;
+					    }
+					  .scale-labels li span {
+					    display: block;
+					    float: left;
+					    height: 15px;
+					    width: 50px;
+					    }
+					</style>
+					<br>
+					<label>Gradient color scale</label>
+					<br>
+					  <ul class='scale-labels'>
+					    <li><span style='background:#8c8cb9;'></span>0 - 3</li>
+					    <li><span style='background:#7676c3;'></span>3 - 5 </li>
+					    <li><span style='background:#5151d6;'></span>5 - 7</li>
+					    <li><span style='background:#3e3edf;'></span>7 - 10 </li>
+					    <li><span style='background:#0000FE;'></span> >10 </li>
+					  </ul>
+			$button
 			<table id='tissueTable' class='wikitable sortable'>
 			<tr class='table-blue-tableheadings' id='tr_header'>
 			<td class='table-blue-headercell'>Viewer</td>
@@ -196,7 +237,7 @@ HTML;
 				$filename = (file_exists ( $filename )) ? $filename : $filename2;
 				$list_genes = "";
 				$active_index = 0;
-				$mesure_index = 0;
+				$measure_index = 0;
 				if (file_exists ( $filename )) {
 					$file = fopen ( $filename, r );
 					while ( ! feof ( $file ) ) {
@@ -221,7 +262,7 @@ HTML;
 								$info = explode ( ' ', $gene );
 								if (count ( $info ) > 1) {
 									$list_genes .= "&label[]=".$info[1];
-									$mesure_index = $mesure_index + 1;
+									$measure_index = $measure_index + 1;
 									//$list_genes .= "&xref[]=".$info[0].",Ensembl";
 								}
 							}
@@ -231,7 +272,7 @@ HTML;
 				
 				if (!$list_genes == ""){
 					$list_genes .= "&colors=%236A03B2";
-					for($k = 0; $k < $mesure_index; ++ $k) {
+					for($k = 0; $k < $measure_index; ++ $k) {
 						$list_genes .= ",%23D9A4FF";
 					}						
 				}
@@ -285,7 +326,49 @@ HTML;
 		$html .= '</table></div>
 				
 				<img id="sex-toggle-image" src="/wpi/extensions/TissueAnalyzer/images/' . $sex . '_selected.png" style="width:20px;height:38px;padding:2px;vertical-align:top"" role="button" >
-				<div id="anatomogramBody" style="display:inline-block;width: 400px; height:600px;vertical-align:top" ></div></div>
+				<div id="anatomogramBody" style="display:inline-block;width: 400px; height:600px;vertical-align:top" ></div>
+				<style type="text/css">
+				  .my-legend .legend-title {
+				    text-align: left;
+				    margin-bottom: 5px;
+				    font-weight: bold;
+				    font-size: 90%;
+				    }
+				  .my-legend .legend-scale ul {
+				    margin: 0;
+				    margin-bottom: 5px;
+				    padding: 0;
+				    float: left;
+				    list-style: none;
+				    }
+				  .my-legend .legend-scale ul li {
+					display: inline-block;
+				    font-size: 80%;
+				    list-style: none;
+				    margin-left: 0;
+				    line-height: 18px;
+				    margin-bottom: 2px;
+				    }
+				  .my-legend ul.legend-labels li span {
+				    display: block;
+				    float: left;
+				    height: 16px;
+				    width: 30px;
+				    margin-right: 5px;
+				    margin-left: 0;
+				    border: 1px solid #999;
+				    }
+				</style>
+				<div class="my-legend" id="my-legend" style="display: none;">
+				<div class="legend-title">Highlighting legend</div>
+				<div class="legend-scale">
+				  <ul class="legend-labels">
+				    <li><span style="background:#6A03B2;"></span>Active gene (expression > 6)</li>
+				    <li><span style="background:#D9A4FF;"></span>Not-active gene (expression < 6)</li>
+				  </ul>
+				</div>
+				</div>
+				</div>
 				<iframe id="path_viewer" src ="http://www.wikipathways.org/wpi/PathwayWidget.php?id=WP1" width="900px" height="500px" style="display: none;"></iframe>';
 
 
