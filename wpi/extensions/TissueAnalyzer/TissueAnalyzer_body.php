@@ -27,7 +27,7 @@ HTML;
 		$wgOut->addHTML ( $intro );
 		$speciesSelect = "<form name= action=''>
 				<SELECT name='select' size='1'>";
-		$tissuesFile = fopen ( "wpi/bin/tissues.txt", r );
+		$tissuesFile = fopen ( "wpi/bin/TissueAnalyzer/tissues.txt", r );
 		$select = $_GET ["select"];
 
 		
@@ -100,7 +100,9 @@ HTML;
 		fclose ( $tissuesFile );
 
 		$js .= 'anatomogramModule.init(
-				allQueryFactorValues,"/wpi/data/human_male.svg", "/wpi/data/human_female.svg",
+				allQueryFactorValues,
+				"/wpi/extensions/TissueAnalyzer/images/human_male.svg",
+				"/wpi/extensions/TissueAnalyzer/images/human_female.svg",
 				"' . $select . '", "' . $sex . '"
 						);
 	});</script>';
@@ -229,9 +231,6 @@ HTML;
 				
 				if (!$list_genes == ""){
 					$list_genes .= "&colors=%236A03B2";
-// 					for($j = 1; $j < $active_index; ++ $j) {
-// 						$list_genes .= ",purple";
-// 					}
 					for($k = 0; $k < $mesure_index; ++ $k) {
 						$list_genes .= ",%23D9A4FF";
 					}						
@@ -285,7 +284,7 @@ HTML;
 		}
 		$html .= '</table></div>
 				
-				<img id="sex-toggle-image" src="/wpi/data/' . $sex . '_selected.png" style="width:20px;height:38px;padding:2px;vertical-align:top"" role="button" >
+				<img id="sex-toggle-image" src="/wpi/extensions/TissueAnalyzer/images/' . $sex . '_selected.png" style="width:20px;height:38px;padding:2px;vertical-align:top"" role="button" >
 				<div id="anatomogramBody" style="display:inline-block;width: 400px; height:600px;vertical-align:top" ></div></div>
 				<iframe id="path_viewer" src ="http://www.wikipathways.org/wpi/PathwayWidget.php?id=WP1" width="900px" height="500px" style="display: none;"></iframe>';
 
