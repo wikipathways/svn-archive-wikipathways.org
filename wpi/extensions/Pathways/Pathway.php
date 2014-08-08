@@ -785,6 +785,15 @@ class Pathway {
 		} else {
 			throw new Exception("Unable to save GPML, are you logged in?");
 		}
+		
+		$gpmlLocation = realpath($this->getFileLocation(FILETYPE_GPML));
+		$pgex = "wpi/bin/TissueAnalyzer/tissues_27.pgex ";
+		$bridge =  "wpi/bin/TissueAnalyzer/Hs_Derby_20130701.bridge ";
+		$output =  "wpi/data/TissueAnalyzer/ ";
+		$path_name = $this->getName();
+		$path_name = str_replace ( " ", '_', $path_name);
+		exec("java -jar wpi/bin/TissueAnalyzer/tissue_analyzer.jar ".$gpmlLocation." ".$pgex.$bridge.$output.$path_name." 2> wpi/data/log.txt");
+		
 		return $succ;
 	}
 
