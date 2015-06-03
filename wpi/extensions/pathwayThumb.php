@@ -21,7 +21,6 @@ function renderPathwayImage( &$parser, $pwTitleEncoded, $width = 0, $align = '',
 	try {
 		$pathway = Pathway::newFromTitle($pwTitle);
 
-		// TODO there must be a better way to get the most recent revision number.
 		// FIX: replaced $latestRevision with '0' in (or nearL line 61, $output..). I think this should be sufficient.
 		//$history = getHistory($pathway);
 		//$doc = new DOMDocument();
@@ -119,7 +118,8 @@ function makeThumbLinkObj( $pathway, $latestRevision=0, $label = '', $href = '',
 	$img = $pathway->getImage();
 	$imgURL = $img->getURL();
 
-	$identifier = $pathway->getIdentifier(); 
+	$identifier = $pathway->getIdentifier();
+	$version = $pathway->getLatestRevision(); 
 	$resource = 'http://identifiers.org/wikipathways/WP4';
 
 	$textalign = $wgContLang->isRTL() ? ' style="text-align:right"' : '';
@@ -131,6 +131,8 @@ function makeThumbLinkObj( $pathway, $latestRevision=0, $label = '', $href = '',
 				<wikipathways-pvjs id="pvjs-container"
 				    class="wikipathways-pvjs"
 				    alt="'.$alt.'"
+				    resource="http://identifiers.org/wikipathways/'.$identifier.'"
+				    version='.$version.'"
 				    src="'.$gpml.'"                                                                                                                                               
 				    resource="'.$resource.'"                                                                                                                                               
 				    version="'.$latestRevision.'"                                                                                                                                               
