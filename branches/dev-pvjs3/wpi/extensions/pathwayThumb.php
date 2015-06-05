@@ -105,12 +105,10 @@ function createEditCaption($pathway) {
  * $img is an Image object
  */
 function makeThumbLinkObj( $pathway, $latestRevision=0, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 180, $boxheight=false, $framed=false ) {
-	global $wgStylePath, $wgContLang;
+	global $wgStylePath, $wgContLang, $wgUser;
 
-	// TODO this is a brittle kludge. How should we get the user's logged in status
-	// so we can set the editor state?
 	$editorState = 'disabled';
-	if (preg_match("/Edit\ pathway/", $label, $output_array)) {
+	if ($wgUser->isLoggedIn() && $wgUser->isEmailConfirmed()){
 		$editorState = 'closed';
 	}
 
