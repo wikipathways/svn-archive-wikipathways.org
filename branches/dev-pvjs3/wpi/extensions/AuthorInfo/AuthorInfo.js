@@ -54,6 +54,9 @@ AuthorInfo.loadAuthorsCallback = function(xhr) {
 			var elm = elements[i];
 			var nm = elm.getAttribute("Name");
 			var title = nm + " edited this page " + elm.getAttribute("EditCount") + " times";
+			if(i==0){
+				title += " and is the original author";
+			}
 			html += "<A href='" + elm.getAttribute("Url") + "' title='" + title + "'>" + nm + "</A>";
 			if(i != end - 1) {
 				html += ", ";
