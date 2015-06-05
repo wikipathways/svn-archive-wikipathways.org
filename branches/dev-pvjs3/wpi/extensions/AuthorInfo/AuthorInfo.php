@@ -45,7 +45,7 @@ function renderAuthorInfo($input, $argv, $parser) {
  * @param $includeBots Whether to include users marked as bot.
  * @return An xml document containing all authors for the given page
  */
-function jsGetAuthors($pageId, $limit = '', $includeBots = true) {
+function jsGetAuthors($pageId, $limit = '', $includeBots = false) {
 	$title = Title::newFromId($pageId);
 	if($includeBots === 'false') $includeBots = false;
 	$authorList = new AuthorInfoList($title, $limit, $includeBots);
@@ -62,7 +62,7 @@ class AuthorInfoList {
 
 	private $authors;
 
-	public function __construct($title, $limit = '', $showBots = true) {
+	public function __construct($title, $limit = '', $showBots = false) {
 		$this->title = $title;
 		if($limit) $this->limit = $limit + 1;
 		$this->showBots = $showBots;
