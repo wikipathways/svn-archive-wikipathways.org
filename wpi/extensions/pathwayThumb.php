@@ -20,14 +20,6 @@ function renderPathwayImage( &$parser, $pwTitleEncoded, $width = 0, $align = '',
 	$latestRevision = 0;
 	try {
 		$pathway = Pathway::newFromTitle($pwTitle);
-
-		// FIX: replaced $latestRevision with '0' in (or nearL line 61, $output..). I think this should be sufficient.
-		//$history = getHistory($pathway);
-		//$doc = new DOMDocument();
-		//$doc->loadHTML($history);
-		//$targetElement = $doc->getElementsByTagName('form')->item(0)->getElementsByTagName('td')->item(1);
-		//$latestRevision = $targetElement->nodeValue;
-
 		$revision = $wgRequest->getVal('oldid');
 		if($revision) {
 			$pathway->setActiveRevision($revision);
@@ -56,8 +48,12 @@ function renderPathwayImage( &$parser, $pwTitleEncoded, $width = 0, $align = '',
 																//we would rather parse wikitext, let me know if
 																//you know a way to do that (TK)
 		}
-
-		$output = makeThumbLinkObj($pathway, '0', $caption, $href, $tooltip, $align, $id, $width);
+		
+		if (preg_match("/Pathway\:WP\d+/", $href)){
+			$output = makeThumbLinkObj($pathway, $caption, $href, $tooltip, $align, $id, $width);
+		} else {
+			$output = makePvjsObj($pathway, '0', $caption, $href, $tooltip, $align, $id, $width);
+		}
 
 	} catch(Exception $e) {
 		return "invalid pathway title: $e";
@@ -104,7 +100,75 @@ function createEditCaption($pathway) {
  * Make HTML for a thumbnail including image, border and caption
  * $img is an Image object
  */
-function makeThumbLinkObj( $pathway, $latestRevision=0, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 180, $boxheight=false, $framed=false ) {
+function makeThumbLinkObj( $pathway, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 180, $boxheight=false, $framed=false ) {
+        global $wgStylePath, $wgContLang;
+
+        $img = $pathway->getImage();
+        $imgURL = $img->getURL();
+
+        $thumbUrl = '';
+        $error = '';
+
+        $width = $height = 0;
+        if ( $img->exists() ) {
+                $width  = $img->getWidth();
+                $height = $img->getHeight();
+        }
+        if ( 0 == $width || 0 == $height ) {
+                $width = $height = 180;
+        }
+        if ( $boxwidth == 0 ) {
+                $boxwidth = 180;
+        }
+        if ( $framed ) {
+                // Use image dimensions, don't scale
+                $boxwidth  = $width;
+                $boxheight = $height;
+                $thumbUrl  = $img->getViewURL();
+        } else {
+                if ( $boxheight === false ) $boxheight = -1;
+                $thumb = $img->getThumbnail( $boxwidth, $boxheight );
+                if ( $thumb ) {
+                        $thumbUrl = $thumb->getUrl();
+                        $boxwidth = $thumb->width;
+                        $boxheight = $thumb->height;
+                } else {
+                        $error = $img->getLastError();
+                }
+        }
+        $oboxwidth = $boxwidth + 2;
+
+        $more = htmlspecialchars( wfMsg( 'thumbnail-more' ) );
+        $magnifyalign = $wgContLang->isRTL() ? 'left' : 'right';
+        $textalign = $wgContLang->isRTL() ? ' style="text-align:right"' : '';
+
+        $s = "<div id=\"{$id}\" class=\"thumb t{$align}\"><div class=\"thumbinner\" style=\"width:{$oboxwidth}px;\">";
+        if( $thumbUrl == '' ) {
+                // Couldn't generate thumbnail? Scale the image client-side.
+                $thumbUrl = $img->getViewURL();
+                if( $boxheight == -1 ) {
+                        // Approximate...
+                        $boxheight = intval( $height * $boxwidth / $width );
+                }
+        }
+        if ( $error ) {
+                $s .= htmlspecialchars( $error );
+        } elseif( !$img->exists() ) {
+                $s .= "Image does not exist";
+        } else {
+                $s .= '<a href="'.$href.'" class="internal" title="'.$alt.'">'.
+                        '<img src="'.$thumbUrl.'" alt="'.$alt.'" ' .
+                        'width="'.$boxwidth.'" height="'.$boxheight.'" ' .
+                        'longdesc="'.$href.'" class="thumbimage" /></a>';
+        }
+        $s .= '  <div class="thumbcaption"'.$textalign.'>'.$label."</div></div></div>";
+        return str_replace("\n", ' ', $s);
+        //return $s;
+}
+
+
+/* Modified from makeThumbLinkObj() above to handle pathway rendering on Pathway Pages */
+function makePvjsObj( $pathway, $latestRevision=0, $label = '', $href = '', $alt, $align = 'right', $id = 'thumb', $boxwidth = 180, $boxheight=false, $framed=false ) {
 	global $wgStylePath, $wgContLang, $wgUser;
 
 	$editorState = 'disabled';
