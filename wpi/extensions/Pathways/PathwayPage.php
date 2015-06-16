@@ -38,7 +38,7 @@ ERROR;
 	return true;
 }
 
-function addPreloaderScript($out) {
+function addPreloaderScript(&$out) {
 	global $wgTitle, $wgUser, $wgScriptPath;
 /*
 	if($wgTitle->getNamespace() == NS_PATHWAY && $wgUser->isLoggedIn() &&
