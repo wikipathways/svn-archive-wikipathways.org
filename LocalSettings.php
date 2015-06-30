@@ -55,7 +55,6 @@ $wgPasswordSender = "webmaster@localhost";
 ## Turn of httponly cookies, otherwise the applet will not
 ## have access to the authentication cookies
 $wgCookieHttpOnly = false;
-$wgCookieExpiration = 604800;  #7 days
 
 ## For a detailed description of the following switches see
 ## http://meta.wikimedia.org/Enotif and http://meta.wikimedia.org/Eauthent
@@ -350,7 +349,6 @@ require_once('extensions/SocialRewarding/SocialRewarding.php');
 require_once('extensions/UserMerge/UserMerge.php');
 require_once('extensions/parseViewRedirect.php');
 require_once( "$IP/wpi/autoload-setup.php" );
-require_once('wpi/extensions/EmailConfirmedUser.php');
 
 $contribScoreIgnoreBots = true;  //Set to true if you want to exclude Bots from the reporting - Can be omitted.
 
