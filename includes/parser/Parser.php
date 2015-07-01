@@ -3566,7 +3566,7 @@ class Parser
 			//					$safeHeadline );
 			$mILH = "\$this->mInterwikiLinkHolders";
 			$safeHeadline = preg_replace_callback('/<!--IWLINK ([0-9]*)-->/',
-				create_function('$matches','return $mILH[\'texts\'][$matches[1]];'), $safeheadline);
+				create_function('$matches','return $mILH[\'texts\'][$matches[1]];'), $safeHeadline);
 			
 			# Strip out HTML (other than plain <sup> and <sub>: bug 8393)
 			$tocline = preg_replace(
