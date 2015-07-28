@@ -203,8 +203,9 @@ function makePvjsObj( $pathway, $latestRevision=0, $label = '', $href = '', $alt
 				    manual-render="true"
 				    editor="'.$editorState.'"
 				    fit-to-container="true">
-					  <img alt="'.$alt.'"
-					    src="'.$thumbUrl.'">
+					  <img style="height:600px; max-width:100%" 
+						alt="'.$alt.'"
+					    	src="'.$imgURL.'">
 				</wikipathways-pvjs>
 			</div>';
 	$s .= '  <div class="thumbcaption"'.$textalign.'>'.$label."</div></div></div>";
