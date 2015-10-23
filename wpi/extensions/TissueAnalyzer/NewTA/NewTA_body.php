@@ -1,9 +1,9 @@
 <?php
 
-class TissueAnalyzer extends SpecialPage {
-	protected $name        = 'TissueAnalyzer';
+class NewTA extends SpecialPage {
+	protected $name        = 'NewTA';
 
-	function TissueAnalyzer() {
+	function NewTA() {
 		SpecialPage::SpecialPage ( $this->name  );
 		self::loadMessages();
 	}
@@ -11,9 +11,30 @@ class TissueAnalyzer extends SpecialPage {
 	function execute($par) {
 		global $wgOut, $wgUser, $wgLang;
 		$this->setHeaders ();
-		$wgOut->setPagetitle ("TissueAnalyzer");
+		$wgOut->setPagetitle ("NewTA");
 		$sex = (isset ( $_GET ["sex"] )) ? $_GET ["sex"] : "male";
-		$cutoff = (isset ( $_GET ["cutoff"] )) ? $_GET ["cutoff"] : "6";
+		$cutoff = (isset ( $_GET ["cutoff"] )) ? $_GET ["cutoff"] : "5";
+		$dataset = (isset ( $_GET ["dataset"] )) ? $_GET ["dataset"] : "E-MTAB-2836";
+		$select = $_GET ["select"];
+
+		$datasetSelect = "<form name= action=''><SELECT name='dataset' id='dataSelect' size='1'>";
+		$path = "wpi/bin/TissueAnalyzer/datasets.txt";
+		$datasetFile = fopen ($path , r );
+		$hashArray = array ();
+		while ( ! feof ( $datasetFile ) ) {
+			$line = fgets ( $datasetFile );
+			$pieces = explode ( "\t", $line );
+			$id = $pieces [0];
+			if ($id === '')
+				break;	
+			$hashArray[$id]["short"] = $pieces [2];
+			$hashArray[$id]["full"] = $pieces [1];
+						
+			$datasetSelect .= (strcmp ( trim ( $dataset ), trim ( $id ) ) == 0) ? "<option selected=\"selected\">$id</option>" : "<option>$id</option>";
+		}
+		fclose ( $datasetFile );
+		$datasetSelect .="</SELECT>";
+
 		$intro = <<<HTML
 								
 			<style type='text/css'>
@@ -23,38 +44,142 @@ class TissueAnalyzer extends SpecialPage {
 			</style>		  
 			<div style="display:inline-block;overflow:visible">
 			<div style="display:block;overflow:visible">
-			<p>This project was developed during the <b>Google Summer of Code 2014</b> by Jonathan Melius. We integrated tissue baseline expression data (RNAseq) from Expression Atlas with the pathways from WikiPathways.<br/>The aim of this project is to provide indications about 'how expressed a pathway is in a specific tissue'.<br/>You can find the dataset used on the Expression Atlas website: 
+			<p>This project was developed during the <b>Google Summer of Code 2014</b> by Jonathan Mélius.
+			We integrated tissue baseline expression data (RNAseq) from Expression Atlas with the pathways from WikiPathways.<br/>
+			The aim of this project is to provide indications about 'how expressed a pathway is in a specific tissue'.<br/>
+			You can find the dataset used on the Expression Atlas website: 
 			<a target="_blank" href="http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-1733">E-MTAB-1733</a>.
 			<br/><i><font color="red">This project is still under development and further improvements will be available in the up-coming releases of WikiPathways.</font></i><br/><br/>
+			
 			<ul>
-				<li>Start by selecting your tissue of interest. The pathways in the table are sorted based on the median expression of the genes involved.</li> 
+				<li>Start by selecting the dataset of interest.</li> 
+				<li>Then by selecting your tissue of interest. The pathways in the table are sorted based on the median expression of the genes involved.</li> 
 				<li>If you click on the pathway name in the table, the pathway will be shown below the table and the active genes are highlighted in the pathway.</li>
-				<li>Generic pathways that are expressed in nearly all of the tissues (>23 out of 27) are hidden by default but can be shown by selecting "Show generic pathways"</li>
+				<li>Generic pathways that are expressed in nearly all of the tissues (e.g >23 out of 27) are hidden by default but can be shown by selecting "Show generic pathways"</li>
 			</ul>
-			</p>
-			<hr/><br/>
-			</div>
+			<ul>New, multiple datasets are available:<br>
 HTML;
+			foreach ($hashArray as $id => $description) {
+				foreach ($description as $k => $v) {
+					if (strcmp($k,"short" )== 0){
+						$intro .= "<li>$v</li> ";
+					}
+				}
+			}
+			$intro .= "</ul>
+			</p>			
+			<hr/><br/>
+			</div>";
 		
 	
 		$topTenFile = fopen ( "wpi/bin/TissueAnalyzer/topTen.txt", r );
 		$topTen = array ();
 		while (!feof($topTenFile)) {
-			//$line = fgets($topTenFile);
 			array_push ( $topTen, trim (fgets($topTenFile)) );
 		}
 		fclose ( $topTenFile );
-		//$topTen = array("Cytoplasmic_Ribosomal_Proteins","Proteasome_Degradation",
-		//		"TCA_Cycle","Electron_Transport_Chain",
-		//		"Peroxisomal_beta-oxidation_of_tetracosanoyl-CoA","Oxidative_phosphorylation");
 		$top = json_encode($topTen);
+
+		
+		
+		$hash = json_encode($hashArray);
 		$wgOut->addHTML ( $intro );
 		
 		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery-migrate-1.2.0.min.js");
 		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery-ui.min.js");
-		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery.svg.js");
-		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/anatomogramModule.js");
-	
+		//$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery.svg.js");
+		//$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/anatomogramModule.js");
+		$wgOut->addScript('<script language="JavaScript">
+						var hexArr = [];
+						var rgbArr = [];
+						var namArr = [];
+						//var colorhexFlag = "B0B0B0";
+						var colorhexFlag = "";
+						var colorhexPick1 = "6A03B2";
+						var colorhexPick2 = "B0B0B0";
+						function HexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)}
+						function HexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)}
+						function HexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)}
+						function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h}
+
+						function ToHex(x) {
+							var hex = x.toString(16);
+							return hex.length == 1 ? "0" + hex : hex;
+						}
+						function rgbToHex(rgb) {
+							var x = rgb.replace(/ /g, "");
+							var a = x.split(",");
+							var r = Number(a[0]);
+							var g = Number(a[1]);
+							var b = Number(a[2]);
+							if (isNaN(r) || isNaN(g) || isNaN(b) || r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {return -1;}
+							return ToHex(r) + ToHex(g) + ToHex(b);
+						}
+						function clickColor(id,html5) {
+							hh = 1;
+							var colorrgb, colornam = "", xhttp, c, r, g, b, i;
+							if (html5 && html5 == 5)	{
+								c = document.getElementById("html5colorpicker"+id).value;
+							}
+							if (c.substr(0,1) == "#")	{
+								c = c.substr(1);
+							}
+							c = c.replace(/;/g, "");
+							if (c.indexOf(",") > -1 || c.toLowerCase().indexOf("rgb") > -1 || c.indexOf("(") > -1) {
+								c = c.replace(/rgb/i, "");
+								c = c.replace("(", "");
+								c = c.replace(")", "");
+								c = rgbToHex(c);
+								if (c == -1) {wrongInput(); return;}
+							}
+							colorhexFlag=c;
+							colorhex = c;
+							if (colorhex.length == 3) {colorhex = colorhex.substr(0,1) + colorhex.substr(0,1) + colorhex.substr(1,1) + colorhex.substr(1,1) + colorhex.substr(2,1) + colorhex.substr(2,1); }
+							colorhex = colorhex.substr(0,6);
+						//    if (hexArr.length == 0) {checkColorValue(); }
+							for (i = 0; i < hexArr.length; i++) {
+								if (c.toLowerCase() == hexArr[i].toLowerCase()) {
+									colornam = namArr[i];
+									break;
+								}
+								if (c.toLowerCase() == namArr[i].toLowerCase()) {
+									colorhex = hexArr[i];
+									colornam = namArr[i];            
+									break;
+								}
+								if (c == rgbArr[i]) {
+									colorhex = hexArr[i];
+									colornam = namArr[i];            
+									break;
+								}
+							}
+							colorhex = colorhex.substr(0,10);
+							colorhex = colorhex.toUpperCase();
+							r = HexToR(colorhex);
+							g = HexToG(colorhex);
+							b = HexToB(colorhex);
+							if (isNaN(r) || isNaN(g) || isNaN(b)) {wrongInput(); return;}
+
+							if (id==1){
+
+							someString = document.getElementById("path_viewer").src;
+							re = new RegExp(colorhexPick1.toUpperCase(),"g");
+    						anotherString = someString.replace(re,colorhex);
+				
+							colorhexPick1=colorhexFlag;
+							colorhexFlag=colorhex;
+							}
+							if (id==2){
+							someString = document.getElementById("path_viewer").src;
+							re = new RegExp(colorhexPick2.toUpperCase(),"g");
+    						anotherString = someString.replace(re,colorhex);
+				
+							colorhexPick2=colorhexFlag;
+							colorhexFlag=colorhex;
+							}
+							document.getElementById("path_viewer").src = anotherString;
+					}
+				</script>');
 		$wgOut->addScript('
 				<script language="JavaScript">
 					function check() {
@@ -81,8 +206,7 @@ HTML;
 				</script>');
 		$wgOut->addScript('<script language="JavaScript">
 					function tissue_viewer(id,genes,pathway_name){
-						
-						document.getElementById("legend-title").innerHTML="Highlighting legend : "+pathway_name;
+						document.getElementById("pwyname").innerHTML="<b>Selected pathway:</b> " + pathway_name;
 						$("#my-legend").attr("style","");
 						$("#path_viewer").attr("src",
 						"http://www.wikipathways.org/wpi/PathwayWidget.php?id="+id+genes);
@@ -93,47 +217,33 @@ HTML;
  		$wgOut->addScript('<script type="text/javascript">
     			function updateTextInput(val) {
     			  document.getElementById("cutoff_label").innerHTML=val; 
-				}
+				}				
+				$(function() {
+					$("#dataSelect").change(function() {
+						$("#tissueSelect").load("/wpi/bin/TissueAnalyzer/"+$(this).val()+"_tissues_opt.txt");
+						var words = '.$hash.';
+						document.getElementById("description").innerHTML= words[$(this).val()]["full"];
+					});
+				});
 				</script>');
 
-
-		$speciesSelect = "<form name= action=''>
-				<SELECT name='select' size='1'>";
-		$tissuesFile = fopen ( "wpi/bin/TissueAnalyzer/tissues.txt", r );
-		$select = $_GET ["select"];		
-
 		
+
+		$speciesSelect = "<SELECT name='select' id='tissueSelect' size='1'>";
+		$path = "wpi/bin/TissueAnalyzer/".$dataset."_tissues_opt.txt";
+		$tissuesFile = fopen ($path , r );
 		
-		$js .= '<script type="text/javascript">
-							function tissue(name,id) {
-								this.name = name;
-								this.id = id;
-							}
-							$( document ).ready(function() {
-								//window.onload =(function () {
-								var allQueryFactorValues = new Array(); ';
 
 		while ( ! feof ( $tissuesFile ) ) {
 			$line = fgets ( $tissuesFile );
-			$pieces = explode ( "\t", $line );
-			$tissue = $pieces [0];
-			$id = trim($pieces [1]);
-			if ($tissue === false)
+			$tissue = str_replace("</option>",'',$line);
+			$tissue = str_replace("<option>",'',$tissue);
+            $tissue = trim ( $tissue );
+			if ($tissue === '')
 				break;
-			$js .= 'allQueryFactorValues[allQueryFactorValues.length] = new tissue("'.$tissue.'","'.$id.'");';
-				
-			$speciesSelect .= (strcmp ( trim ( $select ), trim ( $tissue ) ) == 0) ? "<option selected=\"selected\">$tissue" : "<option>$tissue";
+			$speciesSelect .= (strcmp ( trim ( $select ), trim ( $tissue ) ) == 0) ? "<option selected=\"selected\">$tissue</option>" : "<option>$tissue</option>";
 		}
 		fclose ( $tissuesFile );
-
-		$js .= 'anatomogramModule.init(
-				allQueryFactorValues,
-				"/wpi/extensions/TissueAnalyzer/images/human_male.svg",
-				"/wpi/extensions/TissueAnalyzer/images/human_female.svg",
-				"' . $select . '", "' . $sex . '"
-						);
-	});</script>';
-		$wgOut->addScript($js);
 		$speciesSelect .= "</SELECT>";
 
 		$button = <<<HTML
@@ -145,9 +255,11 @@ HTML;
    				<label id="cutoff_label">'.$cutoff.'</label>
 ';
 		$out = <<<HTML
-			<div style="display:block;width:70%;overflow:visible">
+			<div style="display:block;width:100%;overflow:visible">			
 			<table id='nsselect' class='allpages'>
 				<tr>
+					<td align='right'>Select dataset:</td>
+					<td align='left'>{$datasetSelect}</td>
 					<td align='right'>Select tissue:</td>
 					<td align='left'>{$speciesSelect}</td>
 					
@@ -156,6 +268,7 @@ HTML;
 					<td align='right'>{$button}</td>
 				</tr>
 			</table>
+			<p id="description"></p>
 HTML;
 		$wgOut->addHTML ( $out );
 
@@ -166,14 +279,13 @@ HTML;
 		$wgOut->addHTML ($checkbox);
 		
 		if (!isset ( $select )) {
-		$div = "<div style='display:inline-block;overflow:visible;width:70%'>";
+		$div = "<div style='display:inline-block;overflow:visible;width:100%'>";
 		
 		$wgOut->addHTML ( $div );
 		}
 
-		if (isset ( $select ) & strlen ( $select ) <= 16 & is_string ( $select )) {
-			$tissue = fopen ( "wpi/data/TissueAnalyzer/$cutoff/Tissue/$select.txt", r );
-				
+		if (isset ( $select ) & strlen ( $select ) <= 42 & is_string ( $select )) {
+			$tissue = fopen ( "wpi/data/NewTA/$dataset/$cutoff/Tissue/$select.txt", r );
 			$nrShow = 20;
 			$expand = "<b>View all...</b>";
 			$collapse = "<b>View first ".($nrShow)."...</b>";
@@ -181,7 +293,7 @@ HTML;
 					'doToggle("tissueTable", this, "' . $expand . '", "' . $collapse . '")' .
 					"' style='cursor:pointer;color:#0000FF'>"."$expand<td width='45%'></table>";
 			
-			$html = "<div style='display:block;overflow:visible;width:70%'>
+			$html = "<div style='display:block;width: 860px;overflow:visible;width:100%'>
 					<style type='text/css'>
 					.scale-title {
 					    text-align: left;
@@ -224,10 +336,10 @@ HTML;
 			
 			
 			</div>
-			<div style='display:inline-block;overflow:visible;width:70%'>
+			<div style='display:inline-block;overflow:visible;width:100%'>
 			<table id='tissueTable' class='wikitable sortable' style='display:inline-block;width:100%'>
 			<tr class='table-blue-tableheadings' id='tr_header'>
-			<td class='table-blue-headercell' style='width:45%'>Pathways</td>
+			<td class='table-blue-headercell' style='width:44%'>Pathways</td>
 			<td class='table-blue-headercell' align='center' style='width:10%'>Linkout</td>
 			<td class='table-blue-headercell' align='center'style='width:10%'>Median</td>
 			<td class='table-blue-headercell' style='width:1%'></td>
@@ -251,6 +363,7 @@ HTML;
 				$id = explode ( "_", $id );
 				$path_name = explode ( "_WP", $name );
 				$path_name = str_replace ( "Hs_", '', $path_name[0] );
+				$path_name = str_replace ( "Mm_", '', $path_name );
 				$title = Title::newFromText ( ( string ) $id [0], NS_PATHWAY );
 				$pp = explode ( ".",$pieces[2]);
 				if (isset ( $title )) {
@@ -275,8 +388,8 @@ HTML;
 			$nami, SORT_STRING, SORT_DESC );
 			
 			for($i = 0; $i < count ( $mean ); ++ $i) {
-				$filename = "wpi/data/TissueAnalyzer/$cutoff/Hs_$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
-				$filename2 = "wpi/data/TissueAnalyzer/$cutoff/$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
+				$filename = "wpi/data/NewTA/$dataset/$cutoff/Hs_$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
+				$filename2 = "wpi/data/NewTA/$dataset/$cutoff/$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
 				$filename = (file_exists ( $filename )) ? $filename : $filename2;
 				$list_genes = "";
 				$active_index = 0;
@@ -318,7 +431,6 @@ HTML;
 				// Note: %23D9A4FF => #D9A4FF
 				if (!$list_genes == ""){				
 					if ($n===$m ){
-
 						$list_genes .= "&colors=%236A03B2";						
 						for($l = 1; $l < $active_index; ++ $l){
 							$list_genes .= ",%236A03B2";
@@ -365,11 +477,7 @@ HTML;
 				if ($i < $nrShow && !in_array($nami[$i], $topTen))
 					$doShow = '';
 				else
-					$doShow = 'toggleMe';
-
-				
-
-			
+					$doShow = 'toggleMe';			
 				$pathway_name = str_replace ( "_", " ", $nami[$i] );
 				$html .= <<<HTML
 				<tr class='$doShow' id='$nami[$i]'>
@@ -386,10 +494,11 @@ HTML;
 			fclose($tissue);
 		}
 
-		$html .= '</table></div>
+		$html .= '</table>
 				
-				<img role="button" id="sex-toggle-image" src="/wpi/extensions/TissueAnalyzer/images/' . $sex . '_selected.png" style="width:20px;height:38px; margin-top: 12px;vertical-align:top"  >
-				<div id="anatomogramBody" style="display:inline-block;width:25%; height:600px;vertical-align:top" ></div>
+				
+				<!--<img role="button" id="sex-toggle-image" src="/wpi/extensions/TissueAnalyzer/images/' . $sex . '_selected.png" style="width:20px;height:38px; margin-top: 12px;vertical-align:top"  >-->
+				<!--<div id="anatomogramBody" style="display:inline-block;width:25%; height:600px;vertical-align:top" ></div>-->
 				
 			
 				<style type="text/css">
@@ -425,20 +534,18 @@ HTML;
 				    }
 				</style>
 				</div>
-				<div class="my-legend" id="my-legend" style="display: none;width:70%"">
-				<div class="legend-title" id="legend-title" style="display:inline-block">Highlighting legend</div>
-				
-				<div class="legend-scale" style="display:inline-block%">
+				<div class="my-legend" id="my-legend" style="display: none;">
+				<div class="legend-title" id="legend-title" style="display:inline-block;width:100%">Highlighting legend</div>
+				<div class="legend-scale" style="display:inline-block">
 				  <ul class="legend-labels">
-				    <li><span style="background:#6A03B2;"></span>Active gene (expression > '.$cutoff.')</li>
-				    <li><span style="background:#B0B0B0;"></span>Not-active gene (expression < '.$cutoff.')</li>
+				    <li><input type="color" id="html5colorpicker1"  onchange="clickColor(1,5)" value="#6A03B2">Active gene (expression > '.$cutoff.')</input></li>
+				    <li><input type="color" id="html5colorpicker2"  onchange="clickColor(2,5)" value="#B0B0B0"></span>Not-active gene (expression < '.$cutoff.')</li>
 				  </ul>				
 				</div>
 				</div>
-				</div>		
-				<div style="width:65%">
-				<iframe id="path_viewer" src ="http://www.wikipathways.org/wpi/PathwayWidget.php?id=WP1" width=100% height="500px" style="display: none;"></iframe>
-				</div>	
+				</div>
+				<div id="pwyname"></div>
+				<iframe id="path_viewer" src ="http://www.wikipathways.org/wpi/PathwayWidget.php?id=WP1" width="860px" height="500px" style="display: none;"></iframe>
 				';
 
 		$wgOut->addHTML ( $html );
@@ -451,7 +558,7 @@ HTML;
 			return true;
 		$messagesLoaded = true;
 
-		require (dirname ( __FILE__ ) . '/TissueAnalyzer.i18n.php');
+		require (dirname ( __FILE__ ) . '/NewTA.i18n.php');
 		foreach ( $allMessages as $lang => $langMessages ) {
 			$wgMessageCache->addMessages ( $langMessages, $lang );
 		}

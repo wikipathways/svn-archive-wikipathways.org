@@ -1,7 +1,7 @@
 <?php
 $allMessages = array(
         'en' => array( 
-                'tissueanalyzer' => 'Tissue Analyzer',
+                'newta' => 'New Tissue Analyzer',
         )
 );
 ?>
