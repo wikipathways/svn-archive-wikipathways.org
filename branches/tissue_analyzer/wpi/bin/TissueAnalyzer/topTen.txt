@@ -1,0 +1,9 @@
+Cytoplasmic_Ribosomal_Proteins
+Proteasome_Degradation
+TCA_Cycle
+Electron_Transport_Chain
+Peroxisomal_beta-oxidation_of_tetracosanoyl-CoA
+Oxidative_phosphorylation
+Translation_Factors
+TCA_Cycle_Nutrient_Utilization_and_Invasiveness_of_Ovarian_Cancer
+TCA_Cycle_and_PDHc

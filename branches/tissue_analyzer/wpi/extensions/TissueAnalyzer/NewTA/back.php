@@ -1,9 +1,9 @@
 <?php
 
-class TissueAnalyzer extends SpecialPage {
-	protected $name        = 'TissueAnalyzer';
+class NewTA extends SpecialPage {
+	protected $name        = 'NewTA';
 
-	function TissueAnalyzer() {
+	function NewTA() {
 		SpecialPage::SpecialPage ( $this->name  );
 		self::loadMessages();
 	}
@@ -11,9 +11,10 @@ class TissueAnalyzer extends SpecialPage {
 	function execute($par) {
 		global $wgOut, $wgUser, $wgLang;
 		$this->setHeaders ();
-		$wgOut->setPagetitle ("TissueAnalyzer");
+		$wgOut->setPagetitle ("NewTA");
 		$sex = (isset ( $_GET ["sex"] )) ? $_GET ["sex"] : "male";
-		$cutoff = (isset ( $_GET ["cutoff"] )) ? $_GET ["cutoff"] : "6";
+		$cutoff = (isset ( $_GET ["cutoff"] )) ? $_GET ["cutoff"] : "5";
+		$dataset = (isset ( $_GET ["dataset"] )) ? $_GET ["dataset"] : "E-MTAB-2836";
 		$intro = <<<HTML
 								
 			<style type='text/css'>
@@ -23,15 +24,30 @@ class TissueAnalyzer extends SpecialPage {
 			</style>		  
 			<div style="display:inline-block;overflow:visible">
 			<div style="display:block;overflow:visible">
-			<p>This project was developed during the <b>Google Summer of Code 2014</b> by Jonathan Melius. We integrated tissue baseline expression data (RNAseq) from Expression Atlas with the pathways from WikiPathways.<br/>The aim of this project is to provide indications about 'how expressed a pathway is in a specific tissue'.<br/>You can find the dataset used on the Expression Atlas website: 
+			<p>This project was developed during the <b>Google Summer of Code 2014</b> by Jonathan Mélius.
+			We integrated tissue baseline expression data (RNAseq) from Expression Atlas with the pathways from WikiPathways.<br/>
+			The aim of this project is to provide indications about 'how expressed a pathway is in a specific tissue'.<br/>
+			You can find the dataset used on the Expression Atlas website: 
 			<a target="_blank" href="http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-1733">E-MTAB-1733</a>.
 			<br/><i><font color="red">This project is still under development and further improvements will be available in the up-coming releases of WikiPathways.</font></i><br/><br/>
+			
 			<ul>
-				<li>Start by selecting your tissue of interest. The pathways in the table are sorted based on the median expression of the genes involved.</li> 
+				<li>Start by selecting the dataset of interest.</li> 
+				<li>Then by selecting your tissue of interest. The pathways in the table are sorted based on the median expression of the genes involved.</li> 
 				<li>If you click on the pathway name in the table, the pathway will be shown below the table and the active genes are highlighted in the pathway.</li>
-				<li>Generic pathways that are expressed in nearly all of the tissues (>23 out of 27) are hidden by default but can be shown by selecting "Show generic pathways"</li>
+				<li>Generic pathways that are expressed in nearly all of the tissues (e.g >23 out of 27) are hidden by default but can be shown by selecting "Show generic pathways"</li>
 			</ul>
-			</p>
+			<ul>New, multiple datasets are available:<br>
+			<li><a target="_blank" href="http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-2836">E-MTAB-2836</a> -
+				 RNA-seq of coding RNA from tissue samples of 122 human individuals representing 32 different tissues from the Human Protein Atlas project 
+			<li><a target="_blank" href="http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-2919">E-MTAB-2919</a> -
+				 RNA-seq from 53 human tissue samples from the Genotype-Tissue Expression (GTEx) Project
+			<li><a target="_blank" href="http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3358">E-MTAB-3358</a> - 
+				 RNA-Seq CAGE (Cap Analysis of Gene Expression) analysis of 56 human tissues in RIKEN FANTOM5 project
+			<li><a target="_blank" href="http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3579">E-MTAB-3579</a> - 
+				 RNA-Seq CAGE (Cap Analysis of Gene Expression) analysis of 35 mice tissues in RIKEN FANTOM5 project
+			</ul>
+			</p>			
 			<hr/><br/>
 			</div>
 HTML;
@@ -52,8 +68,8 @@ HTML;
 		
 		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery-migrate-1.2.0.min.js");
 		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery-ui.min.js");
-		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery.svg.js");
-		$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/anatomogramModule.js");
+		//$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/jquery.svg.js");
+		//$wgOut->addScriptFile( "/wpi/extensions/TissueAnalyzer/js/anatomogramModule.js");
 	
 		$wgOut->addScript('
 				<script language="JavaScript">
@@ -81,8 +97,7 @@ HTML;
 				</script>');
 		$wgOut->addScript('<script language="JavaScript">
 					function tissue_viewer(id,genes,pathway_name){
-						
-						document.getElementById("legend-title").innerHTML="Highlighting legend : "+pathway_name;
+						document.getElementById("pwyname").innerHTML="<b>Selected pathway:</b> " + pathway_name;
 						$("#my-legend").attr("style","");
 						$("#path_viewer").attr("src",
 						"http://www.wikipathways.org/wpi/PathwayWidget.php?id="+id+genes);
@@ -94,46 +109,86 @@ HTML;
     			function updateTextInput(val) {
     			  document.getElementById("cutoff_label").innerHTML=val; 
 				}
+				$(function() {
+					$("#dataSelect").change(function() {
+						$("#tissueSelect").load("/wpi/bin/TissueAnalyzer/"+$(this).val()+"_tissues_opt.txt");
+							switch($(this).val()) {
+								case "E-MTAB-2836":
+									document.getElementById("description").innerHTML= 
+										"RNA-seq was performed of tissue samples from 122 human individuals "+
+										"representing 32 different tissues in order to study the human tissue transcriptome."+
+										"This submission contains 27 new samples and the data from E-MTAB-1733.";
+									break;
+								case "E-MTAB-2919":
+									document.getElementById("description").innerHTML= 
+										"RNA-seq from human tissue samples from the Genotype-Tissue Expression (GTEx) Project (http://www.gtexportal.org/home/)";
+									break;
+								case "E-MTAB-3358":
+									document.getElementById("description").innerHTML= 
+										"This experiment captures the expression data reported by the RIKEN FANTOM5 project ( http://fantom.gsc.riken.jp/5/ ),"+
+										"focusing on tissue/organism part data which was deposited in the seqence read archive (SRA) under study accssion DRP001031 ( https://www.ebi.ac.uk/ena/data/view/DRP001031 ) ."+
+										"The samples in this experiment can also be found on a dedicated page of the FANTOM website: http://fantom.gsc.riken.jp/5/sstar/Browse_samples ."+
+										"Since this is CAGE analsyis, gene expression data is reported by FANTOM5 in TPMs (tags per milliion) for gene promoters.";
+								case "E-MTAB-3358":
+									document.getElementById("description").innerHTML= 
+										"This experiment captures the expression data reported by the RIKEN FANTOM5 project ( http://fantom.gsc.riken.jp/5/ ),"+
+										"focusing on mice tissue data which was deposited in the sequence read archive (SRA) under study accession DRP001032 (https://www.ebi.ac.uk/ena/data/view/DRP001031 ) ."+
+										"The samples in this experiment can also be found on a dedicated page of the FANTOM website: http://fantom.gsc.riken.jp/5/sstar/Browse_samples. Since this is CAGE analysis,"+
+										"gene expression data is reported by FANTOM5 in TPMs (tags per milliion) for gene promoters."+
+										"This is in conjunction with E-MTAB-3578 (http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3578/)";
+							}
+					});
+				});
 				</script>');
 
+		$datasetSelect = "<form name= action=''><SELECT name='dataset' id='dataSelect' size='1'>";
+		$datasetSelect .=(strcmp ( trim ($dataset), "E-MTAB-2836" ) == 0) ? "<option selected=\"selected\">$dataset</option>" :"<option>E-MTAB-2836</option>";
+		$datasetSelect .=(strcmp ( trim ($dataset), "E-MTAB-2919" ) == 0) ? "<option selected=\"selected\">$dataset</option>" :"<option>E-MTAB-2919</option>";
+		$datasetSelect .=(strcmp ( trim ($dataset), "E-MTAB-3358" ) == 0) ? "<option selected=\"selected\">$dataset</option>" :"<option>E-MTAB-3358</option>";
+		$datasetSelect .=(strcmp ( trim ($dataset), "E-MTAB-3579" ) == 0) ? "<option selected=\"selected\">$dataset</option>" :"<option>E-MTAB-3579</option>";
+		$datasetSelect .="</SELECT>";
 
-		$speciesSelect = "<form name= action=''>
-				<SELECT name='select' size='1'>";
-		$tissuesFile = fopen ( "wpi/bin/TissueAnalyzer/tissues.txt", r );
+		$speciesSelect = "<SELECT name='select' id='tissueSelect' size='1'>";
+		//$tissuesFile = fopen ( "wpi/bin/TissueAnalyzer/"+trim($dataset)+"_tissues.txt", r );
+		//$path = "wpi/bin/TissueAnalyzer/"+$dataset;
+		$path = "wpi/bin/TissueAnalyzer/".$dataset."_tissues.txt";
+		$tissuesFile = fopen ($path , r );
+		//$tissuesFile = fopen ( "wpi/bin/TissueAnalyzer/E-MTAB-2836_tissues.txt", r );
 		$select = $_GET ["select"];		
 
 		
 		
-		$js .= '<script type="text/javascript">
-							function tissue(name,id) {
-								this.name = name;
-								this.id = id;
-							}
-							$( document ).ready(function() {
-								//window.onload =(function () {
-								var allQueryFactorValues = new Array(); ';
+		//$js .= '<script type="text/javascript">
+		//					function tissue(name,id) {
+		//						this.name = name;
+		//						this.id = id;
+		//					}
+		//					$( document ).ready(function() {
+		//						//window.onload =(function () {
+		//						var allQueryFactorValues = new Array(); ';
 
 		while ( ! feof ( $tissuesFile ) ) {
 			$line = fgets ( $tissuesFile );
-			$pieces = explode ( "\t", $line );
-			$tissue = $pieces [0];
-			$id = trim($pieces [1]);
+			$tissue = $line;
+			//$pieces = explode ( "\t", $line );
+			//$tissue = $pieces [0];
+			//$id = trim($pieces [1]);
 			if ($tissue === false)
 				break;
-			$js .= 'allQueryFactorValues[allQueryFactorValues.length] = new tissue("'.$tissue.'","'.$id.'");';
+			//$js .= 'allQueryFactorValues[allQueryFactorValues.length] = new tissue("'.$tissue.'","'.$id.'");';
 				
-			$speciesSelect .= (strcmp ( trim ( $select ), trim ( $tissue ) ) == 0) ? "<option selected=\"selected\">$tissue" : "<option>$tissue";
+			$speciesSelect .= (strcmp ( trim ( $select ), trim ( $tissue ) ) == 0) ? "<option selected=\"selected\">$tissue</option>" : "<option>$tissue</option>";
 		}
 		fclose ( $tissuesFile );
 
-		$js .= 'anatomogramModule.init(
-				allQueryFactorValues,
-				"/wpi/extensions/TissueAnalyzer/images/human_male.svg",
-				"/wpi/extensions/TissueAnalyzer/images/human_female.svg",
-				"' . $select . '", "' . $sex . '"
-						);
-	});</script>';
-		$wgOut->addScript($js);
+		//$js .= 'anatomogramModule.init(
+		//		allQueryFactorValues,
+		//		"/wpi/extensions/TissueAnalyzer/images/human_male.svg",
+		//		"/wpi/extensions/TissueAnalyzer/images/human_female.svg",
+		//		"' . $select . '", "' . $sex . '"
+		//				);
+	//});</script>';
+	//	$wgOut->addScript($js);
 		$speciesSelect .= "</SELECT>";
 
 		$button = <<<HTML
@@ -145,9 +200,11 @@ HTML;
    				<label id="cutoff_label">'.$cutoff.'</label>
 ';
 		$out = <<<HTML
-			<div style="display:block;width:70%;overflow:visible">
+			<div style="display:block;width:100%;overflow:visible">			
 			<table id='nsselect' class='allpages'>
 				<tr>
+					<td align='right'>Select dataset:</td>
+					<td align='left'>{$datasetSelect}</td>
 					<td align='right'>Select tissue:</td>
 					<td align='left'>{$speciesSelect}</td>
 					
@@ -156,6 +213,7 @@ HTML;
 					<td align='right'>{$button}</td>
 				</tr>
 			</table>
+			<p id="description"></p>
 HTML;
 		$wgOut->addHTML ( $out );
 
@@ -166,13 +224,13 @@ HTML;
 		$wgOut->addHTML ($checkbox);
 		
 		if (!isset ( $select )) {
-		$div = "<div style='display:inline-block;overflow:visible;width:70%'>";
+		$div = "<div style='display:inline-block;overflow:visible;width:100%'>";
 		
 		$wgOut->addHTML ( $div );
 		}
 
 		if (isset ( $select ) & strlen ( $select ) <= 16 & is_string ( $select )) {
-			$tissue = fopen ( "wpi/data/TissueAnalyzer/$cutoff/Tissue/$select.txt", r );
+			$tissue = fopen ( "wpi/data/NewTA/$dataset/$cutoff/Tissue/$select.txt", r );
 				
 			$nrShow = 20;
 			$expand = "<b>View all...</b>";
@@ -181,7 +239,7 @@ HTML;
 					'doToggle("tissueTable", this, "' . $expand . '", "' . $collapse . '")' .
 					"' style='cursor:pointer;color:#0000FF'>"."$expand<td width='45%'></table>";
 			
-			$html = "<div style='display:block;overflow:visible;width:70%'>
+			$html = "<div style='display:block;width: 860px;overflow:visible;width:100%'>
 					<style type='text/css'>
 					.scale-title {
 					    text-align: left;
@@ -224,10 +282,10 @@ HTML;
 			
 			
 			</div>
-			<div style='display:inline-block;overflow:visible;width:70%'>
+			<div style='display:inline-block;overflow:visible;width:100%'>
 			<table id='tissueTable' class='wikitable sortable' style='display:inline-block;width:100%'>
 			<tr class='table-blue-tableheadings' id='tr_header'>
-			<td class='table-blue-headercell' style='width:45%'>Pathways</td>
+			<td class='table-blue-headercell' style='width:44%'>Pathways</td>
 			<td class='table-blue-headercell' align='center' style='width:10%'>Linkout</td>
 			<td class='table-blue-headercell' align='center'style='width:10%'>Median</td>
 			<td class='table-blue-headercell' style='width:1%'></td>
@@ -275,8 +333,8 @@ HTML;
 			$nami, SORT_STRING, SORT_DESC );
 			
 			for($i = 0; $i < count ( $mean ); ++ $i) {
-				$filename = "wpi/data/TissueAnalyzer/$cutoff/Hs_$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
-				$filename2 = "wpi/data/TissueAnalyzer/$cutoff/$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
+				$filename = "wpi/data/NewTA/$dataset/$cutoff/Hs_$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
+				$filename2 = "wpi/data/NewTA/$dataset/$cutoff/$nami[$i]_$path_id[$i]_$path_rev[$i].txt";
 				$filename = (file_exists ( $filename )) ? $filename : $filename2;
 				$list_genes = "";
 				$active_index = 0;
@@ -365,11 +423,7 @@ HTML;
 				if ($i < $nrShow && !in_array($nami[$i], $topTen))
 					$doShow = '';
 				else
-					$doShow = 'toggleMe';
-
-				
-
-			
+					$doShow = 'toggleMe';			
 				$pathway_name = str_replace ( "_", " ", $nami[$i] );
 				$html .= <<<HTML
 				<tr class='$doShow' id='$nami[$i]'>
@@ -386,10 +440,11 @@ HTML;
 			fclose($tissue);
 		}
 
-		$html .= '</table></div>
+		$html .= '</table>
 				
-				<img role="button" id="sex-toggle-image" src="/wpi/extensions/TissueAnalyzer/images/' . $sex . '_selected.png" style="width:20px;height:38px; margin-top: 12px;vertical-align:top"  >
-				<div id="anatomogramBody" style="display:inline-block;width:25%; height:600px;vertical-align:top" ></div>
+				
+				<!--<img role="button" id="sex-toggle-image" src="/wpi/extensions/TissueAnalyzer/images/' . $sex . '_selected.png" style="width:20px;height:38px; margin-top: 12px;vertical-align:top"  >-->
+				<!--<div id="anatomogramBody" style="display:inline-block;width:25%; height:600px;vertical-align:top" ></div>-->
 				
 			
 				<style type="text/css">
@@ -425,20 +480,18 @@ HTML;
 				    }
 				</style>
 				</div>
-				<div class="my-legend" id="my-legend" style="display: none;width:70%"">
+				<div class="my-legend" id="my-legend" style="display: none;">
 				<div class="legend-title" id="legend-title" style="display:inline-block">Highlighting legend</div>
-				
-				<div class="legend-scale" style="display:inline-block%">
+				<div class="legend-scale">
 				  <ul class="legend-labels">
-				    <li><span style="background:#6A03B2;"></span>Active gene (expression > '.$cutoff.')</li>
-				    <li><span style="background:#B0B0B0;"></span>Not-active gene (expression < '.$cutoff.')</li>
+				    <li><span style="background:#6A03B2;"></span>Active gene (expression > 6)</li>
+				    <li><span style="background:#B0B0B0;"></span>Not-active gene (expression < 6)</li>
 				  </ul>				
 				</div>
 				</div>
-				</div>		
-				<div style="width:65%">
-				<iframe id="path_viewer" src ="http://www.wikipathways.org/wpi/PathwayWidget.php?id=WP1" width=100% height="500px" style="display: none;"></iframe>
-				</div>	
+				</div>
+				<div id="pwyname"></div>
+				<iframe id="path_viewer" src ="http://www.wikipathways.org/wpi/PathwayWidget.php?id=WP1" width="860px" height="500px" style="display: none;"></iframe>
 				';
 
 		$wgOut->addHTML ( $html );
@@ -451,7 +504,7 @@ HTML;
 			return true;
 		$messagesLoaded = true;
 
-		require (dirname ( __FILE__ ) . '/TissueAnalyzer.i18n.php');
+		require (dirname ( __FILE__ ) . '/NewTA.i18n.php');
 		foreach ( $allMessages as $lang => $langMessages ) {
 			$wgMessageCache->addMessages ( $langMessages, $lang );
 		}
