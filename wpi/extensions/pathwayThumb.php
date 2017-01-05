@@ -78,10 +78,10 @@ function createEditCaption($pathway) {
 			  '<a id="download-from-page" href="#" onclick="return false;" class="button"><span>Launch Editor</span></a>' .
 			  '<script type="text/javascript">' .
 				" $('#download-from-page').click(function() { " .
-					" $.modal('<div id=\"jnlp-instructions\" style=\"width: 576px; height: 450px; background-color:white; \"> <img id=\"jnlp-instructions-diagram\" src=\"https://wikipathways.github.io/academy/images/jnlp-instructions.png\" width=\"576px\" height=\"403px\" alt=\"The JNLP will download to your default folder. Right-click the JNLP file and select Open.\">  <button id=\"download-from-modal\" class=\"btn btn-primary btn-lg\" type=\"button\" onClick=\"$.modal.close()\" style=\"float:right; margin: 2px;\">Got It</button> </div>', {overlayClose:true, overlayCss: {backgroundColor: \"gray\"}, opacity: 50}); " .
+					" $.modal('<div id=\"jnlp-instructions\" style=\"width: 576px; height: 450px; background-color:white; \"> <img id=\"jnlp-instructions-diagram\" src=\"/skins/wikipathways/jnlp-instructions.png\" width=\"576px\" height=\"403px\" alt=\"The JNLP will download to your default folder. Right-click the JNLP file and select Open.\">  <button id=\"download-from-modal\" class=\"btn btn-primary btn-lg\" type=\"button\" onClick=\"$.modal.close()\" style=\"float:right; margin: 2px;\">Got It</button> </div>', {overlayClose:true, overlayCss: {backgroundColor: \"gray\"}, opacity: 50}); " .
 					// We need the kludge below, because the image doesn't display in FF otherwise.
 					" window.setTimeout(function() { " .
-						" $('#jnlp-instructions-diagram').attr('src', 'https://wikipathways.github.io/academy/images/jnlp-instructions.png'); " .
+						" $('#jnlp-instructions-diagram').attr('src', '/skins/wikipathways/jnlp-instructions.png'); " .
 					"}, 10);" .
 					// server must set Content-Disposition: attachment
 					// TODO why do the ampersand symbols below get parsed as HTML entities? Disabling this line and using the minimal line below for now, but we shouldn't have to do this..
