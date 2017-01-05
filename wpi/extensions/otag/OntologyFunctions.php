@@ -34,9 +34,9 @@ class OntologyFunctions
 		$pathway = Pathway::newFromTitle($pwTitle);
 		$ontology = self::getOntologyName($tagId);
 		//$path = self::getOntologyTagPath($tagId);
+		$path = "";
 		$gpml = $pathway->getGpml();
 		$xml = simplexml_load_string($gpml);
-		$path = "";
 		if(!isset($xml->Biopax[0]))
 			$xml->addChild("Biopax");
 
@@ -86,8 +86,16 @@ class OntologyFunctions
 		$title = $pwId;
 		$resultArray = array();
 		$dbr =& wfGetDB(DB_SLAVE);
-		$query = "SELECT * FROM `ontology` " . "WHERE `pw_id` = '$title' ORDER BY `ontology`";
-		$res = $dbr->query($query);
+		#$query = "SELECT * FROM `ontology` " . "WHERE `pw_id` = '$title' ORDER BY `ontology`";
+                #$res = $dbr->query($query);
+		## Replacing with parameterized SQL to resolve critical security issue
+		$res = $dbr->select(
+			'ontology',
+			'*',
+			array('pw_id' => $title),
+			__METHOD__,
+			array('ORDER BY' => 'ontology')
+		);
 
 		$path = "";
 
